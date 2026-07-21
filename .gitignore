@@ -44,5 +44,8 @@ yarn-error.*
 .omo/run-continuation/
 .qoder/
 
+# superseded writing-plans version (kept local, not in repo)
+.omo/plans/2026-02-18-wastex-mobile-implementation.md
+
 # large proposal documents (kept locally, not in repo)
 *.docx
