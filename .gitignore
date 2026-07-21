@@ -40,8 +40,8 @@ yarn-error.*
 /ios
 /android
 
-# agent tooling / planning artifacts (local only)
-.omo/
+# agent runtime session state (local only) — planning .md files ARE committed
+.omo/run-continuation/
 .qoder/
 
 # large proposal documents (kept locally, not in repo)
