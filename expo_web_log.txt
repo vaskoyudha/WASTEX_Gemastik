@@ -1,0 +1,206 @@
+Starting project at C:\Users\Kiral\Documents\Wastex\WASTEX_Gemastik
+Starting Metro Bundler
+
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+
+2 packages may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.
+Web Bundled 5206ms node_modules\expo-router\entry.js (2683 modules)
+Web Bundled 630ms node_modules\expo-router\entry.js (1 module)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  WARN  Cannot record touch end without a touch start.
+ Touch End: {"identifier":0,"pageX":1154,"pageY":185,"timestamp":7574.800000000745}
+ Touch Bank: []
+Web Bundled 76ms node_modules\expo-router\entry.js (1 module)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  WARN  Cannot record touch end without a touch start.
+ Touch End: {"identifier":0,"pageX":1183,"pageY":261,"timestamp":3590}
+ Touch Bank: []
+Web Bundled 41ms node_modules\expo-router\entry.js (1 module)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+› Detected a change in metro.config.js. Restart the server to see the new results.
+› Detected a change in babel.config.js. Restart the server to see the new results. You may need to clear the bundler cache with the --clear flag for your changes to take effect.
+› Detected a change in metro.config.js. Restart the server to see the new results.
+› Detected a change in babel.config.js. Restart the server to see the new results. You may need to clear the bundler cache with the --clear flag for your changes to take effect.
+Web Bundled 23446ms node_modules\expo-router\entry.js (1 module)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web Bundled 45586ms node_modules\expo-router\entry.js (1 module)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Android Bundled 143259ms node_modules\expo-router\entry.js (3628 modules)
+Android Bundled 4705ms node_modules\expo-router\entry.js (1 module)
+Unable to resolve "@expo-google-fonts/inter" from "app\_layout.tsx"
+[0m [90m 4 |[39m [36mimport[39m [33mAsyncStorage[39m [36mfrom[39m [32m"@react-native-async-storage/async-storage"[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { [33mView[39m[33m,[39m [33mActivityIndicator[39m } [36mfrom[39m [32m"react-native"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useFonts[33m,[39m [33mInter_400Regular[39m[33m,[39m [33mInter_500Medium[39m[33m,[39m [33mInter_600SemiBold[39m[33m,[39m [33mInter_700Bold[39m[33m,[39m [33mInter_800ExtraBold[39m } [36mfrom[39m [32m"@expo-google-fonts/inter"[39m[33m;[39m
+ [90m   |[39m                                                                                                                    [31m[1m^[22m[39m
+ [90m 7 |[39m
+ [90m 8 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mRootLayout[39m() {
+ [90m 9 |[39m   [36mconst[39m [isReady[33m,[39m setIsReady] [33m=[39m useState([36mfalse[39m)[33m;[39m[0m
+
+Import stack:
+
+ app\_layout.tsx
+ | import "@expo-google-fonts/inter"
+
+ app (require.context)
+
+Web  ERROR  [UnableToResolveError: Unable to resolve module @expo-google-fonts/inter from C:\Users\Kiral\Documents\Wastex\WASTEX_Gemastik\app\_layout.tsx: @expo-google-fonts/inter could not be found within the project or in these directories:
+  node_modules
+  4 | import AsyncStorage from "@react-native-async-storage/async-storage";
+  5 | import { View, ActivityIndicator } from "react-native";
+> 6 | import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+    |                                                                                                                    ^
+  7 |
+  8 | export default function RootLayout() {
+  9 |   const [isReady, setIsReady] = useState(false);]
+Unable to resolve "@expo-google-fonts/inter" from "app\_layout.tsx"
+[0m [90m 4 |[39m [36mimport[39m [33mAsyncStorage[39m [36mfrom[39m [32m"@react-native-async-storage/async-storage"[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { [33mView[39m[33m,[39m [33mActivityIndicator[39m } [36mfrom[39m [32m"react-native"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useFonts[33m,[39m [33mInter_400Regular[39m[33m,[39m [33mInter_500Medium[39m[33m,[39m [33mInter_600SemiBold[39m[33m,[39m [33mInter_700Bold[39m[33m,[39m [33mInter_800ExtraBold[39m } [36mfrom[39m [32m"@expo-google-fonts/inter"[39m[33m;[39m
+ [90m   |[39m                                                                                                                    [31m[1m^[22m[39m
+ [90m 7 |[39m
+ [90m 8 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mRootLayout[39m() {
+ [90m 9 |[39m   [36mconst[39m [isReady[33m,[39m setIsReady] [33m=[39m useState([36mfalse[39m)[33m;[39m[0m
+
+Import stack:
+
+ app\_layout.tsx
+ | import "@expo-google-fonts/inter"
+
+ app (require.context)
+
+Web  ERROR  [UnableToResolveError: Unable to resolve module @expo-google-fonts/inter from C:\Users\Kiral\Documents\Wastex\WASTEX_Gemastik\app\_layout.tsx: @expo-google-fonts/inter could not be found within the project or in these directories:
+  node_modules
+  4 | import AsyncStorage from "@react-native-async-storage/async-storage";
+  5 | import { View, ActivityIndicator } from "react-native";
+> 6 | import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+    |                                                                                                                    ^
+  7 |
+  8 | export default function RootLayout() {
+  9 |   const [isReady, setIsReady] = useState(false);]
+Android Bundling failed 8684ms node_modules\expo-router\entry.js (1 module)
+Unable to resolve "./100Thin/Inter_100Thin.ttf" from "node_modules\@expo-google-fonts\inter\index.js"
+[0m [90m 4 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./useFonts'[39m[33m;[39m
+ [90m 5 |[39m [36mexport[39m { [36mdefault[39m [36mas[39m __metadata__ } [36mfrom[39m [32m'./metadata.json'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mexport[39m [36mconst[39m [33mInter_100Thin[39m [33m=[39m require([32m'./100Thin/Inter_100Thin.ttf'[39m)[33m;[39m
+ [90m   |[39m                                       [31m[1m^[22m[39m
+ [90m 7 |[39m [36mexport[39m [36mconst[39m [33mInter_200ExtraLight[39m [33m=[39m require([32m'./200ExtraLight/Inter_200ExtraLight.ttf'[39m)[33m;[39m
+ [90m 8 |[39m [36mexport[39m [36mconst[39m [33mInter_300Light[39m [33m=[39m require([32m'./300Light/Inter_300Light.ttf'[39m)[33m;[39m
+ [90m 9 |[39m [36mexport[39m [36mconst[39m [33mInter_400Regular[39m [33m=[39m require([32m'./400Regular/Inter_400Regular.ttf'[39m)[33m;[39m[0m
+
+Import stack:
+
+ node_modules\@expo-google-fonts\inter\index.js
+ | import "./100Thin/Inter_100Thin.ttf"
+
+ app\_layout.tsx
+ | import "@expo-google-fonts/inter"
+
+ app (require.context)
+
+Android Bundling failed 3584ms node_modules\expo-router\entry.js (1 module)
+Unable to resolve "./100Thin/Inter_100Thin.ttf" from "node_modules\@expo-google-fonts\inter\index.js"
+[0m [90m 4 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./useFonts'[39m[33m;[39m
+ [90m 5 |[39m [36mexport[39m { [36mdefault[39m [36mas[39m __metadata__ } [36mfrom[39m [32m'./metadata.json'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mexport[39m [36mconst[39m [33mInter_100Thin[39m [33m=[39m require([32m'./100Thin/Inter_100Thin.ttf'[39m)[33m;[39m
+ [90m   |[39m                                       [31m[1m^[22m[39m
+ [90m 7 |[39m [36mexport[39m [36mconst[39m [33mInter_200ExtraLight[39m [33m=[39m require([32m'./200ExtraLight/Inter_200ExtraLight.ttf'[39m)[33m;[39m
+ [90m 8 |[39m [36mexport[39m [36mconst[39m [33mInter_300Light[39m [33m=[39m require([32m'./300Light/Inter_300Light.ttf'[39m)[33m;[39m
+ [90m 9 |[39m [36mexport[39m [36mconst[39m [33mInter_400Regular[39m [33m=[39m require([32m'./400Regular/Inter_400Regular.ttf'[39m)[33m;[39m[0m
+
+Import stack:
+
+ node_modules\@expo-google-fonts\inter\index.js
+ | import "./100Thin/Inter_100Thin.ttf"
+
+ app\_layout.tsx
+ | import "@expo-google-fonts/inter"
+
+ app (require.context)
+
+Android Bundling failed 3483ms node_modules\expo-router\entry.js (1 module)
+Unable to resolve "./100Thin/Inter_100Thin.ttf" from "node_modules\@expo-google-fonts\inter\index.js"
+[0m [90m 4 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./useFonts'[39m[33m;[39m
+ [90m 5 |[39m [36mexport[39m { [36mdefault[39m [36mas[39m __metadata__ } [36mfrom[39m [32m'./metadata.json'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mexport[39m [36mconst[39m [33mInter_100Thin[39m [33m=[39m require([32m'./100Thin/Inter_100Thin.ttf'[39m)[33m;[39m
+ [90m   |[39m                                       [31m[1m^[22m[39m
+ [90m 7 |[39m [36mexport[39m [36mconst[39m [33mInter_200ExtraLight[39m [33m=[39m require([32m'./200ExtraLight/Inter_200ExtraLight.ttf'[39m)[33m;[39m
+ [90m 8 |[39m [36mexport[39m [36mconst[39m [33mInter_300Light[39m [33m=[39m require([32m'./300Light/Inter_300Light.ttf'[39m)[33m;[39m
+ [90m 9 |[39m [36mexport[39m [36mconst[39m [33mInter_400Regular[39m [33m=[39m require([32m'./400Regular/Inter_400Regular.ttf'[39m)[33m;[39m[0m
+
+Import stack:
+
+ node_modules\@expo-google-fonts\inter\index.js
+ | import "./100Thin/Inter_100Thin.ttf"
+
+ app\_layout.tsx
+ | import "@expo-google-fonts/inter"
+
+ app (require.context)
+
+Android Bundling failed 8664ms node_modules\expo-router\entry.js (1 module)
+Unable to resolve "./100Thin/Inter_100Thin.ttf" from "node_modules\@expo-google-fonts\inter\index.js"
+[0m [90m 4 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./useFonts'[39m[33m;[39m
+ [90m 5 |[39m [36mexport[39m { [36mdefault[39m [36mas[39m __metadata__ } [36mfrom[39m [32m'./metadata.json'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mexport[39m [36mconst[39m [33mInter_100Thin[39m [33m=[39m require([32m'./100Thin/Inter_100Thin.ttf'[39m)[33m;[39m
+ [90m   |[39m                                       [31m[1m^[22m[39m
+ [90m 7 |[39m [36mexport[39m [36mconst[39m [33mInter_200ExtraLight[39m [33m=[39m require([32m'./200ExtraLight/Inter_200ExtraLight.ttf'[39m)[33m;[39m
+ [90m 8 |[39m [36mexport[39m [36mconst[39m [33mInter_300Light[39m [33m=[39m require([32m'./300Light/Inter_300Light.ttf'[39m)[33m;[39m
+ [90m 9 |[39m [36mexport[39m [36mconst[39m [33mInter_400Regular[39m [33m=[39m require([32m'./400Regular/Inter_400Regular.ttf'[39m)[33m;[39m[0m
+
+Import stack:
+
+ node_modules\@expo-google-fonts\inter\index.js
+ | import "./100Thin/Inter_100Thin.ttf"
+
+ app\_layout.tsx
+ | import "@expo-google-fonts/inter"
+
+ app (require.context)
+
+Android Bundling failed 11578ms node_modules\expo-router\entry.js (1 module)
+Unable to resolve "./100Thin/Inter_100Thin.ttf" from "node_modules\@expo-google-fonts\inter\index.js"
+[0m [90m 4 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./useFonts'[39m[33m;[39m
+ [90m 5 |[39m [36mexport[39m { [36mdefault[39m [36mas[39m __metadata__ } [36mfrom[39m [32m'./metadata.json'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mexport[39m [36mconst[39m [33mInter_100Thin[39m [33m=[39m require([32m'./100Thin/Inter_100Thin.ttf'[39m)[33m;[39m
+ [90m   |[39m                                       [31m[1m^[22m[39m
+ [90m 7 |[39m [36mexport[39m [36mconst[39m [33mInter_200ExtraLight[39m [33m=[39m require([32m'./200ExtraLight/Inter_200ExtraLight.ttf'[39m)[33m;[39m
+ [90m 8 |[39m [36mexport[39m [36mconst[39m [33mInter_300Light[39m [33m=[39m require([32m'./300Light/Inter_300Light.ttf'[39m)[33m;[39m
+ [90m 9 |[39m [36mexport[39m [36mconst[39m [33mInter_400Regular[39m [33m=[39m require([32m'./400Regular/Inter_400Regular.ttf'[39m)[33m;[39m[0m
+
+Import stack:
+
+ node_modules\@expo-google-fonts\inter\index.js
+ | import "./100Thin/Inter_100Thin.ttf"
+
+ app\_layout.tsx
+ | import "@expo-google-fonts/inter"
+
+ app (require.context)
+
