@@ -1,0 +1,21 @@
+=== task-3-wastex-mobile-mockfirst ===
+
+--- TDD RED (before src/lib/format.ts existed) ---
+Cannot find module './format' from 'src/lib/format.test.ts'
+Correct failure reason: formatter implementation was missing.
+
+--- npm test -- format ---
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+
+--- npx tsc --noEmit ---
+exit code: 0
+
+--- LSP diagnostics ---
+src/lib/format.ts: clean
+src/lib/format.test.ts: clean
+src/lib/theme.ts: clean
+
+--- Test runner repair prerequisite ---
+Jest, jest-expo, and related runtime packages resolve consistently at 29.7.0.
+babel-preset-expo is a direct dev dependency, matching babel.config.js.
