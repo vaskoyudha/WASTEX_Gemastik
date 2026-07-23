@@ -18,6 +18,8 @@ export interface ScanResult {
   condition: string;
   confidence: number; // 0–1; <0.7 triggers manual correction
   riskLevel: RiskLevel;
+  difficulty?: Difficulty;
+  potentialValue?: "rendah" | "sedang" | "tinggi";
   safetyNotes: string[];
   potentialUses: string[];
 }
@@ -39,6 +41,7 @@ export interface ProductRecommendation {
 
 export interface RecommendationService {
   getRecommendations(material: ScanResult): Promise<ProductRecommendation[]>;
+  getProductById(productId: string): Promise<ProductRecommendation | null>;
 }
 
 // ---- Tutorial ----
