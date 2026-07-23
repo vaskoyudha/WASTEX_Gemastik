@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
+import { safeBack } from "../../../src/lib/navigation";
 import { ShieldAlert } from "lucide-react-native";
 
 export default function TutorialScreen() {
@@ -21,7 +22,7 @@ export default function TutorialScreen() {
     return (
       <View className="flex-1 bg-slate-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Tutorial tidak ditemukan.</Text>
-        <Button title="Kembali" onPress={() => router.back()} />
+        <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
     );
   }
@@ -35,7 +36,7 @@ export default function TutorialScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title={`Tutorial: ${product.name}`} onBack={() => router.back()} />
+      <Header title={`Tutorial: ${product.name}`} onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Text className="text-xs text-slate-500 mb-4">
@@ -60,7 +61,7 @@ export default function TutorialScreen() {
           <Card
             key={step.order}
             className="p-4 mb-4 border border-slate-100"
-            onPress={() => handleStepPress(step.safetyWarning)}
+            onPress={step.safetyWarning ? () => handleStepPress(step.safetyWarning) : undefined}
           >
             <View className="flex-row items-start mb-3">
               <View className="w-7 h-7 rounded-full bg-brand items-center justify-center mr-3 mt-0.5">

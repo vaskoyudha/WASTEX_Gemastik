@@ -1,13 +1,25 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Share } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Share, Platform, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { useScanStore } from "../../../src/store/useScanStore";
 import { impact } from "../../../src/services";
+import { MOCK_SCAN_RESULTS } from "../../../src/mocks/mockData";
+import { MaterialType } from "../../../src/services/types";
+import { safeBack } from "../../../src/lib/navigation";
 import { Copy, Share2, Check, BookmarkCheck } from "lucide-react-native";
 
 type SellingTab = "deskripsi" | "caption" | "hashtag" | "tips";
+
+function inferMaterialFromProduct(productId: string): MaterialType {
+  if (productId.includes("hdpe")) return "plastik_hdpe";
+  if (productId.includes("kardus")) return "kardus";
+  if (productId.includes("kaleng")) return "kaleng";
+  if (productId.includes("kaca")) return "kaca";
+  if (productId.includes("sachet")) return "sachet";
+  return "plastik_pet";
+}
 
 export default function SellingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,6 +28,8 @@ export default function SellingScreen() {
   const { scanResult, imageUri, resetSession } = useScanStore();
 
   const [sellingTab, setSellingTab] = useState<SellingTab>("deskripsi");
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat AI Selling Assistant..." />;
@@ -25,38 +39,47 @@ export default function SellingScreen() {
     return (
       <View className="flex-1 bg-slate-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Data selling assistant tidak ditemukan.</Text>
-        <Button title="Kembali" onPress={() => router.back()} />
+      <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
     );
   }
 
-  const handleSaveProject = async () => {
-    if (!scanResult) {
-      Alert.alert(
-        "Belum Ada Hasil Scan",
-        "Simpan impact hanya aktif setelah kamu memulai dari scan sampah. Silakan scan ulang dari Beranda."
-      );
+  const goHome = () => {
+    router.replace("/");
+  };
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      safeBack(router);
       return;
     }
+
+    goHome();
+  };
+
+  const handleSaveProject = () => {
+    setConfirmVisible(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const material = scanResult || MOCK_SCAN_RESULTS[inferMaterialFromProduct(product.id)];
+
+    setSaving(true);
     try {
       await impact.saveProject({
         id: Date.now().toString(),
         savedAt: new Date().toISOString(),
-        material: scanResult,
+        material,
         product,
         photoUri: imageUri || product.thumbnailUri,
       });
-      Alert.alert("Berhasil Disimpan!", "Proyek upcycling telah dicatat ke Impact Tracker.", [
-        {
-          text: "OK",
-          onPress: () => {
-            resetSession();
-            router.replace("/(tabs)/impact");
-          },
-        },
-      ]);
+      setConfirmVisible(false);
+      resetSession();
+      goHome();
     } catch (e) {
       Alert.alert("Gagal", "Tidak dapat menyimpan proyek.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -76,6 +99,26 @@ export default function SellingScreen() {
       await Share.share({ title, message });
     } catch {
       Alert.alert("Gagal", "Konten tidak bisa dibagikan saat ini.");
+    }
+  };
+
+  const copySellingText = async (message: string, title = "Konten") => {
+    if (!message.trim()) {
+      Alert.alert("Tidak Ada Konten", "Tidak ada teks yang bisa disalin.");
+      return;
+    }
+
+    try {
+      const clipboard = (globalThis as any).navigator?.clipboard;
+      if (Platform.OS === "web" && clipboard?.writeText) {
+        await clipboard.writeText(message);
+        Alert.alert("Tersalin", `${title} berhasil disalin ke clipboard.`);
+        return;
+      }
+
+      await Share.share({ title, message });
+    } catch {
+      Alert.alert("Gagal", "Konten tidak bisa disalin saat ini.");
     }
   };
 
@@ -99,11 +142,11 @@ export default function SellingScreen() {
                 <Text className="text-xs text-slate-700 leading-5 mb-3">{cap}</Text>
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => shareSellingText(cap, "Caption Instagram")}
+                  onPress={() => copySellingText(cap, "Caption Instagram")}
                   className="flex-row items-center self-start bg-slate-100 px-3 py-1.5 rounded-lg"
                 >
                   <Copy size={14} color="#64748b" />
-                  <Text className="text-[10px] font-bold text-slate-600 ml-1">Salin / Bagikan</Text>
+                  <Text className="text-[10px] font-bold text-slate-600 ml-1">Salin</Text>
                 </TouchableOpacity>
               </Card>
             ))}
@@ -146,7 +189,7 @@ export default function SellingScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="AI Selling Assistant" onBack={() => router.back()} />
+      <Header title="AI Selling Assistant" onBack={handleBack} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <View className="flex-row bg-white rounded-2xl p-1 border border-slate-100 mb-5">
@@ -186,7 +229,7 @@ export default function SellingScreen() {
             title="Salin Semua"
             variant="secondary"
             className="flex-1"
-            onPress={() => shareSellingText(getAllSellingText())}
+            onPress={() => copySellingText(getAllSellingText(), "Semua konten")}
           />
           <Button
             title="Bagikan"
@@ -204,6 +247,36 @@ export default function SellingScreen() {
           variant="primary"
         />
       </ScrollView>
+
+      <Modal visible={confirmVisible} animationType="fade" transparent onRequestClose={() => setConfirmVisible(false)}>
+        <View className="flex-1 items-center justify-center bg-black/50 px-6">
+          <View className="w-full max-w-sm rounded-3xl bg-white p-6">
+            <View className="w-14 h-14 rounded-full bg-emerald-50 items-center justify-center mb-4 self-center">
+              <BookmarkCheck size={28} color="#16a34a" />
+            </View>
+            <Text className="text-lg font-bold text-slate-900 text-center mb-2">Simpan Proyek?</Text>
+            <Text className="text-sm text-slate-600 text-center leading-5 mb-6">
+              Proyek akan dicatat ke Riwayat dan Impact Tracker, lalu kamu akan kembali ke Beranda.
+            </Text>
+            <View className="flex-row gap-3">
+              <Button
+                title="Batal"
+                variant="outline"
+                className="flex-1"
+                onPress={() => setConfirmVisible(false)}
+                disabled={saving}
+              />
+              <Button
+                title="Simpan"
+                variant="primary"
+                className="flex-1"
+                onPress={handleConfirmSave}
+                loading={saving}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

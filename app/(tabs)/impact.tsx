@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
-import { Alert, View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Header, Card } from "../../src/components/ui";
 import { impact } from "../../src/services";
 import { ImpactSummary } from "../../src/services/types";
@@ -25,6 +25,7 @@ const maxWaste = Math.max(...monthlyData.map((d) => d.waste));
 const maxValue = Math.max(...monthlyData.map((d) => d.value));
 
 export default function ImpactScreen() {
+  const router = useRouter();
   const [summary, setSummary] = useState<ImpactSummary>(defaultSummary);
 
   useFocusEffect(
@@ -145,7 +146,7 @@ export default function ImpactScreen() {
             <Text className="text-base font-bold text-slate-900 tracking-tight">Pencapaian</Text>
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => Alert.alert("Pencapaian", "Ringkasan pencapaian lengkap akan ditampilkan di versi berikutnya.")}
+              onPress={() => router.push("/achievements")}
               className="flex-row items-center"
             >
               <Text className="text-xs font-semibold text-brand tracking-tight">Lihat Semua</Text>
@@ -153,25 +154,25 @@ export default function ImpactScreen() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5" contentContainerStyle={{ gap: 16, paddingHorizontal: 2 }}>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => Alert.alert("Pencapaian", "Badge Hijau Awal belum memiliki detail tambahan.") }>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?focus=green_start") }>
               <Card className="p-4 items-center justify-center w-24 h-24 mx-2 border border-slate-100 shadow-sm">
                 <Leaf size={26} color="#16a34a" />
                 <Text className="text-[10px] font-semibold text-gray-700 mt-2 text-center">Hijau Awal</Text>
               </Card>
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => Alert.alert("Pencapaian", "Badge 28 Produk membuka detail proyek.") }>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?focus=products_28") }>
               <Card className="p-4 items-center justify-center w-24 h-24 mx-2 border border-slate-100 shadow-sm">
                 <Award size={26} color="#d97706" />
                 <Text className="text-[10px] font-semibold text-gray-700 mt-2 text-center">28 Produk</Text>
               </Card>
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => Alert.alert("Pencapaian", "Badge Nilai Jual bisa dipakai untuk insight ekonomi.") }>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?focus=sell_value") }>
               <Card className="p-4 items-center justify-center w-24 h-24 mx-2 border border-slate-100 shadow-sm">
                 <Gift size={26} color="#0284c7" />
                 <Text className="text-[10px] font-semibold text-gray-700 mt-2 text-center">Nilai Jual</Text>
               </Card>
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => Alert.alert("Tambah Pencapaian", "Fitur tambah pencapaian belum diaktifkan.") }>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?action=add") }>
               <Card className="p-0 items-center justify-center w-24 h-24 mx-2 border border-slate-200 border-dashed bg-white">
                 <Plus size={24} color="#94a3b8" />
                 <Text className="text-[10px] font-semibold text-gray-600 mt-2 text-center">Tambah</Text>

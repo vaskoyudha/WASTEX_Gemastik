@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
+import { safeBack } from "../../../src/lib/navigation";
 
 export default function MockupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,14 +18,14 @@ export default function MockupScreen() {
     return (
       <View className="flex-1 bg-slate-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Mockup tidak ditemukan.</Text>
-        <Button title="Kembali" onPress={() => router.back()} />
+        <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
     );
   }
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Mockup Produk" onBack={() => router.back()} />
+      <Header title="Mockup Produk" onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="rounded-3xl overflow-hidden p-0 border-0 mb-5">
