@@ -3,6 +3,8 @@ import { Alert, Share, View, Text, ScrollView, Image, TouchableOpacity } from "r
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, Badge, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
+import { favorites } from "../../../src/services/localState";
+import { safeBack } from "../../../src/lib/navigation";
 import {
   Heart,
   Share2,
@@ -48,7 +50,7 @@ export default function ProductDetailScreen() {
     return (
       <View className="flex-1 bg-slate-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Produk tidak ditemukan.</Text>
-        <Button title="Kembali" onPress={() => router.back()} />
+        <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
     );
   }
@@ -57,7 +59,13 @@ export default function ProductDetailScreen() {
     <View className="flex-row items-center gap-2">
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => Alert.alert("Favorit", `${product.name} ditambahkan ke favorit demo.`)}
+        onPress={async () => {
+          const saved = await favorites.toggle(product);
+          Alert.alert(
+            saved ? "Favorit" : "Favorit Dihapus",
+            saved ? `${product.name} ditambahkan ke favorit.` : `${product.name} dihapus dari favorit.`
+          );
+        }}
         className="p-2"
       >
         <Heart size={22} color="#1e293b" />
@@ -74,7 +82,7 @@ export default function ProductDetailScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Detail Produk" onBack={() => router.back()} rightElement={headerRight} />
+      <Header title="Detail Produk" onBack={() => safeBack(router)} rightElement={headerRight} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="rounded-3xl overflow-hidden p-0 border-0 mb-5">

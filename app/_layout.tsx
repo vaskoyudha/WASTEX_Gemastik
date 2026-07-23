@@ -43,6 +43,10 @@ export default function RootLayout() {
       <Stack.Screen name="product/[id]/pricing" />
       <Stack.Screen name="product/[id]/selling" />
       <Stack.Screen name="expert-dashboard" />
+      <Stack.Screen name="notifications" />
+      <Stack.Screen name="materials" />
+      <Stack.Screen name="ideas" />
+      <Stack.Screen name="achievements" />
     </Stack>
   );
 }

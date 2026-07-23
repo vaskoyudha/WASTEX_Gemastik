@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Header, Button, Card, LoadingSpinner } from "../../src/components/ui";
 import { scanner, recommendation } from "../../src/services";
 import { useScanStore } from "../../src/store/useScanStore";
+import { safeBack } from "../../src/lib/navigation";
 import {
   Camera,
   Image as ImageIcon,
@@ -81,7 +82,7 @@ export default function UploadScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Upload Sampah" onBack={() => router.back()} />
+      <Header title="Upload Sampah" onBack={() => safeBack(router)} />
 
       {analyzing ? (
         <LoadingSpinner fullScreen message="AI Upcycling Agent sedang menganalisis material & risiko keamanan..." />

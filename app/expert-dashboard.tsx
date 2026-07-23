@@ -1,20 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Header, Card, Badge } from "../src/components/ui";
+import { expertItems, ExpertStatus, StoredExpertItem } from "../src/services/localState";
+import { safeBack } from "../src/lib/navigation";
 import { CheckCircle2, XCircle, Eye, ThumbsDown } from "lucide-react-native";
 
-type TabKey = "menunggu" | "disetujui" | "ditolak";
-
-interface ValidationItem {
-  id: string;
-  title: string;
-  source: string;
-  thumbnail: string;
-  risk: "Rendah" | "Sedang";
-  difficulty: "Mudah" | "Sedang" | "Sulit";
-  status: TabKey;
-}
+type TabKey = ExpertStatus;
+type ValidationItem = StoredExpertItem;
 
 const initialItems: ValidationItem[] = [
   {
@@ -57,6 +50,18 @@ export default function ExpertDashboardScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>("menunggu");
   const [items, setItems] = useState<ValidationItem[]>(initialItems);
 
+  useEffect(() => {
+    expertItems.getAll(initialItems).then(setItems);
+  }, []);
+
+  const updateItemStatus = (id: string, status: TabKey) => {
+    setItems((current) => {
+      const updated = current.map((item) => (item.id === id ? { ...item, status } : item));
+      expertItems.saveAll(updated);
+      return updated;
+    });
+  };
+
   const filtered = items.filter((i) => i.status === activeTab);
   const tabItems = ([
     { key: "menunggu", label: "Menunggu" },
@@ -70,20 +75,35 @@ export default function ExpertDashboardScreen() {
   const handleReview = (item: ValidationItem) => {
     Alert.alert(
       "Detail Validasi",
-      `${item.title}\nSumber: ${item.source}\nRisiko: ${item.risk}\nKesulitan: ${item.difficulty}`
+      `${item.title}\nSumber: ${item.source}\nRisiko: ${item.risk}\nKesulitan: ${item.difficulty}`,
+      [
+        { text: "Tutup", style: "cancel" },
+        {
+          text: "Tolak",
+          style: "destructive",
+          onPress: () => handleReject(item.id),
+        },
+        {
+          text: "Setujui",
+          onPress: () => handleApprove(item.id),
+        },
+      ]
     );
   };
 
+  const handleApprove = (id: string) => {
+    updateItemStatus(id, "disetujui");
+    Alert.alert("Disetujui", "Skill diteruskan ke pustaka tutorial lokal.");
+  };
+
   const handleReject = (id: string) => {
-    setItems((current) =>
-      current.map((item) => (item.id === id ? { ...item, status: "ditolak" } : item))
-    );
+    updateItemStatus(id, "ditolak");
     Alert.alert("Ditolak", "Skill dipindahkan ke tab Ditolak.");
   };
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Validasi Skill Baru" subtitle="Expert Dashboard (Preview)" onBack={() => router.back()} />
+      <Header title="Validasi Skill Baru" subtitle="Expert Dashboard (Preview)" onBack={() => safeBack(router)} />
 
       <View className="px-6 pt-6">
         {/* Tabs */}
