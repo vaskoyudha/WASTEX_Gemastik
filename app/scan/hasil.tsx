@@ -5,6 +5,7 @@ import { Header, Button, Card, Badge } from "../../src/components/ui";
 import { useScanStore } from "../../src/store/useScanStore";
 import { MaterialType } from "../../src/services/types";
 import { recommendation } from "../../src/services";
+import { safeBack } from "../../src/lib/navigation";
 import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight } from "lucide-react-native";
 
 const materialTraits: Record<string, string[]> = {
@@ -25,7 +26,7 @@ export default function HasilScreen() {
     return (
       <View className="flex-1 bg-white items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Belum ada hasil scan.</Text>
-        <Button title="Kembali ke Upload" onPress={() => router.back()} fullWidth={false} />
+        <Button title="Kembali ke Upload" onPress={() => router.replace("/scan/upload")} fullWidth={false} />
       </View>
     );
   }
@@ -65,7 +66,7 @@ export default function HasilScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Hasil Analisis AI" onBack={() => router.back()} />
+      <Header title="Hasil Analisis AI" onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Photo Preview */}

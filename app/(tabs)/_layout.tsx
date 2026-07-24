@@ -1,7 +1,7 @@
 import React from "react";
 import { Tabs, useRouter } from "expo-router";
 import { View, TouchableOpacity } from "react-native";
-import { Home, Search, Camera, Leaf, User } from "lucide-react-native";
+import { Camera, History, Home, Leaf, User } from "lucide-react-native";
 
 function ScanTabButton(props: any) {
   const router = useRouter();
@@ -61,10 +61,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explorasi"
+        name="riwayat"
         options={{
-          title: "Eksplorasi",
-          tabBarIcon: ({ color, size }) => <Search size={size} color={color} />,
+          title: "Riwayat",
+          tabBarIcon: ({ color, size }) => <History size={size} color={color} />,
         }}
       />
       <Tabs.Screen

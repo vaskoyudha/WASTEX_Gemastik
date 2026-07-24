@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
+import { safeBack } from "../../../src/lib/navigation";
 import { ArrowDown, ArrowRight } from "lucide-react-native";
 
 export default function BeforeAfterScreen() {
@@ -18,14 +19,14 @@ export default function BeforeAfterScreen() {
     return (
       <View className="flex-1 bg-slate-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Data tidak ditemukan.</Text>
-        <Button title="Kembali" onPress={() => router.back()} />
+        <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
     );
   }
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Sebelum & Sesudah" onBack={() => router.back()} />
+      <Header title="Sebelum & Sesudah" onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="p-4 border border-slate-100 mb-4 items-center">

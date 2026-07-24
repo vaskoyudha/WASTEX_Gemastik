@@ -63,7 +63,7 @@ export function useServiceCall<T, Args extends any[] = any[]>(
     if (autoCall) {
       execute(...initialArgs);
     }
-  }, [autoCall]);
+  }, [autoCall, execute, initialArgs]);
 
   return {
     data,
