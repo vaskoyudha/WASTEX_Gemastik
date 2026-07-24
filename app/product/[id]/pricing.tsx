@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { TrendingUp } from "lucide-react-native";
+import { safeBack } from "../../../src/lib/navigation";
 
 export default function PricingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,7 +19,7 @@ export default function PricingScreen() {
     return (
       <View className="flex-1 bg-slate-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Estimasi harga tidak ditemukan.</Text>
-        <Button title="Kembali" onPress={() => router.back()} />
+        <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
     );
   }
@@ -29,7 +30,7 @@ export default function PricingScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Estimasi Harga" onBack={() => router.back()} />
+      <Header title="Estimasi Harga" onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="p-0 border border-slate-100 mb-5 overflow-hidden">

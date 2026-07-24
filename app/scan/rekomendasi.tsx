@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { Header, Badge, EmptyState } from "../../src/components/ui";
 import { useScanStore } from "../../src/store/useScanStore";
 import { ProductRecommendation } from "../../src/services/types";
+import { bookmarks } from "../../src/services/localState";
+import { safeBack } from "../../src/lib/navigation";
 import { Clock, Bookmark, ChevronRight, Tag } from "lucide-react-native";
 
 export default function RekomendasiScreen() {
@@ -17,7 +19,7 @@ export default function RekomendasiScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <Header title="Rekomendasi Produk" onBack={() => router.back()} />
+      <Header title="Rekomendasi Produk" onBack={() => safeBack(router)} />
 
       {recommendations.length === 0 ? (
         <EmptyState
@@ -57,7 +59,13 @@ export default function RekomendasiScreen() {
                     </Text>
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      onPress={() => Alert.alert("Tersimpan", `${item.name} ditambahkan ke bookmark demo.`)}
+                      onPress={async () => {
+                        const saved = await bookmarks.toggle(item);
+                        Alert.alert(
+                          saved ? "Tersimpan" : "Dihapus",
+                          saved ? `${item.name} ditambahkan ke bookmark.` : `${item.name} dihapus dari bookmark.`
+                        );
+                      }}
                       className="p-1"
                     >
                       <Bookmark size={16} color="#94a3b8" />
@@ -92,7 +100,7 @@ export default function RekomendasiScreen() {
           ListFooterComponent={
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => Alert.alert("Semua Ide", "Daftar lengkap ide upcycling akan tersedia pada versi berikutnya.")}
+              onPress={() => router.push("/ideas")}
               className="flex-row items-center justify-center py-3 mt-2"
             >
               <Text className="text-sm font-bold text-brand mr-1">Lihat Semua Ide (12)</Text>
