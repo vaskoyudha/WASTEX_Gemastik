@@ -35,6 +35,10 @@ class MockScanner implements WasteScannerService {
 
     return MOCK_SCAN_RESULTS[randomMaterial] || MOCK_SCAN_RESULTS.plastik_pet;
   }
+
+  async getMaterialInfo(materialType: MaterialType): Promise<ScanResult> {
+    return MOCK_SCAN_RESULTS[materialType] || MOCK_SCAN_RESULTS.plastik_pet;
+  }
 }
 
 class MockRecommendation implements RecommendationService {
@@ -50,6 +54,10 @@ class MockRecommendation implements RecommendationService {
         .flat()
         .find((product) => product.id === productId) || null
     );
+  }
+
+  async getAllProducts(): Promise<ProductRecommendation[]> {
+    return Object.values(MOCK_RECOMMENDATIONS).flat();
   }
 }
 

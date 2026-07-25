@@ -26,6 +26,7 @@ export interface ScanResult {
 
 export interface WasteScannerService {
   scan(imageUri: string): Promise<ScanResult>;
+  getMaterialInfo(materialType: MaterialType): Promise<ScanResult>;
 }
 
 // ---- Recommendation ----
@@ -42,6 +43,7 @@ export interface ProductRecommendation {
 export interface RecommendationService {
   getRecommendations(material: ScanResult): Promise<ProductRecommendation[]>;
   getProductById(productId: string): Promise<ProductRecommendation | null>;
+  getAllProducts(): Promise<ProductRecommendation[]>;
 }
 
 // ---- Tutorial ----
