@@ -4,8 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { useScanStore } from "../../../src/store/useScanStore";
-import { impact } from "../../../src/services";
-import { MOCK_SCAN_RESULTS } from "../../../src/mocks/mockData";
+import { impact, scanner } from "../../../src/services";
 import { MaterialType } from "../../../src/services/types";
 import { safeBack } from "../../../src/lib/navigation";
 import { Copy, Share2, Check, BookmarkCheck } from "lucide-react-native";
@@ -71,7 +70,7 @@ export default function SellingScreen() {
   };
 
   const handleConfirmSave = async () => {
-    const material = scanResult || MOCK_SCAN_RESULTS[inferMaterialFromProduct(product.id)];
+    const material = scanResult || await scanner.getMaterialInfo(inferMaterialFromProduct(product.id));
 
     setSaving(true);
     try {
