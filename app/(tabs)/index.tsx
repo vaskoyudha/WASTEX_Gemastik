@@ -1,11 +1,13 @@
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Card } from "../../src/components/ui";
+import { useImpactData } from "../../src/hooks/useImpactData";
 import {
   Bell,
   Camera,
   ChevronRight,
+  History,
   Leaf,
   Recycle,
   Sparkles,
@@ -32,12 +34,6 @@ const steps = [
   },
 ];
 
-const stats = [
-  { icon: Recycle, value: "12.8 ton", label: "Sampah Diolah" },
-  { icon: Store, value: "3.245", label: "Produk Dibuat" },
-  { icon: TrendingUp, value: "Rp 128 jt", label: "Nilai Ekonomi" },
-];
-
 const categories = ["Plastik PET", "Plastik HDPE", "Kardus", "Kaleng", "Kaca", "Sachet"];
 
 function HeroIllustration() {
@@ -58,6 +54,12 @@ function HeroIllustration() {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { history, summary, loading: historyLoading } = useImpactData();
+  const stats = [
+    { icon: Recycle, value: `${summary.totalWasteProcessed} kg`, label: "Sampah Diolah" },
+    { icon: Store, value: `${summary.totalProductsMade}`, label: "Produk Dibuat" },
+    { icon: TrendingUp, value: `Rp ${summary.estimatedEconomicValue.toLocaleString("id-ID")}`, label: "Nilai Ekonomi" },
+  ];
 
   return (
     <View className="flex-1 bg-white">
@@ -157,6 +159,85 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
+        </View>
+
+        <View className="px-5 mt-8">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-base font-bold text-slate-900 tracking-tight">Riwayat Terakhir</Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push("/riwayat")}
+              className="flex-row items-center"
+            >
+              <Text className="text-xs font-semibold text-brand tracking-tight">Lihat Semua</Text>
+              <ChevronRight size={14} color="#16a34a" />
+            </TouchableOpacity>
+          </View>
+
+          {historyLoading ? (
+            <Card className="mt-5 p-4 border border-slate-100 bg-slate-50">
+              <View className="flex-row items-center">
+                <View className="w-12 h-12 rounded-2xl bg-slate-200 mr-4" />
+                <View className="flex-1">
+                  <View className="h-3 rounded-full bg-slate-200 w-3/5 mb-2" />
+                  <View className="h-2.5 rounded-full bg-slate-100 w-4/5" />
+                </View>
+              </View>
+            </Card>
+          ) : history.length === 0 ? (
+            <Card className="mt-5 p-5 border border-dashed border-slate-200 bg-slate-50">
+              <View className="items-center">
+                <View className="w-12 h-12 rounded-full bg-white items-center justify-center mb-3 border border-slate-100">
+                  <History size={24} color="#64748b" />
+                </View>
+                <Text className="text-sm font-bold text-slate-900 text-center">Belum ada riwayat tersimpan</Text>
+                <Text className="text-xs text-slate-500 text-center leading-5 mt-1 mb-4">
+                  Selesaikan satu alur scan sampai tahap simpan proyek untuk melihat item terakhir di sini.
+                </Text>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => router.push("/scan/upload")}
+                  className="flex-row items-center bg-brand px-4 py-2.5 rounded-xl"
+                >
+                  <Camera size={16} color="#ffffff" />
+                  <Text className="text-white font-semibold text-sm ml-2">Mulai Scan</Text>
+                </TouchableOpacity>
+              </View>
+            </Card>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5" contentContainerStyle={{ gap: 14, paddingHorizontal: 2 }}>
+              {history.slice(0, 3).map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  activeOpacity={0.8}
+                  onPress={() => router.push(`/product/${item.product.id}`)}
+                  className="w-[260px]"
+                >
+                  <Card className="p-3 border border-slate-100 shadow-sm">
+                    <View className="flex-row items-center">
+                      <Image source={{ uri: item.photoUri }} className="w-16 h-16 rounded-2xl bg-slate-200" resizeMode="cover" />
+                      <View className="flex-1 ml-3">
+                        <Text className="text-sm font-bold text-slate-900" numberOfLines={1}>
+                          {item.product.name}
+                        </Text>
+                        <Text className="text-xs text-slate-500 mt-1" numberOfLines={2}>
+                          {item.product.shortDescription}
+                        </Text>
+                      </View>
+                    </View>
+                    <View className="flex-row items-center justify-between mt-3">
+                      <Text className="text-[11px] text-slate-500" numberOfLines={1}>
+                        {item.material.materialLabel}
+                      </Text>
+                      <Text className="text-[11px] font-semibold text-brand-dark">
+                        Rp {item.product.estimatedCost.toLocaleString("id-ID")}
+                      </Text>
+                    </View>
+                  </Card>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         <View className="px-5 mt-8">

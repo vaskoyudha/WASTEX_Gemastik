@@ -18,9 +18,13 @@ export default function ProfilScreen() {
           text: "Hapus Semua",
           style: "destructive",
           onPress: async () => {
-            await impact.clearAll();
-            Alert.alert("Berhasil", "Data telah dibersihkan.");
-            router.replace("/(tabs)");
+            try {
+              await impact.clearAll();
+              Alert.alert("Berhasil", "Data telah dibersihkan.");
+              router.replace("/(tabs)");
+            } catch {
+              Alert.alert("Gagal", "Data belum bisa dibersihkan saat ini.");
+            }
           },
         },
       ]

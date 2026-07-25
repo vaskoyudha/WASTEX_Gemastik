@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, Image, TouchableOpacity, Alert, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -6,6 +6,8 @@ import { Header, Button, Card, LoadingSpinner } from "../../src/components/ui";
 import { scanner, recommendation } from "../../src/services";
 import { useScanStore } from "../../src/store/useScanStore";
 import { safeBack } from "../../src/lib/navigation";
+import { useServiceCall } from "../../src/hooks/useServiceCall";
+import { ProductRecommendation, ScanResult } from "../../src/services/types";
 import {
   Camera,
   Image as ImageIcon,
@@ -28,12 +30,40 @@ const supportedMaterials = [
   { label: "Dll", icon: MoreHorizontal },
 ];
 
+interface AnalyzePayload {
+  photoUri: string;
+  scanResult: ScanResult;
+  recommendations: ProductRecommendation[];
+}
+
 export default function UploadScreen() {
   const [image, setImage] = useState<string | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
   const router = useRouter();
 
   const { setImageUri, setScanResult, setRecommendations } = useScanStore();
+
+  const analyzePhoto = useCallback(async (photoUri: string): Promise<AnalyzePayload> => {
+    const scanResult = await scanner.scan(photoUri);
+    const recommendations = await recommendation.getRecommendations(scanResult);
+
+    return {
+      photoUri,
+      scanResult,
+      recommendations,
+    };
+  }, []);
+
+  const analyzeCall = useServiceCall<AnalyzePayload, [string]>(analyzePhoto, {
+    onSuccess: (payload) => {
+      setImageUri(payload.photoUri);
+      setScanResult(payload.scanResult);
+      setRecommendations(payload.recommendations);
+      router.push("/scan/hasil");
+    },
+    onError: () => {
+      Alert.alert("Analisis Gagal", "Terjadi kesalahan saat memindai foto. Silakan coba lagi.");
+    },
+  });
 
   const pickImage = async (mode: "camera" | "gallery") => {
     let result;
@@ -65,26 +95,14 @@ export default function UploadScreen() {
 
   const handleAnalyze = async () => {
     if (!image) return;
-    setAnalyzing(true);
-    try {
-      setImageUri(image);
-      const scanRes = await scanner.scan(image);
-      setScanResult(scanRes);
-      const recs = await recommendation.getRecommendations(scanRes);
-      setRecommendations(recs);
-      router.push("/scan/hasil");
-    } catch (e) {
-      Alert.alert("Analisis Gagal", "Terjadi kesalahan saat memindai foto. Silakan coba lagi.");
-    } finally {
-      setAnalyzing(false);
-    }
+    await analyzeCall.execute(image);
   };
 
   return (
     <View className="flex-1 bg-slate-50">
       <Header title="Upload Sampah" onBack={() => safeBack(router)} />
 
-      {analyzing ? (
+      {analyzeCall.loading ? (
         <LoadingSpinner fullScreen message="AI Upcycling Agent sedang menganalisis material & risiko keamanan..." />
       ) : (
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>

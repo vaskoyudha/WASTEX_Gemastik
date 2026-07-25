@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+const EMPTY_ARGS: any[] = [];
 
 export interface UseServiceCallResult<T, Args extends any[] = any[]> {
   data: T | null;
@@ -18,7 +20,13 @@ export function useServiceCall<T, Args extends any[] = any[]>(
     onError?: (error: Error) => void;
   } = {}
 ): UseServiceCallResult<T, Args> {
-  const { autoCall = false, initialArgs = [] as unknown as Args, onSuccess, onError } = options;
+  const { autoCall = false, onSuccess, onError } = options;
+  const initialArgs = options.initialArgs ?? (EMPTY_ARGS as Args);
+  const initialArgsRef = useRef(initialArgs);
+
+  useEffect(() => {
+    initialArgsRef.current = initialArgs;
+  }, [initialArgs]);
 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(autoCall);
@@ -26,6 +34,7 @@ export function useServiceCall<T, Args extends any[] = any[]>(
 
   const execute = useCallback(
     async (...args: Args): Promise<T | null> => {
+      initialArgsRef.current = args;
       setLoading(true);
       setError(null);
       try {
@@ -50,8 +59,8 @@ export function useServiceCall<T, Args extends any[] = any[]>(
   );
 
   const refetch = useCallback(() => {
-    return execute(...initialArgs);
-  }, [execute, initialArgs]);
+    return execute(...initialArgsRef.current);
+  }, [execute]);
 
   const reset = useCallback(() => {
     setData(null);
@@ -61,7 +70,7 @@ export function useServiceCall<T, Args extends any[] = any[]>(
 
   useEffect(() => {
     if (autoCall) {
-      execute(...initialArgs);
+      execute(...initialArgsRef.current);
     }
   }, [autoCall, execute, initialArgs]);
 

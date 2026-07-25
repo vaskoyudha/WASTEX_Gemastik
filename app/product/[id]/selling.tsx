@@ -24,7 +24,7 @@ function inferMaterialFromProduct(productId: string): MaterialType {
 export default function SellingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { product, sellData, loading } = useProductData(id);
+  const { product, sellData, loading, error, refetch } = useProductData(id);
   const { scanResult, imageUri, resetSession } = useScanStore();
 
   const [sellingTab, setSellingTab] = useState<SellingTab>("deskripsi");
@@ -33,6 +33,15 @@ export default function SellingScreen() {
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat AI Selling Assistant..." />;
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <Text className="text-slate-600 text-center mb-4">AI Selling Assistant gagal dimuat.</Text>
+        <Button title="Coba Lagi" onPress={() => refetch()} />
+      </View>
+    );
   }
 
   if (!product || !sellData) {
