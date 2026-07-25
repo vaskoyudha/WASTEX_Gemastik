@@ -9,9 +9,9 @@ import { CustomAchievement, customAchievements } from "../src/services/localStat
 import { safeBack } from "../src/lib/navigation";
 
 const defaultSummary: ImpactSummary = {
-  totalWasteProcessed: 12.8,
-  totalProductsMade: 28,
-  estimatedEconomicValue: 1250000,
+  totalWasteProcessed: 0,
+  totalProductsMade: 0,
+  estimatedEconomicValue: 0,
 };
 
 const baseAchievements = [
@@ -49,9 +49,7 @@ export default function AchievementsScreen() {
       impact.getImpactSummary(),
       customAchievements.getAll(),
     ]);
-    if (impactSummary.totalProductsMade > 0) {
-      setSummary(impactSummary);
-    }
+    setSummary(impactSummary);
     setManualAchievements(savedAchievements);
   };
 

@@ -9,10 +9,19 @@ import { ArrowDown, ArrowRight } from "lucide-react-native";
 export default function BeforeAfterScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { tutData, priceData, loading } = useProductData(id);
+  const { tutData, priceData, loading, error, refetch } = useProductData(id);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat perbandingan..." />;
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <Text className="text-slate-600 text-center mb-4">Perbandingan gagal dimuat.</Text>
+        <Button title="Coba Lagi" onPress={() => refetch()} />
+      </View>
+    );
   }
 
   if (!tutData) {

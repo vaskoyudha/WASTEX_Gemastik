@@ -8,10 +8,19 @@ import { safeBack } from "../../../src/lib/navigation";
 export default function MockupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { tutData, loading } = useProductData(id);
+  const { tutData, loading, error, refetch } = useProductData(id);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat mockup produk..." />;
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <Text className="text-slate-600 text-center mb-4">Mockup produk gagal dimuat.</Text>
+        <Button title="Coba Lagi" onPress={() => refetch()} />
+      </View>
+    );
   }
 
   if (!tutData) {
