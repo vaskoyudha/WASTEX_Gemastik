@@ -48,6 +48,7 @@ export class LocalImpactService implements ImpactService {
       return defaultSummary;
     }
 
+    // Temporary proxy: AI phase must replace estimatedCost with suggestedSellPrice.
     const estimatedEconomicValue = history.reduce(
       (sum, project) => sum + project.product.estimatedCost,
       0

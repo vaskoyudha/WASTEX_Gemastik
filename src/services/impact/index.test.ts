@@ -70,6 +70,13 @@ describe("LocalImpactService", () => {
     expect(summary.estimatedEconomicValue).toBe(35000);
   });
 
+  it("returns empty history when stored JSON is corrupt", async () => {
+    const service = new LocalImpactService();
+    mockStore[HISTORY_STORAGE_KEY] = "{bad";
+
+    await expect(service.getHistory()).resolves.toEqual([]);
+  });
+
   it("migrates legacy history data to the contracted key", async () => {
     const service = new LocalImpactService();
     mockStore["@wastex_saved_projects_v1"] = JSON.stringify([makeProject("legacy", 18000)]);
@@ -94,16 +101,19 @@ describe("LocalImpactService", () => {
     expect(history[0].id).toBe("two");
   });
 
-  it("clearAll only removes impact history and keeps onboarding state", async () => {
+  it("clearAll removes both history keys and keeps onboarding state", async () => {
     const service = new LocalImpactService();
     mockStore["wastex.onboarded"] = "true";
     mockStore["@wastex_saved_projects_v1"] = JSON.stringify([makeProject("legacy", 18000)]);
-
-    await service.saveProject(makeProject("one", 10000));
+    mockStore[HISTORY_STORAGE_KEY] = JSON.stringify([makeProject("one", 10000)]);
     await service.clearAll();
 
     expect(mockStore[HISTORY_STORAGE_KEY]).toBeUndefined();
     expect(mockStore["@wastex_saved_projects_v1"]).toBeUndefined();
     expect(mockStore["wastex.onboarded"]).toBe("true");
+    await expect(service.getHistory()).resolves.toEqual([]);
+    expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(2);
+    expect(AsyncStorage.removeItem).toHaveBeenNthCalledWith(1, HISTORY_STORAGE_KEY);
+    expect(AsyncStorage.removeItem).toHaveBeenNthCalledWith(2, "@wastex_saved_projects_v1");
   });
 });
