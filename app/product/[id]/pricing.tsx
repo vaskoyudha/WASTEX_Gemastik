@@ -9,10 +9,19 @@ import { safeBack } from "../../../src/lib/navigation";
 export default function PricingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { priceData, loading } = useProductData(id);
+  const { priceData, loading, error, refetch } = useProductData(id);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat estimasi harga..." />;
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <Text className="text-slate-600 text-center mb-4">Estimasi harga gagal dimuat.</Text>
+        <Button title="Coba Lagi" onPress={() => refetch()} />
+      </View>
+    );
   }
 
   if (!priceData) {

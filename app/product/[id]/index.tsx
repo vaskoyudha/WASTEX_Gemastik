@@ -40,10 +40,19 @@ function getToolIcon(name: string) {
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { product, tutData, priceData, loading } = useProductData(id);
+  const { product, tutData, priceData, loading, error, refetch } = useProductData(id);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat detail produk..." />;
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <Text className="text-slate-600 text-center mb-4">Detail produk gagal dimuat.</Text>
+        <Button title="Coba Lagi" onPress={() => refetch()} />
+      </View>
+    );
   }
 
   if (!product) {
