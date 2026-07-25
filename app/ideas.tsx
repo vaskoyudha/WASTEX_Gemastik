@@ -1,16 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Clock, Tag, ChevronRight } from "lucide-react-native";
-import { Header, Card, Badge } from "../src/components/ui";
-import { MOCK_RECOMMENDATIONS } from "../src/mocks/mockData";
+import { Header, Card, Badge, LoadingSpinner } from "../src/components/ui";
+import { recommendation } from "../src/services";
 import { ProductRecommendation } from "../src/services/types";
 import { safeBack } from "../src/lib/navigation";
 
-const ideas: ProductRecommendation[] = Object.values(MOCK_RECOMMENDATIONS).flat();
-
 export default function IdeasScreen() {
   const router = useRouter();
+  const [ideas, setIdeas] = useState<ProductRecommendation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    recommendation.getAllProducts().then((data) => {
+      setIdeas(data);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return <LoadingSpinner fullScreen message="Memuat ide produk..." />;
+  }
 
   return (
     <View className="flex-1 bg-slate-50">
