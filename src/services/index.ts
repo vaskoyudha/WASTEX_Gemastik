@@ -20,7 +20,7 @@ import {
 } from "../mocks/mockData";
 
 class MockScanner implements WasteScannerService {
-  async scan(imageUri: string): Promise<ScanResult> {
+  async scan(_imageUri: string): Promise<ScanResult> {
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const materials: MaterialType[] = [
@@ -81,6 +81,8 @@ class MockSelling implements SellingAssistantService {
     return MOCK_SELLING[productId] || MOCK_SELLING["prod_pet_1"];
   }
 }
+
+export const USE_MOCK = true;
 
 export const scanner: WasteScannerService = new MockScanner();
 export const recommendation: RecommendationService = new MockRecommendation();
