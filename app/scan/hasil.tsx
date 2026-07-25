@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
+import React, { useCallback, useState } from "react";
+import { Alert, View, Text, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { Header, Button, Card, Badge } from "../../src/components/ui";
 import { useScanStore } from "../../src/store/useScanStore";
 import { MaterialType } from "../../src/services/types";
 import { recommendation } from "../../src/services";
 import { safeBack } from "../../src/lib/navigation";
+import { useServiceCall } from "../../src/hooks/useServiceCall";
 import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight } from "lucide-react-native";
 
 const materialTraits: Record<string, string[]> = {
@@ -17,10 +18,48 @@ const materialTraits: Record<string, string[]> = {
   sachet: ["Lentur", "Tahan Air", "Multilayer", "Daur Ulang"],
 };
 
+interface ManualCorrectionPayload {
+  materialType: MaterialType;
+  materialLabel: string;
+  recommendations: Awaited<ReturnType<typeof recommendation.getRecommendations>>;
+}
+
 export default function HasilScreen() {
   const router = useRouter();
   const { imageUri, scanResult, updateScanResultMaterial, setRecommendations } = useScanStore();
   const [modalVisible, setModalVisible] = useState(false);
+
+  const loadManualRecommendations = useCallback(
+    async (type: MaterialType, label: string, currentResult: NonNullable<typeof scanResult>) => {
+      const recommendations = await recommendation.getRecommendations({
+        ...currentResult,
+        materialType: type,
+        materialLabel: label,
+        confidence: 1.0,
+      });
+
+      return {
+        materialType: type,
+        materialLabel: label,
+        recommendations,
+      };
+    },
+    []
+  );
+
+  const manualCorrectionCall = useServiceCall<
+    ManualCorrectionPayload,
+    [MaterialType, string, NonNullable<typeof scanResult>]
+  >(loadManualRecommendations, {
+    onSuccess: ({ materialType, materialLabel, recommendations }) => {
+      updateScanResultMaterial(materialType, materialLabel);
+      setRecommendations(recommendations);
+      setModalVisible(false);
+    },
+    onError: () => {
+      Alert.alert("Rekomendasi Gagal", "Material belum bisa diperbarui karena rekomendasi gagal dimuat. Coba lagi.");
+    },
+  });
 
   if (!scanResult) {
     return (
@@ -32,15 +71,7 @@ export default function HasilScreen() {
   }
 
   const handleManualSelect = async (type: MaterialType, label: string) => {
-    updateScanResultMaterial(type, label);
-    setModalVisible(false);
-    const newRecs = await recommendation.getRecommendations({
-      ...scanResult,
-      materialType: type,
-      materialLabel: label,
-      confidence: 1.0,
-    });
-    setRecommendations(newRecs);
+    await manualCorrectionCall.execute(type, label, scanResult);
   };
 
   const confidencePct = Math.round(scanResult.confidence * 100);
@@ -155,6 +186,9 @@ export default function HasilScreen() {
                 <X size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
+            {manualCorrectionCall.loading && (
+              <Text className="text-xs font-semibold text-brand-dark mb-3">Memuat rekomendasi baru...</Text>
+            )}
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
                 { type: "plastik_pet" as MaterialType, label: "Botol Plastik PET" },
@@ -166,8 +200,11 @@ export default function HasilScreen() {
               ].map((item) => (
                 <TouchableOpacity
                   key={item.type}
+                  disabled={manualCorrectionCall.loading}
                   onPress={() => handleManualSelect(item.type, item.label)}
-                  className="py-3.5 px-4 rounded-xl border border-slate-100 bg-slate-50 mb-3 active:bg-emerald-50"
+                  className={`py-3.5 px-4 rounded-xl border border-slate-100 mb-3 active:bg-emerald-50 ${
+                    manualCorrectionCall.loading ? "bg-slate-100 opacity-60" : "bg-slate-50"
+                  }`}
                   activeOpacity={0.7}
                 >
                   <Text className="font-semibold text-slate-800 text-sm">{item.label}</Text>

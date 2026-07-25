@@ -9,13 +9,22 @@ import { ShieldAlert } from "lucide-react-native";
 export default function TutorialScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { product, tutData, loading } = useProductData(id);
+  const { product, tutData, loading, error, refetch } = useProductData(id);
 
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [pendingWarning, setPendingWarning] = useState<string | null>(null);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat tutorial..." />;
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <Text className="text-slate-600 text-center mb-4">Tutorial gagal dimuat.</Text>
+        <Button title="Coba Lagi" onPress={() => refetch()} />
+      </View>
+    );
   }
 
   if (!product || !tutData) {

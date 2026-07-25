@@ -1,42 +1,55 @@
-import React, { useCallback, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
-import { Header, Card } from "../../src/components/ui";
-import { impact } from "../../src/services";
-import { ImpactSummary } from "../../src/services/types";
+import React, { useMemo } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
 import { Award, Gift, Leaf, Plus, Recycle, TrendingUp } from "lucide-react-native";
+import { Header, Card, EmptyState, LoadingSpinner } from "../../src/components/ui";
+import { useImpactData } from "../../src/hooks/useImpactData";
 
-const defaultSummary: ImpactSummary = {
-  totalWasteProcessed: 12.8,
-  totalProductsMade: 28,
-  estimatedEconomicValue: 1250000,
-};
-
-const monthlyData = [
-  { month: "Jan", waste: 8, value: 42 },
-  { month: "Feb", waste: 12, value: 56 },
-  { month: "Mar", waste: 15, value: 68 },
-  { month: "Apr", waste: 10, value: 48 },
-  { month: "Mei", waste: 17, value: 74 },
-  { month: "Jun", waste: 14, value: 62 },
+const achievementLinks = [
+  { id: "green_start", title: "Hijau Awal", icon: Leaf, color: "#16a34a" },
+  { id: "products_28", title: "28 Produk", icon: Award, color: "#d97706" },
+  { id: "sell_value", title: "Nilai Jual", icon: Gift, color: "#0284c7" },
 ];
-
-const maxWaste = Math.max(...monthlyData.map((d) => d.waste));
-const maxValue = Math.max(...monthlyData.map((d) => d.value));
 
 export default function ImpactScreen() {
   const router = useRouter();
-  const [summary, setSummary] = useState<ImpactSummary>(defaultSummary);
+  const { history, summary, loading, error, refresh } = useImpactData();
 
-  useFocusEffect(
-    useCallback(() => {
-      impact.getImpactSummary().then((s) => {
-        if (s.totalProductsMade > 0) {
-          setSummary(s);
-        }
-      });
-    }, [])
+  const chartData = useMemo(
+    () => [
+      { label: "Sampah", value: summary.totalWasteProcessed, display: `${summary.totalWasteProcessed} kg`, color: "#16a34a" },
+      { label: "Produk", value: summary.totalProductsMade, display: `${summary.totalProductsMade}`, color: "#d97706" },
+      {
+        label: "Nilai",
+        value: summary.estimatedEconomicValue / 100000,
+        display: `Rp ${summary.estimatedEconomicValue.toLocaleString("id-ID")}`,
+        color: "#0284c7",
+      },
+    ],
+    [summary]
   );
+
+  const maxValue = Math.max(...chartData.map((item) => item.value), 1);
+
+  if (loading) {
+    return <LoadingSpinner fullScreen message="Memuat dampak WASTEX..." />;
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-slate-50">
+        <Header title="Dampak & Pencapaian" />
+        <View className="flex-1 px-5 pt-6">
+          <EmptyState
+            title="Dampak Gagal Dimuat"
+            description="Coba muat ulang data impact yang tersimpan di perangkat ini."
+            actionLabel="Muat Ulang"
+            onAction={refresh}
+          />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <ScrollView className="flex-1 bg-white" contentContainerStyle={{ paddingBottom: 36 }}>
@@ -90,53 +103,36 @@ export default function ImpactScreen() {
               <View className="w-11 h-11 rounded-full bg-sky-50 items-center justify-center mb-3">
                 <Leaf size={22} color="#0284c7" />
               </View>
-              <Text className="text-xl font-black text-slate-900 tracking-tight">15 kg</Text>
-              <Text className="text-[11px] font-semibold text-gray-600 text-center mt-1">CO2 Dihemat</Text>
+              <Text className="text-xl font-black text-slate-900 tracking-tight">{Math.max(summary.totalProductsMade - 1, 0)}x</Text>
+              <Text className="text-[11px] font-semibold text-gray-600 text-center mt-1">Siklus Upcycling</Text>
             </Card>
           </View>
         </View>
 
         <View className="mt-8">
-          <Text className="text-base font-bold text-slate-900 tracking-tight">Grafik Bulanan</Text>
+          <Text className="text-base font-bold text-slate-900 tracking-tight">Grafik Dampak Aktual</Text>
           <Card className="p-5 border border-slate-100 mt-5 rounded-[24px]">
-            <View className="flex-row items-start justify-between mb-6">
-              <View>
-                <Text className="text-sm font-bold text-slate-900 mb-1">Jan-Jun 2026</Text>
-                <Text className="text-[11px] font-semibold text-gray-600">Sampah dan nilai ekonomi</Text>
-              </View>
-              <View className="items-end">
-                <View className="flex-row items-center mb-1">
-                  <View className="w-2.5 h-2.5 rounded-full bg-brand mr-1.5" />
-                  <Text className="text-[10px] font-semibold text-gray-600">Sampah (kg)</Text>
-                </View>
-                <View className="flex-row items-center">
-                  <View className="w-2.5 h-2.5 rounded-full bg-emerald-200 mr-1.5" />
-                  <Text className="text-[10px] font-semibold text-gray-600">Nilai (Rp)</Text>
-                </View>
-              </View>
-            </View>
-
-            <View className="flex-row items-end justify-between gap-4 h-40 mb-3">
-              {monthlyData.map((d) => {
-                const wasteHeight = maxWaste ? (d.waste / maxWaste) * 100 : 0;
-                const valueHeight = maxValue ? (d.value / maxValue) * 100 : 0;
+            <View className="flex-row items-end justify-between h-44 gap-4 mb-4">
+              {chartData.map((item) => {
+                const heightPct = Math.max(Math.round((item.value / maxValue) * 100), 12);
 
                 return (
-                  <View key={d.month} className="flex-1 items-center h-full">
-                    <View className="flex-row items-end gap-1 h-full">
-                      <View className="w-3 bg-brand rounded-t-xl" style={{ height: `${wasteHeight}%` }} />
-                      <View className="w-3 bg-emerald-200 rounded-t-xl" style={{ height: `${valueHeight}%` }} />
+                  <View key={item.label} className="flex-1 items-center h-full justify-end">
+                    <View className="items-center justify-end h-full w-full">
+                      <View
+                        testID="impact-bar"
+                        accessibilityLabel={`${item.label} impact bar`}
+                        className="w-full rounded-t-2xl"
+                        style={{ height: `${heightPct}%`, backgroundColor: item.color }}
+                      />
                     </View>
+                    <Text className="text-[10px] font-semibold text-slate-600 mt-3 text-center leading-4">
+                      {item.label}
+                    </Text>
+                    <Text className="text-[10px] text-slate-400 text-center mt-1 leading-4">{item.display}</Text>
                   </View>
                 );
               })}
-            </View>
-            <View className="flex-row justify-between gap-4">
-              {monthlyData.map((d) => (
-                <Text key={d.month} className="text-[10px] font-semibold text-gray-600 flex-1 text-center">
-                  {d.month}
-                </Text>
-              ))}
             </View>
           </Card>
         </View>
@@ -144,35 +140,25 @@ export default function ImpactScreen() {
         <View className="mt-8">
           <View className="flex-row items-center justify-between">
             <Text className="text-base font-bold text-slate-900 tracking-tight">Pencapaian</Text>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => router.push("/achievements")}
-              className="flex-row items-center"
-            >
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push("/achievements")} className="flex-row items-center">
               <Text className="text-xs font-semibold text-brand tracking-tight">Lihat Semua</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5" contentContainerStyle={{ gap: 16, paddingHorizontal: 2 }}>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?focus=green_start") }>
-              <Card className="p-4 items-center justify-center w-24 h-24 mx-2 border border-slate-100 shadow-sm">
-                <Leaf size={26} color="#16a34a" />
-                <Text className="text-[10px] font-semibold text-gray-700 mt-2 text-center">Hijau Awal</Text>
-              </Card>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?focus=products_28") }>
-              <Card className="p-4 items-center justify-center w-24 h-24 mx-2 border border-slate-100 shadow-sm">
-                <Award size={26} color="#d97706" />
-                <Text className="text-[10px] font-semibold text-gray-700 mt-2 text-center">28 Produk</Text>
-              </Card>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?focus=sell_value") }>
-              <Card className="p-4 items-center justify-center w-24 h-24 mx-2 border border-slate-100 shadow-sm">
-                <Gift size={26} color="#0284c7" />
-                <Text className="text-[10px] font-semibold text-gray-700 mt-2 text-center">Nilai Jual</Text>
-              </Card>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?action=add") }>
+            {achievementLinks.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <TouchableOpacity key={item.id} activeOpacity={0.8} onPress={() => router.push(`/achievements?focus=${item.id}`)}>
+                  <Card className="p-4 items-center justify-center w-24 h-24 mx-2 border border-slate-100 shadow-sm">
+                    <Icon size={26} color={item.color} />
+                    <Text className="text-[10px] font-semibold text-gray-700 mt-2 text-center">{item.title}</Text>
+                  </Card>
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/achievements?action=add")}>
               <Card className="p-0 items-center justify-center w-24 h-24 mx-2 border border-slate-200 border-dashed bg-white">
                 <Plus size={24} color="#94a3b8" />
                 <Text className="text-[10px] font-semibold text-gray-600 mt-2 text-center">Tambah</Text>
@@ -180,6 +166,29 @@ export default function ImpactScreen() {
             </TouchableOpacity>
           </ScrollView>
         </View>
+
+        {history.length > 0 && (
+          <View className="mt-8">
+            <Text className="text-base font-bold text-slate-900 tracking-tight mb-4">Aktivitas Terbaru</Text>
+            {history.slice(0, 3).map((project) => (
+              <Card key={project.id} className="p-4 mb-3 border border-slate-100">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1 pr-3">
+                    <Text className="text-sm font-bold text-slate-900" numberOfLines={1}>
+                      {project.product.name}
+                    </Text>
+                    <Text className="text-xs text-slate-500 mt-1" numberOfLines={1}>
+                      {project.material.materialLabel} - Rp {project.product.estimatedCost.toLocaleString("id-ID")}
+                    </Text>
+                  </View>
+                  <TouchableOpacity activeOpacity={0.7} onPress={() => router.push(`/product/${project.product.id}`)}>
+                    <Text className="text-xs font-semibold text-brand">Lihat</Text>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            ))}
+          </View>
+        )}
       </View>
     </ScrollView>
   );
