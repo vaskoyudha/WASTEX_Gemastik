@@ -3,7 +3,7 @@ import { Tabs, useRouter } from "expo-router";
 import { View, TouchableOpacity } from "react-native";
 import { Camera, History, Home, Leaf, User } from "lucide-react-native";
 
-function ScanTabButton(props: any) {
+function ScanTabButton(props: { accessibilityState?: { selected?: boolean } }) {
   const router = useRouter();
   const selected = props.accessibilityState?.selected;
 
@@ -57,35 +57,35 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Beranda",
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => <Home size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="riwayat"
         options={{
           title: "Riwayat",
-          tabBarIcon: ({ color, size }) => <History size={size} color={color} />,
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => <History size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
           title: "Scan",
-          tabBarButton: (props) => <ScanTabButton {...props} />,
+          tabBarButton: (props: Record<string, unknown>) => <ScanTabButton {...props} />,
         }}
       />
       <Tabs.Screen
         name="impact"
         options={{
           title: "Dampak",
-          tabBarIcon: ({ color, size }) => <Leaf size={size} color={color} />,
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => <Leaf size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profil"
         options={{
           title: "Profil",
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => <User size={size} color={color} />,
         }}
       />
     </Tabs>
