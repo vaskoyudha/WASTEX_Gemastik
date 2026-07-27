@@ -4,26 +4,24 @@ npm notice run ! grep -rEn 'from ["'"'"'](@/mocks|\.\./)+(src/)?mocks' app --inc
 exit=0
 
 === npx tsc --noEmit ===
-npm notice run wastex-mobile@1.0.0 npx
-npm notice run 'tsc' --noEmit
 exit=0
 
 === npm test ===
 npm notice run wastex-mobile@1.0.0 test
-npm notice run jest
-PASS src/lib/format.test.ts
-PASS src/services/impact/index.test.ts
+npm notice run jest --no-cache
+PASS src/hooks/useServiceCall.test.ts (8.415 s)
+PASS src/services/impact/index.test.ts (8.365 s)
+PASS src/hooks/useImpactData.test.ts (9.428 s)
 PASS src/services/boundary.test.ts
-PASS src/hooks/useServiceCall.test.ts
-PASS src/hooks/useImpactData.test.ts
-PASS app/(tabs)/index.test.tsx
-PASS app/scan/rekomendasi.test.tsx
-PASS src/features/index.test.tsx
-PASS app/(tabs)/profil.test.tsx
-PASS src/services/index.test.ts (7.073 s)
+PASS src/lib/format.test.ts
+PASS src/services/index.test.ts (15.526 s)
+PASS app/(tabs)/index.test.tsx (28.883 s)
+PASS app/(tabs)/profil.test.tsx (15.562 s)
+PASS app/scan/rekomendasi.test.tsx (31.188 s)
+PASS src/features/index.test.tsx (31.356 s)
 
 Test Suites: 10 passed, 10 total
 Tests:       34 passed, 34 total
 Snapshots:   0 total
-Time:        7.489 s, estimated 8 s
+Time:        35.299 s
 Ran all test suites.

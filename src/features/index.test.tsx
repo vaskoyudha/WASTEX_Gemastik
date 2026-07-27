@@ -7,6 +7,8 @@ jest.mock("lucide-react-native", () => ({
   ShieldCheck: () => null,
 }));
 
+jest.setTimeout(15000);
+
 describe("Falih feature components", () => {
   it("renders the mapped risk label", async () => {
     const { getByText } = await render(<RiskBadge level="berisiko" />);
