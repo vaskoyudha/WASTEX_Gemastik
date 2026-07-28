@@ -110,3 +110,13 @@ class SkillStatusUpdate(BaseModel):
 
 class IngestRequest(BaseModel):
     skill_ids: list[UUID] | None = None
+
+
+class SellingKit(BaseModel):
+    skill_id: str = ""
+    product_name: str
+    description: str
+    captions: list[str] = []
+    photo_tips: list[str] = []
+    packaging_ideas: list[str] = []
+    hashtags: list[str] = []
