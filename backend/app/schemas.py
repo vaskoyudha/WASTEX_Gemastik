@@ -120,3 +120,38 @@ class SellingKit(BaseModel):
     photo_tips: list[str] = []
     packaging_ideas: list[str] = []
     hashtags: list[str] = []
+
+
+from datetime import datetime
+
+
+class UserProfileCreate(BaseModel):
+    auth_user_id: UUID = Field(..., description="UUID from auth.users")
+    display_name: str = Field(..., min_length=1, max_length=64)
+    first_name: str | None = Field(None, max_length=64)
+    last_name: str | None = Field(None, max_length=64)
+    bio: str | None = Field(None, max_length=500)
+    phone: str | None = Field(None, max_length=24)
+    avatar_url: str | None = Field(None, max_length=512)
+
+
+class UserProfileUpdate(BaseModel):
+    display_name: str | None = Field(None, min_length=1, max_length=64)
+    first_name: str | None = Field(None, max_length=64)
+    last_name: str | None = Field(None, max_length=64)
+    bio: str | None = Field(None, max_length=500)
+    phone: str | None = Field(None, max_length=24)
+    avatar_url: str | None = Field(None, max_length=512)
+
+
+class UserProfileResponse(BaseModel):
+    id: UUID
+    auth_user_id: UUID
+    display_name: str
+    first_name: str | None
+    last_name: str | None
+    bio: str | None
+    phone: str | None
+    avatar_url: str | None
+    created_at: datetime
+    updated_at: datetime | None
