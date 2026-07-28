@@ -3,8 +3,6 @@ const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(__dirname);
 
-config.maxWorkers = 1;
-
 config.resolver.blockList = [
   ...(config.resolver.blockList || []),
   /\.test\.(ts|tsx|js|jsx)$/,

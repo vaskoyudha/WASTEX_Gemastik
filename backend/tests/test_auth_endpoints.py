@@ -11,16 +11,16 @@ from tests.fakes import FakeSupabase
 def test_register_success():
     """Valid register should create user + profile and return JWT."""
     from app.api.auth import get_auth_supabase
-    
+
     # Clear cache AND set up dependency override for our wrapper
     get_supabase.cache_clear()
-    
+
     client = TestClient(app)
     fake = FakeSupabase()
     # Access tables to ensure they're initialized
     _ = fake.table("profiles")
     _ = fake.table("auth.users")
-    
+
     # We don't pre-populate - the register endpoint will call insert
     app.dependency_overrides[get_auth_supabase] = lambda: fake
 
@@ -42,16 +42,16 @@ def test_register_success():
 def test_login_success():
     """Valid login should return JWT + profile."""
     from app.api.auth import get_auth_supabase
-    
+
     get_supabase.cache_clear()
-    
+
     client = TestClient(app)
     fake = FakeSupabase()
     _ = fake.table("profiles")
-    
+
     user_id = str(uuid4())
     profile_id = str(uuid4())
-    
+
     fake.tables["profiles"].rows.append(
         {
             "id": profile_id,
@@ -85,16 +85,16 @@ def test_me_requires_auth(client):
 def test_me_returns_profile(client):
     """Authenticated /me should return profile."""
     from app.api.auth import get_auth_supabase
-    
+
     get_supabase.cache_clear()
-    
+
     token = create_test_token({"sub": str(uuid4()), "email": "test@example.com"})
     fake = FakeSupabase()
     _ = fake.table("profiles")
-    
+
     user_id = str(uuid4())
     profile_id = str(uuid4())
-    
+
     fake.tables["profiles"].rows.append(
         {
             "id": profile_id,

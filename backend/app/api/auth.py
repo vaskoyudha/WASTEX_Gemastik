@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
-from supabase import Client
 from uuid import uuid4
+
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
 from app.deps import get_supabase
@@ -11,6 +11,7 @@ from app.schemas import (
     RegisterRequest,
     UserProfileResponse,
 )
+from supabase import Client
 
 
 async def get_auth_supabase() -> Client:

@@ -7,7 +7,8 @@ from supabase import Client
 
 def _skill_to_sections(skill: dict) -> list[tuple[str, str]]:
     steps = "\n".join(
-        f"{s['order']}. {s['instruction']}" + (f" (Peringatan: {s['warning']})" if s.get("warning") else "")
+        f"{s['order']}. {s['instruction']}"
+        + (f" (Peringatan: {s['warning']})" if s.get("warning") else "")
         for s in skill.get("steps", [])
     )
     tools = ", ".join(
@@ -37,7 +38,11 @@ async def ingest_skill(sb: Client, skill_id: UUID | str) -> int:
 
     chunks = []
     for section, text in _skill_to_sections(skill):
-        meta = {"material": skill["material"], "difficulty": skill["difficulty"], "section": section}
+        meta = {
+            "material": skill["material"],
+            "difficulty": skill["difficulty"],
+            "section": section,
+        }
         chunks.extend(chunk_text(text, metadata=meta))
     if not chunks:
         return 0
