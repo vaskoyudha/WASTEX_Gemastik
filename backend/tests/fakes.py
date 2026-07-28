@@ -3,32 +3,34 @@ from uuid import uuid4
 
 class FakeAuth:
     """Mock Supabase auth for testing."""
-    
+
     def __init__(self):
         self.users = []
-    
+
     async def sign_up(self, params: dict) -> object:
         """Mock user registration."""
+
         class Response:
             pass
-        
+
         response = Response()
         user_id = str(uuid4())
-        response.user = type('User', (), {'id': user_id})()
+        response.user = type("User", (), {"id": user_id})()
         response.access_token = f"fake_jwt_token_{user_id}"
         response.error = None
         self.users.append({"id": user_id, **params})
         return response
-    
+
     async def sign_in_with_password(self, params: dict) -> object:
         """Mock user login."""
+
         class Response:
             pass
-        
+
         response = Response()
         # Find existing user (for simplicity, just create one)
         user_id = str(uuid4())
-        response.user = type('User', (), {'id': user_id})()
+        response.user = type("User", (), {"id": user_id})()
         response.access_token = f"fake_jwt_token_{user_id}"
         response.error = None
         return response
@@ -101,9 +103,13 @@ class FakeTable:
 class FakeStorageBucket:
     def __init__(self):
         self.uploads = []
+        self.removed = []
 
     def upload(self, path, data, file_options=None):
         self.uploads.append((path, len(data), file_options))
+
+    def remove(self, paths):
+        self.removed.extend(paths)
 
 
 class FakeStorage:
