@@ -1,0 +1,10 @@
+# Curated source whitelist for seed bootstrap and skill discovery (spec §6).
+# Each entry needs: id, title, url or citation, materials, notes.
+# Example:
+# sources:
+#   - id: bank-sampah-guide-2024
+#     title: Panduan Pengelolaan Bank Sampah
+#     url: https://example.go.id/panduan-bank-sampah.pdf
+#     materials: [plastik_pet, plastik_hdpe]
+#     notes: Panduan resmi, bagian 3 membahas upcycling botol PET.
+sources: []
