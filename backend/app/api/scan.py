@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from uuid import uuid4
 
@@ -7,7 +8,7 @@ from app.agent.tools.vision import VisionUnavailable, scan_material
 from app.auth import get_current_user
 from app.config import get_settings
 from app.deps import get_optional_user_id, get_supabase
-from app.schemas import Material, ScanResponse
+from app.schemas import Material, MaterialIdentification, ScanResponse
 from supabase import Client
 
 router = APIRouter()
@@ -43,19 +44,34 @@ async def scan(
     if not image:
         raise HTTPException(status_code=400, detail="empty image")
     content_type = file.content_type or "image/jpeg"
-    try:
-        ident = await scan_material(image, content_type)
-    except VisionUnavailable:
-        raise HTTPException(status_code=503, detail="vision providers unavailable")
+
+    # Check for cached result based on image hash
+    image_hash = hashlib.sha256(image).hexdigest()
+    ident: MaterialIdentification | None = None
+    prev = sb.table("scans").select("*").eq("image_hash", image_hash).limit(1).execute()
+    hit = next(
+        (r for r in (prev.data or []) if r.get("image_hash") == image_hash and r.get("raw_json")),
+        None,
+    )
+    if hit:
+        ident = MaterialIdentification.model_validate(hit["raw_json"])
+    else:
+        try:
+            ident = await scan_material(image, content_type)
+        except VisionUnavailable:
+            raise HTTPException(status_code=503, detail="vision providers unavailable")
 
     scan_id = str(uuid4())
     object_path = f"{scan_id}.{content_type.split('/')[-1]}"
     image_url: str | None = object_path
-    try:
-        sb.storage.from_("scans").upload(object_path, image, {"content-type": content_type})
-    except Exception:
-        logger.exception("scan image upload failed; storing scan without image_url")
-        image_url = None
+    if hit:
+        image_url = hit.get("image_url")
+    else:
+        try:
+            sb.storage.from_("scans").upload(object_path, image, {"content-type": content_type})
+        except Exception:
+            logger.exception("scan image upload failed; storing scan without image_url")
+            image_url = None
 
     row = (
         sb.table("scans")
@@ -64,6 +80,7 @@ async def scan(
                 "id": scan_id,
                 "user_id": user_id,
                 "image_url": image_url,
+                "image_hash": image_hash,
                 "material": ident.material.value,
                 "condition": ident.condition,
                 "confidence": ident.confidence,
