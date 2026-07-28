@@ -43,6 +43,7 @@ class Step(BaseModel):
     order: int
     instruction: str
     warning: str | None = None
+    visual_description: str | None = None
 
 
 class Risk(BaseModel):
@@ -81,6 +82,7 @@ class SolutionPackage(BaseModel):
     est_cost_idr: int | None = None
     est_price_idr: int | None = None
     marketing_copy: str | None = None
+    est_time_minutes: int | None = None
     sources: list[str] = []
 
 

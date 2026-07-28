@@ -84,6 +84,7 @@ export interface Step {
   order: number;
   instruction: string;
   warning?: string;
+  visual_description?: string;
 }
 
 export interface Risk {
@@ -99,6 +100,7 @@ export interface SolutionPackage {
   est_cost_idr?: number;
   est_price_idr?: number;
   marketing_copy?: string;
+  est_time_minutes?: number;
   sources: string[];
 }
 
