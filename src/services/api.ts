@@ -23,6 +23,9 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
     throw new Error(error.detail || `API error: ${response.status}`);
   }
 
+  if (response.status === 204) {
+    return undefined as unknown as T;
+  }
   return response.json();
 }
 
@@ -100,7 +103,41 @@ export const apiClient = {
     return request('/impact', { method: 'POST', body: data });
   },
 
+  async register(data: {
+    email: string;
+    password: string;
+    display_name: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    bio?: string | null;
+    phone?: string | null;
+  }) {
+    return request('/auth/register', { method: 'POST', body: data });
+  },
+
+  async login(data: { email: string; password: string }) {
+    return request('/auth/login', { method: 'POST', body: data });
+  },
+
+  async updateProfile(userId: string, data: {
+    display_name?: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    bio?: string | null;
+    phone?: string | null;
+    avatar_url?: string | null;
+  }) {
+    return request(`/auth/profile/${userId}`, { method: 'PATCH', body: data });
+  },
+
   async healthCheck() {
     return request('/health');
+  },
+
+  async deleteScan(scanId: string, token: string) {
+    return request(`/scan/${scanId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
   },
 };

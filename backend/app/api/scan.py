@@ -4,6 +4,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from app.agent.tools.vision import VisionUnavailable, scan_material
+from app.auth import get_current_user
 from app.config import get_settings
 from app.deps import get_optional_user_id, get_supabase
 from app.schemas import Material, ScanResponse
@@ -82,3 +83,22 @@ async def scan(
             material_options=list(Material),
         )
     return ScanResponse(scan_id=row["id"], status="identified", identification=ident)
+
+
+@router.delete("/{scan_id}", status_code=204)
+def delete_scan(
+    scan_id: str,
+    user: dict = Depends(get_current_user),
+    sb: Client = Depends(get_supabase),
+) -> None:
+    res = sb.table("scans").select("*").eq("id", scan_id).execute()
+    row = next((r for r in (res.data or []) if str(r.get("id")) == scan_id), None)
+    # UU PDP: return 404 (not 403) for non-owners to avoid leaking scan existence.
+    if not row or row.get("user_id") != user["user_id"]:
+        raise HTTPException(status_code=404, detail="scan not found")
+    if row.get("image_url"):
+        try:
+            sb.storage.from_("scans").remove([row["image_url"]])
+        except Exception:
+            logger.exception("failed to remove scan image %s", row["image_url"])
+    sb.table("scans").delete().eq("id", scan_id).execute()
