@@ -96,6 +96,10 @@ export const apiClient = {
     return request(`/selling/${skillId}`);
   },
 
+  async logImpact(data: { skill_id?: string; material: string; waste_kg: number; est_value_idr: number }) {
+    return request('/impact', { method: 'POST', body: data });
+  },
+
   async healthCheck() {
     return request('/health');
   },
