@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import ingest, recommend, scan, skills
+from app.auth import get_current_user
 from app.config import get_settings
 
 app = FastAPI(title="WASTEX AI Pipeline", version="0.1.0")
@@ -25,3 +26,8 @@ app.include_router(ingest.router, prefix="/ingest", tags=["ingest"])
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/me")
+def get_me(user: dict = Depends(get_current_user)) -> dict:
+    return user
