@@ -12,6 +12,9 @@ from supabase import Client
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"]
+
 
 @router.post("", response_model=ScanResponse)
 async def scan(
@@ -19,7 +22,23 @@ async def scan(
     user_id: str | None = Depends(get_optional_user_id),
     sb: Client = Depends(get_supabase),
 ) -> ScanResponse:
+    # Validate file type
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported file type: {file.content_type}. Use JPEG, PNG, or HEIC.",
+        )
+
+    # Read file content
     image = await file.read()
+
+    # Validate file size
+    if len(image) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large: {len(image)} bytes. Maximum is 10MB.",
+        )
+
     if not image:
         raise HTTPException(status_code=400, detail="empty image")
     content_type = file.content_type or "image/jpeg"
