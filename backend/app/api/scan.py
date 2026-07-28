@@ -1,3 +1,6 @@
+import logging
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from app.agent.tools.vision import VisionUnavailable, scan_material
@@ -7,6 +10,7 @@ from app.schemas import Material, ScanResponse
 from supabase import Client
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("", response_model=ScanResponse)
@@ -18,17 +22,28 @@ async def scan(
     image = await file.read()
     if not image:
         raise HTTPException(status_code=400, detail="empty image")
+    content_type = file.content_type or "image/jpeg"
     try:
-        ident = await scan_material(image, file.content_type or "image/jpeg")
+        ident = await scan_material(image, content_type)
     except VisionUnavailable:
         raise HTTPException(status_code=503, detail="vision providers unavailable")
 
-    # TODO(spec §10): upload image to Supabase Storage and store image_url.
+    scan_id = str(uuid4())
+    object_path = f"{scan_id}.{content_type.split('/')[-1]}"
+    image_url: str | None = object_path
+    try:
+        sb.storage.from_("scans").upload(object_path, image, {"content-type": content_type})
+    except Exception:
+        logger.exception("scan image upload failed; storing scan without image_url")
+        image_url = None
+
     row = (
         sb.table("scans")
         .insert(
             {
+                "id": scan_id,
                 "user_id": user_id,
+                "image_url": image_url,
                 "material": ident.material.value,
                 "condition": ident.condition,
                 "confidence": ident.confidence,
