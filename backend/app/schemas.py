@@ -125,9 +125,6 @@ class SellingKit(BaseModel):
     hashtags: list[str] = []
 
 
-from uuid import UUID
-
-
 class UserProfileCreate(BaseModel):
     auth_user_id: UUID = Field(..., description="UUID from auth.users")
     display_name: str = Field(..., min_length=1, max_length=64)
@@ -199,3 +196,7 @@ class ImpactSummary(BaseModel):
     total_projects: int
     total_waste_kg: float
     total_value_idr: int
+
+
+class SkillFlagIn(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
