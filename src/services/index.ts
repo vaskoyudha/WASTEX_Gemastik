@@ -10,6 +10,12 @@ import {
   PricingEstimate,
   SellingKit,
   MaterialType,
+  Difficulty,
+  BackendDifficulty,
+  BackendScanResult,
+  BackendTutorial,
+  BackendPricing,
+  Skill,
 } from "./types";
 import {
   MOCK_SCAN_RESULTS,
@@ -18,6 +24,7 @@ import {
   MOCK_PRICING,
   MOCK_SELLING,
 } from "../mocks/mockData";
+import { apiClient } from "./api";
 
 class MockScanner implements WasteScannerService {
   async scan(_imageUri: string): Promise<ScanResult> {
@@ -82,11 +89,109 @@ class MockSelling implements SellingAssistantService {
   }
 }
 
-export const USE_MOCK = true;
+const DIFFICULTY_MAP: Record<BackendDifficulty, Difficulty> = {
+  pemula: "mudah",
+  menengah: "sedang",
+  mahir: "sulit",
+};
 
-export const scanner: WasteScannerService = new MockScanner();
-export const recommendation: RecommendationService = new MockRecommendation();
-export const tutorial: TutorialService = new MockTutorial();
-export const pricing: PricingService = new MockPricing();
+function skillToProduct(skill: Skill): ProductRecommendation {
+  return {
+    id: skill.id,
+    name: skill.title,
+    thumbnailUri: "",
+    difficulty: DIFFICULTY_MAP[skill.difficulty] ?? "sedang",
+    estimatedCost: skill.est_cost_idr ?? 0,
+    estimatedTimeMinutes: (skill.steps?.length ?? 0) * 10 || 30,
+    shortDescription: skill.description ?? "",
+  };
+}
+
+class ApiScanner implements WasteScannerService {
+  async scan(imageUri: string): Promise<ScanResult> {
+    const result = (await apiClient.scan(imageUri)) as BackendScanResult;
+    const material =
+      result.identification?.material ?? result.material_options?.[0] ?? "plastik_pet";
+    const base = MOCK_SCAN_RESULTS[material] || MOCK_SCAN_RESULTS.plastik_pet;
+    return {
+      ...base,
+      condition: result.identification?.condition ?? base.condition,
+      confidence: result.identification?.confidence ?? 0,
+    };
+  }
+
+  async getMaterialInfo(materialType: MaterialType): Promise<ScanResult> {
+    return MOCK_SCAN_RESULTS[materialType] || MOCK_SCAN_RESULTS.plastik_pet;
+  }
+}
+
+class ApiRecommendation implements RecommendationService {
+  async getRecommendations(material: ScanResult): Promise<ProductRecommendation[]> {
+    const skills = (await apiClient.getProducts()) as Skill[];
+    const matching = skills.filter((s) => s.material === material.materialType);
+    return (matching.length > 0 ? matching : skills).map(skillToProduct);
+  }
+
+  async getProductById(productId: string): Promise<ProductRecommendation | null> {
+    try {
+      const skill = (await apiClient.getProduct(productId)) as Skill;
+      return skillToProduct(skill);
+    } catch {
+      return null;
+    }
+  }
+
+  async getAllProducts(): Promise<ProductRecommendation[]> {
+    const skills = (await apiClient.getProducts()) as Skill[];
+    return skills.map(skillToProduct);
+  }
+}
+
+class ApiTutorial implements TutorialService {
+  async getTutorial(productId: string): Promise<ProductTutorial> {
+    const t = (await apiClient.getTutorial(productId)) as BackendTutorial;
+    return {
+      productId: t.skill_id,
+      steps: t.steps.map((step) => ({
+        order: step.order,
+        title: `Langkah ${step.order}`,
+        description: step.instruction,
+        imageUri: "",
+        safetyWarning: step.warning ?? undefined,
+      })),
+      beforeImageUri: "",
+      afterImageUri: "",
+      mockupImageUri: "",
+      toolsAndMaterials: [...(t.materials ?? []), ...(t.tools ?? [])],
+    };
+  }
+}
+
+class ApiPricing implements PricingService {
+  async estimatePrice(productId: string): Promise<PricingEstimate> {
+    const p = (await apiClient.getPricing(productId)) as BackendPricing;
+    return {
+      productId: p.skill_id,
+      materialCost: p.material_cost,
+      additionalCost: p.labor_cost,
+      suggestedSellPrice: p.suggested_price,
+      estimatedProfit: p.suggested_price - p.total_cost,
+      priceRangeLow: Math.round((p.suggested_price * 0.9) / 1000) * 1000,
+      priceRangeHigh: Math.round((p.suggested_price * 1.1) / 1000) * 1000,
+      notes: `Margin ${Math.round(p.profit_margin * 100)}% dari total biaya.`,
+    };
+  }
+}
+
+// Set EXPO_PUBLIC_USE_MOCK=false to call the real backend API.
+export const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK !== "false";
+
+export const scanner: WasteScannerService = USE_MOCK ? new MockScanner() : new ApiScanner();
+export const recommendation: RecommendationService = USE_MOCK
+  ? new MockRecommendation()
+  : new ApiRecommendation();
+export const tutorial: TutorialService = USE_MOCK ? new MockTutorial() : new ApiTutorial();
+export const pricing: PricingService = USE_MOCK ? new MockPricing() : new ApiPricing();
+// No backend selling-kit endpoint yet; kit content stays local.
 export const selling: SellingAssistantService = new MockSelling();
 export { impact } from "./impact";

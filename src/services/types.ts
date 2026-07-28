@@ -201,6 +201,8 @@ export interface Skill {
   tools: string[];
   steps: Step[];
   risks: Risk[];
+  est_cost_idr?: number;
+  est_price_idr?: number;
   status: SkillStatus;
   author_id?: string;
   created_at: string;

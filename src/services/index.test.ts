@@ -24,7 +24,7 @@ const ALL_MATERIALS: MaterialType[] = [
 ];
 
 describe("service registry integration (USE_MOCK)", () => {
-  it("runs against mock services in this phase", () => {
+  it("defaults to mock services unless EXPO_PUBLIC_USE_MOCK=false", () => {
     expect(USE_MOCK).toBe(true);
   });
 
