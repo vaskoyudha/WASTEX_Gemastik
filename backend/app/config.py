@@ -29,6 +29,8 @@ class Settings(BaseSettings):
         "exp://localhost:19000",  # Expo Go
     ]
 
+    supabase_jwt_secret: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:
