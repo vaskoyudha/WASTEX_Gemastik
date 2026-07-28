@@ -1,5 +1,9 @@
+import time
+from collections import defaultdict
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api import ingest, pricing, products, recommend, scan, selling, skills, tutorial
 from app.auth import get_current_user
@@ -16,6 +20,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Simple in-memory rate limiter (per-IP sliding window)
+request_counts: dict[str, list[float]] = defaultdict(list)
+RATE_LIMIT = 60  # requests per window
+RATE_WINDOW = 60  # seconds
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request, call_next):
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+
+    request_counts[client_ip] = [t for t in request_counts[client_ip] if now - t < RATE_WINDOW]
+
+    if len(request_counts[client_ip]) >= RATE_LIMIT:
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded. Try again later."},
+        )
+
+    request_counts[client_ip].append(now)
+    return await call_next(request)
+
 
 app.include_router(scan.router, prefix="/scan", tags=["scan"])
 app.include_router(recommend.router, prefix="/recommend", tags=["recommend"])

@@ -71,6 +71,31 @@ export const apiClient = {
     return request(`/skills/${id}/status`, { method: 'PATCH', body: data });
   },
 
+  async getProducts(params?: { limit?: number; offset?: number }) {
+    const query = params
+      ? `?${new URLSearchParams(
+          Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
+        )}`
+      : '';
+    return request(`/products${query}`);
+  },
+
+  async getProduct(id: string) {
+    return request(`/products/${id}`);
+  },
+
+  async getTutorial(skillId: string) {
+    return request(`/tutorial/${skillId}`);
+  },
+
+  async getPricing(skillId: string) {
+    return request(`/pricing/${skillId}`);
+  },
+
+  async getMarketplace() {
+    return request('/selling');
+  },
+
   async healthCheck() {
     return request('/health');
   },
