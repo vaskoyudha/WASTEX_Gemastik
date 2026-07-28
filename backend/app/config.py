@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     retrieval_top_k: int = 20
     rerank_top_k: int = 5
 
+    cors_origins: list[str] = [
+        "http://localhost:8081",  # Expo dev server
+        "http://localhost:19006", # Expo web
+        "exp://localhost:19000",  # Expo Go
+    ]
+
 
 @lru_cache
 def get_settings() -> Settings:
