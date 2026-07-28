@@ -11,12 +11,25 @@ export type RiskLevel = "aman" | "hati_hati" | "berisiko";
 
 export type Difficulty = "mudah" | "sedang" | "sulit";
 
+// ---- Backend-aligned types (for API integration) ----
+export type BackendMaterial =
+  | 'plastik_pet'
+  | 'plastik_hdpe'
+  | 'kardus'
+  | 'kaleng'
+  | 'kaca'
+  | 'sachet';
+
+export type BackendDifficulty = 'pemula' | 'menengah' | 'mahir';
+
+export type SkillStatus = 'draft' | 'approved' | 'rejected' | 'needs_revision';
+
 // ---- Scanner ----
 export interface ScanResult {
   materialType: MaterialType;
   materialLabel: string;
   condition: string;
-  confidence: number; // 0–1; <0.7 triggers manual correction
+  confidence: number;
   riskLevel: RiskLevel;
   difficulty?: Difficulty;
   potentialValue?: "rendah" | "sedang" | "tinggi";
@@ -27,6 +40,21 @@ export interface ScanResult {
 export interface WasteScannerService {
   scan(imageUri: string): Promise<ScanResult>;
   getMaterialInfo(materialType: MaterialType): Promise<ScanResult>;
+}
+
+// ---- Backend Scanner ----
+export interface MaterialIdentification {
+  material: BackendMaterial;
+  condition: string;
+  confidence: number;
+}
+
+export interface BackendScanResult {
+  scan_id: string;
+  status: 'identified' | 'needs_manual_verification';
+  identification?: MaterialIdentification;
+  material_options?: BackendMaterial[];
+  imageUri?: string;
 }
 
 // ---- Recommendation ----
@@ -44,6 +72,34 @@ export interface RecommendationService {
   getRecommendations(material: ScanResult): Promise<ProductRecommendation[]>;
   getProductById(productId: string): Promise<ProductRecommendation | null>;
   getAllProducts(): Promise<ProductRecommendation[]>;
+}
+
+// ---- Backend Recommendation ----
+export interface ToolItem {
+  name: string;
+  optional: boolean;
+}
+
+export interface Step {
+  order: number;
+  instruction: string;
+  warning?: string;
+}
+
+export interface Risk {
+  hazard: string;
+  mitigation: string;
+}
+
+export interface SolutionPackage {
+  recommendation: string;
+  steps: Step[];
+  tools: ToolItem[];
+  risks: Risk[];
+  est_cost_idr?: number;
+  est_price_idr?: number;
+  marketing_copy?: string;
+  sources: string[];
 }
 
 // ---- Tutorial ----
@@ -68,6 +124,18 @@ export interface TutorialService {
   getTutorial(productId: string): Promise<ProductTutorial>;
 }
 
+// ---- Backend Tutorial ----
+export interface BackendTutorial {
+  skill_id: string;
+  title: string;
+  description: string;
+  difficulty: BackendDifficulty;
+  materials: string[];
+  tools: string[];
+  steps: Step[];
+  estimated_time: string;
+}
+
 // ---- Pricing ----
 export interface PricingEstimate {
   productId: string;
@@ -84,6 +152,18 @@ export interface PricingService {
   estimatePrice(productId: string): Promise<PricingEstimate>;
 }
 
+// ---- Backend Pricing ----
+export interface BackendPricing {
+  skill_id: string;
+  title: string;
+  material_cost: number;
+  labor_cost: number;
+  total_cost: number;
+  profit_margin: number;
+  suggested_price: number;
+  currency: string;
+}
+
 // ---- Selling ----
 export interface SellingKit {
   productId: string;
@@ -98,10 +178,39 @@ export interface SellingAssistantService {
   getSellingKit(productId: string): Promise<SellingKit>;
 }
 
+// ---- Backend Marketplace ----
+export interface MarketplaceItem {
+  id: string;
+  skill_id: string;
+  title: string;
+  description: string;
+  price: number;
+  seller_id: string;
+  status: 'available' | 'sold' | 'reserved';
+  created_at: string;
+}
+
+// ---- Backend Skills ----
+export interface Skill {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: BackendDifficulty;
+  material: BackendMaterial;
+  materials: string[];
+  tools: string[];
+  steps: Step[];
+  risks: Risk[];
+  status: SkillStatus;
+  author_id?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 // ---- Impact / History (local) ----
 export interface SavedProject {
   id: string;
-  savedAt: string; // ISO date
+  savedAt: string;
   material: ScanResult;
   product: ProductRecommendation;
   photoUri: string;
