@@ -92,8 +92,8 @@ export const apiClient = {
     return request(`/pricing/${skillId}`);
   },
 
-  async getMarketplace() {
-    return request('/selling');
+  async getSellingKit(skillId: string) {
+    return request(`/selling/${skillId}`);
   },
 
   async healthCheck() {

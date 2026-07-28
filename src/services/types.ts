@@ -102,6 +102,31 @@ export interface SolutionPackage {
   sources: string[];
 }
 
+// ---- Selling ----
+export interface SellingKit {
+  productId: string;
+  productName: string;
+  description: string;
+  captions: string[];
+  photoTips: string[];
+  packagingIdeas: string[];
+}
+
+export interface SellingAssistantService {
+  getSellingKit(productId: string): Promise<SellingKit>;
+}
+
+// ---- Backend Selling ----
+export interface BackendSellingKit {
+  skill_id: string;
+  product_name: string;
+  description: string;
+  captions: string[];
+  photo_tips: string[];
+  packaging_ideas: string[];
+  hashtags: string[];
+}
+
 // ---- Tutorial ----
 export interface TutorialStep {
   order: number;
@@ -162,32 +187,6 @@ export interface BackendPricing {
   profit_margin: number;
   suggested_price: number;
   currency: string;
-}
-
-// ---- Selling ----
-export interface SellingKit {
-  productId: string;
-  productName: string;
-  description: string;
-  captions: string[];
-  photoTips: string[];
-  packagingIdeas: string[];
-}
-
-export interface SellingAssistantService {
-  getSellingKit(productId: string): Promise<SellingKit>;
-}
-
-// ---- Backend Marketplace ----
-export interface MarketplaceItem {
-  id: string;
-  skill_id: string;
-  title: string;
-  description: string;
-  price: number;
-  seller_id: string;
-  status: 'available' | 'sold' | 'reserved';
-  created_at: string;
 }
 
 // ---- Backend Skills ----
