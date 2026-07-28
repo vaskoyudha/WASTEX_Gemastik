@@ -5,7 +5,18 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import ingest, pricing, products, recommend, scan, selling, skills, tutorial
+from app.api import (
+    ingest,
+    pricing,
+    products,
+    recommend,
+    scan,
+    selling,
+    skills,
+    tutorial,
+    visuals,
+    auth,
+)
 from app.auth import get_current_user
 from app.config import get_settings
 
@@ -52,6 +63,7 @@ app.include_router(products.router, prefix="/products", tags=["products"])
 app.include_router(tutorial.router, prefix="/tutorial", tags=["tutorial"])
 app.include_router(pricing.router, prefix="/pricing", tags=["pricing"])
 app.include_router(selling.router, prefix="/selling", tags=["selling"])
+app.include_router(visuals.router, prefix="/visuals", tags=["visuals"])
 
 
 @app.get("/health")
