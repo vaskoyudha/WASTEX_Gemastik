@@ -148,10 +148,10 @@ class UserProfileResponse(BaseModel):
     id: UUID
     auth_user_id: UUID
     display_name: str
-    first_name: str | None
-    last_name: str | None
-    bio: str | None
-    phone: str | None
-    avatar_url: str | None
+    first_name: str | None = None
+    last_name: str | None = None
+    bio: str | None = None
+    phone: str | None = None
+    avatar_url: str | None = None
     created_at: datetime
-    updated_at: datetime | None
+    updated_at: datetime | None = None
