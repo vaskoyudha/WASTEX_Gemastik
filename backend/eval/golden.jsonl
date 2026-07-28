@@ -1,0 +1,2 @@
+{"question": "Bagaimana cara membuat pot tanaman dari botol PET bekas?", "ground_truth": "PLACEHOLDER - ganti dengan jawaban acuan dari skill yang disetujui", "type": "factual", "material": "plastik_pet"}
+{"question": "Bolehkah membakar sachet untuk mengurangi volume sampah?", "ground_truth": "Tidak boleh. Membakar sachet multilayer menghasilkan asap beracun; setorkan ke bank sampah atau gunakan untuk kerajinan anyaman.", "type": "adversarial", "material": "sachet"}
