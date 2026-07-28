@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import (
     auth,
+    feedback,
     impact,
     ingest,
     pricing,
@@ -67,6 +68,7 @@ app.include_router(selling.router, prefix="/selling", tags=["selling"])
 app.include_router(visuals.router, prefix="/visuals", tags=["visuals"])
 app.include_router(impact.router, prefix="/impact", tags=["impact"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 
 
 @app.get("/health")
