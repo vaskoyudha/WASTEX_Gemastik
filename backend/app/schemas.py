@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Literal
 from uuid import UUID
@@ -122,7 +123,7 @@ class SellingKit(BaseModel):
     hashtags: list[str] = []
 
 
-from datetime import datetime
+from uuid import UUID
 
 
 class UserProfileCreate(BaseModel):
@@ -155,3 +156,44 @@ class UserProfileResponse(BaseModel):
     avatar_url: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
+
+
+# Auth DTOs
+class RegisterRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+    password: str = Field(..., min_length=8)
+    display_name: str = Field(..., min_length=1, max_length=64)
+    first_name: str | None = Field(None, max_length=64)
+    last_name: str | None = Field(None, max_length=64)
+    bio: str | None = Field(None, max_length=500)
+    phone: str | None = Field(None, max_length=24)
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class AuthRegisterResponse(BaseModel):
+    access_token: str
+    user_id: str
+    profile: UserProfileResponse
+
+
+class AuthLoginResponse(BaseModel):
+    access_token: str
+    user_id: str
+    profile: UserProfileResponse
+
+
+class ImpactEventIn(BaseModel):
+    skill_id: UUID | None = None
+    material: Material
+    waste_kg: float = Field(ge=0)
+    est_value_idr: int = Field(ge=0)
+
+
+class ImpactSummary(BaseModel):
+    total_projects: int
+    total_waste_kg: float
+    total_value_idr: int
