@@ -232,3 +232,50 @@ export interface ImpactService {
   deleteProject(id: string): Promise<void>;
   clearAll(): Promise<void>;
 }
+
+// ---- Auth ----
+export interface User {
+  id: string;
+  email: string;
+  accessToken: string | null;
+  profile: UserProfile | null;
+}
+
+export interface UserProfile {
+  id: string;
+  authUserId: string;
+  displayName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
+export interface UpdateProfileRequest {
+  displayName?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface AuthResult {
+  accessToken: string;
+  userId: string;
+  profile: UserProfile;
+}
+
+export interface AuthService {
+  signUp(email: string, password: string, displayName: string, data?: UpdateProfileRequest): Promise<AuthResult>;
+  signIn(email: string, password: string): Promise<AuthResult>;
+  signOut(): Promise<void>;
+  getUser(): User | null;
+  isLoggedIn(): boolean;
+  getAccessToken(): string | null;
+  updateProfile(data: UpdateProfileRequest): Promise<UserProfile>;
+  deleteAccount(): Promise<void>;
+}
