@@ -200,3 +200,10 @@ class ImpactSummary(BaseModel):
 
 class SkillFlagIn(BaseModel):
     reason: str = Field(min_length=3, max_length=500)
+
+
+class FeedbackIn(BaseModel):
+    agent_run_id: UUID | None = None
+    rating: int = Field(ge=1, le=5)
+    flag_inaccurate: bool = False
+    comment: str | None = Field(default=None, max_length=1000)
