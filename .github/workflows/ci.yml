@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5"
+      - run: uv python install 3.12
+      - run: uv sync --group dev
+      - name: Ruff check
+        run: uv run ruff check backend/
+      - name: Ruff format check
+        run: uv run ruff format --check backend/
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5"
+      - run: uv python install 3.12
+      - run: uv sync --group dev
+      - name: Pytest
+        run: uv run pytest backend/tests/ -v --tb=short
+        env:
+          OPENROUTER_API_KEY: test
+          DEEPINFRA_API_KEY: test
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_KEY: test-service-key
