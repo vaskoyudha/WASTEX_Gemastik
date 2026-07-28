@@ -49,3 +49,4 @@ yarn-error.*
 
 # large proposal documents (kept locally, not in repo)
 *.docx
+.superpowers/
