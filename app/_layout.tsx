@@ -2,6 +2,7 @@ import "../global.css";
 import { Stack } from "expo-router";
 import { View, ActivityIndicator, Text } from "react-native";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
 
 // Apply Inter as the app-wide default font family for all RN Text.
 // Weight utilities (font-bold, dll.) tetap bekerja — Android mensintesis bold dari family dasar.
@@ -26,27 +27,29 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: "#ffffff" },
-      }}
-    >
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="scan/upload" />
-      <Stack.Screen name="scan/hasil" />
-      <Stack.Screen name="scan/rekomendasi" />
-      <Stack.Screen name="product/[id]/index" />
-      <Stack.Screen name="product/[id]/tutorial" />
-      <Stack.Screen name="product/[id]/before-after" />
-      <Stack.Screen name="product/[id]/mockup" />
-      <Stack.Screen name="product/[id]/pricing" />
-      <Stack.Screen name="product/[id]/selling" />
-      <Stack.Screen name="expert-dashboard" />
-      <Stack.Screen name="notifications" />
-      <Stack.Screen name="materials" />
-      <Stack.Screen name="ideas" />
-      <Stack.Screen name="achievements" />
-    </Stack>
+    <ErrorBoundary>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "#ffffff" },
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="scan/upload" />
+        <Stack.Screen name="scan/hasil" />
+        <Stack.Screen name="scan/rekomendasi" />
+        <Stack.Screen name="product/[id]/index" />
+        <Stack.Screen name="product/[id]/tutorial" />
+        <Stack.Screen name="product/[id]/before-after" />
+        <Stack.Screen name="product/[id]/mockup" />
+        <Stack.Screen name="product/[id]/pricing" />
+        <Stack.Screen name="product/[id]/selling" />
+        <Stack.Screen name="expert-dashboard" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="materials" />
+        <Stack.Screen name="ideas" />
+        <Stack.Screen name="achievements" />
+      </Stack>
+    </ErrorBoundary>
   );
 }
