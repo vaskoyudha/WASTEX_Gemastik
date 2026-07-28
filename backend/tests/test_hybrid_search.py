@@ -53,9 +53,9 @@ def seeded(db):
         cur.execute(
             "insert into skill_chunks (skill_id, content, embedding, metadata) values "
             "(%s, 'cara membuat pot tanaman dari botol plastik bekas', %s::vector,"
-            " '{\"material\": \"plastik_pet\"}'),"
+            ' \'{"material": "plastik_pet"}\'),'
             "(%s, 'melipat kardus bekas menjadi rak buku sederhana', %s::vector,"
-            " '{\"material\": \"kardus\"}')",
+            ' \'{"material": "kardus"}\')',
             (skill_id, vec(0), skill_id, vec(1)),
         )
     return skill_id

@@ -63,9 +63,7 @@ def seed():
 
     for skill in SEED_SKILLS:
         # Check if already exists
-        existing = (
-            supabase.table("skills").select("id").eq("title", skill["title"]).execute()
-        )
+        existing = supabase.table("skills").select("id").eq("title", skill["title"]).execute()
 
         if existing.data:
             print(f"Skip (exists): {skill['title']}")

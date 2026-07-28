@@ -1,8 +1,10 @@
 import "../global.css";
 import { Stack } from "expo-router";
+import { useEffect } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
+import { seedDemoDataIfNeeded } from "../src/services/demoSeed";
 
 // Apply Inter as the app-wide default font family for all RN Text.
 // Weight utilities (font-bold, dll.) tetap bekerja — Android mensintesis bold dari family dasar.
@@ -17,6 +19,10 @@ export default function RootLayout() {
     Inter_700Bold,
     Inter_800ExtraBold,
   });
+
+  useEffect(() => {
+    seedDemoDataIfNeeded();
+  }, []);
 
   if (!fontsLoaded) {
     return (
@@ -35,6 +41,8 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(tabs)/login" />
+        <Stack.Screen name="(tabs)/register" />
         <Stack.Screen name="scan/upload" />
         <Stack.Screen name="scan/hasil" />
         <Stack.Screen name="scan/rekomendasi" />

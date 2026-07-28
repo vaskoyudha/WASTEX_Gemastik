@@ -7,6 +7,34 @@ import {
   MaterialType,
 } from "../services/types";
 
+// Verified Unsplash photo ids (all return 200 + correct subject matter).
+const img = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=500&auto=format&fit=crop&q=60`;
+
+const IMG = {
+  wastePet: img("1571727153934-b9e0059b7ab2"), // pile of plastic bottles
+  wasteCaps: img("1536939459926-301728717817"), // plastic bottle caps
+  pot: img("1485955900006-10f4d324d411"), // succulent in mint pot
+  plantMonstera: img("1545241047-6083a3684587"),
+  plantAloe: img("1509423350716-97f9360b4e09"),
+  plantCactus: img("1524594152303-9fd13543fe6e"),
+  bottleVase: img("1602143407151-7111542de6e8"), // green bottle / vase
+  scoop: img("1416879595882-3373a0480b5b"), // scoop in soil
+  organizer: img("1456735190827-d1262f71b8a3"), // desk organizer with pens
+  kraftBox: img("1607166452427-7e4477079cb9"),
+  lampPendant: img("1513506003901-1e6a229e2d15"), // lit pendant lamp
+  lampDesk: img("1507473885765-e6ed057f782c"),
+  tote: img("1544816155-12df9643f363"), // kraft tote bag
+  handbag: img("1590874103328-eac38a683ce7"),
+  soapKraft: img("1584305574647-0cc949a2bb9f"), // kraft-wrapped packaging
+  paintBrush: img("1503792501406-2c40da09e1e2"),
+  paintRoller: img("1521334884684-d80222895322"),
+  shelfPlants: img("1513364776144-60967b0f800f"),
+  drill: img("1504148455328-c376907d081c"),
+  sprayClean: img("1562259949-e8e7689d7828"), // spray bottle + gloves
+  whiteBottle: img("1556228578-8c89e6adf883"),
+};
+
 export const MOCK_SCAN_RESULTS: Record<MaterialType, ScanResult> = {
   plastik_pet: {
     materialType: "plastik_pet",
@@ -100,7 +128,7 @@ export const MOCK_RECOMMENDATIONS: Record<MaterialType, ProductRecommendation[]>
     {
       id: "prod_pet_1",
       name: "Pot Tanaman Gantung",
-      thumbnailUri: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&auto=format&fit=crop&q=60",
+      thumbnailUri: IMG.pot,
       difficulty: "mudah",
       estimatedCost: 12000,
       estimatedTimeMinutes: 45,
@@ -109,7 +137,7 @@ export const MOCK_RECOMMENDATIONS: Record<MaterialType, ProductRecommendation[]>
     {
       id: "prod_pet_2",
       name: "Vas Bunga Dekoratif Tali Rami",
-      thumbnailUri: "https://images.unsplash.com/photo-1581783342605-292605fa659a?w=500&auto=format&fit=crop&q=60",
+      thumbnailUri: IMG.bottleVase,
       difficulty: "mudah",
       estimatedCost: 5000,
       estimatedTimeMinutes: 25,
@@ -120,7 +148,7 @@ export const MOCK_RECOMMENDATIONS: Record<MaterialType, ProductRecommendation[]>
     {
       id: "prod_hdpe_1",
       name: "Sudu / Sendok Takar Tanaman",
-      thumbnailUri: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=500&auto=format&fit=crop&q=60",
+      thumbnailUri: IMG.scoop,
       difficulty: "sedang",
       estimatedCost: 1000,
       estimatedTimeMinutes: 20,
@@ -131,7 +159,7 @@ export const MOCK_RECOMMENDATIONS: Record<MaterialType, ProductRecommendation[]>
     {
       id: "prod_kardus_1",
       name: "Organizer Meja Multifungsi",
-      thumbnailUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60",
+      thumbnailUri: IMG.organizer,
       difficulty: "sedang",
       estimatedCost: 4000,
       estimatedTimeMinutes: 45,
@@ -142,7 +170,7 @@ export const MOCK_RECOMMENDATIONS: Record<MaterialType, ProductRecommendation[]>
     {
       id: "prod_kaleng_1",
       name: "Lampu Hias Perforasi Kaleng",
-      thumbnailUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60",
+      thumbnailUri: IMG.lampPendant,
       difficulty: "sedang",
       estimatedCost: 6000,
       estimatedTimeMinutes: 40,
@@ -153,7 +181,7 @@ export const MOCK_RECOMMENDATIONS: Record<MaterialType, ProductRecommendation[]>
     {
       id: "prod_kaca_1",
       name: "Lampu Hias Botol LED Rustic",
-      thumbnailUri: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60",
+      thumbnailUri: IMG.lampDesk,
       difficulty: "mudah",
       estimatedCost: 15000,
       estimatedTimeMinutes: 15,
@@ -164,7 +192,7 @@ export const MOCK_RECOMMENDATIONS: Record<MaterialType, ProductRecommendation[]>
     {
       id: "prod_sachet_1",
       name: "Dompet Lipat Anyaman Sachet",
-      thumbnailUri: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60",
+      thumbnailUri: IMG.handbag,
       difficulty: "sulit",
       estimatedCost: 3000,
       estimatedTimeMinutes: 90,
@@ -183,47 +211,47 @@ export const MOCK_TUTORIALS: Record<string, ProductTutorial> = {
       "Tali gantung / Tali rami",
       "Tanaman hias & media tanam",
     ],
-    beforeImageUri: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=500&auto=format&fit=crop&q=60",
-    afterImageUri: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&auto=format&fit=crop&q=60",
-    mockupImageUri: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&auto=format&fit=crop&q=60",
+    beforeImageUri: IMG.wastePet,
+    afterImageUri: IMG.pot,
+    mockupImageUri: IMG.pot,
     steps: [
       {
         order: 1,
         title: "Pembersihan & Pelepasan Label",
         description: "Cuci bersih botol plastik dengan sabun dan air mengalir. Lepaskan seluruh stiker label merk agar permukaan bersih.",
-        imageUri: "https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=500&auto=format&fit=crop&q=60",
+        imageUri: IMG.sprayClean,
       },
       {
         order: 2,
         title: "Pembuatan Pola Potongan",
         description: "Gunakan spidol untuk membuat garis potong melingkar di 3/4 bagian bawah botol, atau buat bentuk telinga hewan yang lucu.",
-        imageUri: "https://images.unsplash.com/photo-1581783342605-292605fa659a?w=500&auto=format&fit=crop&q=60",
+        imageUri: IMG.wasteCaps,
         safetyWarning: "Hati-hati saat menggunakan cutter/gunting tajam untuk melubangi awal botol.",
       },
       {
         order: 3,
         title: "Pemotongan Sesuai Pola",
         description: "Potong botol perlahan mengikuti garis pola yang telah dibuat. Rapikan bagian tepi yang tajam dengan amplas halus.",
-        imageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60",
+        imageUri: IMG.drill,
       },
       {
         order: 4,
         title: "Pembuatan Lubang Drainase",
         description: "Buat 2-3 lubang kecil di bagian bawah botol menggunakan paku panas agar air siraman tanaman tidak menggenang.",
-        imageUri: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=500&auto=format&fit=crop&q=60",
+        imageUri: IMG.whiteBottle,
         safetyWarning: "Gunakan penjepit saat memanaskan paku agar tidak terkena luka bakar.",
       },
       {
         order: 5,
         title: "Pengecatan & Dekorasi",
         description: "Warnai bagian luar pot dengan cat akrilik atau cat semprot sesuai selera. Biarkan hingga kering sempurna (± 2 jam).",
-        imageUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60",
+        imageUri: IMG.paintBrush,
       },
       {
         order: 6,
         title: "Pemasangan Tali & Penanaman",
         description: "Ikatkan tali gantung pada sisi kiri dan kanan botol. Masukkan media tanam dan tanaman hias kesayangan Anda.",
-        imageUri: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&auto=format&fit=crop&q=60",
+        imageUri: IMG.pot,
       },
     ],
   },
@@ -236,77 +264,77 @@ export const MOCK_TUTORIALS: Record<string, ProductTutorial> = {
       "Gunting tajam",
       "Bunga kering atau bunga plastik",
     ],
-    beforeImageUri: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=500&auto=format&fit=crop&q=60",
-    afterImageUri: "https://images.unsplash.com/photo-1581783342605-292605fa659a?w=500&auto=format&fit=crop&q=60",
-    mockupImageUri: "https://images.unsplash.com/photo-1581783342605-292605fa659a?w=500&auto=format&fit=crop&q=60",
+    beforeImageUri: IMG.wastePet,
+    afterImageUri: IMG.bottleVase,
+    mockupImageUri: IMG.bottleVase,
     steps: [
-      { order: 1, title: "Bersihkan Botol", description: "Cuci botol, lepaskan label, lalu keringkan sampai permukaan siap ditempel.", imageUri: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=500&auto=format&fit=crop&q=60" },
-      { order: 2, title: "Potong Bagian Atas", description: "Potong mulut botol sesuai tinggi vas yang diinginkan dan rapikan tepinya.", imageUri: "https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=500&auto=format&fit=crop&q=60", safetyWarning: "Gunakan gunting tajam dengan hati-hati dan jauhkan tangan dari jalur potong." },
-      { order: 3, title: "Lilit Tali Rami", description: "Tempel tali rami dari bawah ke atas dengan lem tembak agar tampilan vas lebih rapi.", imageUri: "https://images.unsplash.com/photo-1581783342605-292605fa659a?w=500&auto=format&fit=crop&q=60", safetyWarning: "Lem tembak panas dapat menyebabkan luka bakar, gunakan alat bantu saat menekan tali." },
-      { order: 4, title: "Tambahkan Dekorasi", description: "Tambahkan pita, label kecil, atau bunga kering untuk memperkuat nilai jual.", imageUri: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&auto=format&fit=crop&q=60" },
+      { order: 1, title: "Bersihkan Botol", description: "Cuci botol, lepaskan label, lalu keringkan sampai permukaan siap ditempel.", imageUri: IMG.sprayClean },
+      { order: 2, title: "Potong Bagian Atas", description: "Potong mulut botol sesuai tinggi vas yang diinginkan dan rapikan tepinya.", imageUri: IMG.drill, safetyWarning: "Gunakan gunting tajam dengan hati-hati dan jauhkan tangan dari jalur potong." },
+      { order: 3, title: "Lilit Tali Rami", description: "Tempel tali rami dari bawah ke atas dengan lem tembak agar tampilan vas lebih rapi.", imageUri: IMG.soapKraft, safetyWarning: "Lem tembak panas dapat menyebabkan luka bakar, gunakan alat bantu saat menekan tali." },
+      { order: 4, title: "Tambahkan Dekorasi", description: "Tambahkan pita, label kecil, atau bunga kering untuk memperkuat nilai jual.", imageUri: IMG.bottleVase },
     ],
   },
   prod_hdpe_1: {
     productId: "prod_hdpe_1",
     toolsAndMaterials: ["Jerigen HDPE bekas", "Spidol", "Cutter", "Amplas", "Sarung tangan"],
-    beforeImageUri: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=500&auto=format&fit=crop&q=60",
-    afterImageUri: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=500&auto=format&fit=crop&q=60",
-    mockupImageUri: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=500&auto=format&fit=crop&q=60",
+    beforeImageUri: IMG.whiteBottle,
+    afterImageUri: IMG.scoop,
+    mockupImageUri: IMG.scoop,
     steps: [
-      { order: 1, title: "Bilas Wadah", description: "Bersihkan sisa deterjen atau cairan lain sampai tidak berbau.", imageUri: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=500&auto=format&fit=crop&q=60", safetyWarning: "Gunakan sarung tangan saat membersihkan wadah bekas bahan kimia rumah tangga." },
-      { order: 2, title: "Gambar Pola Sudu", description: "Buat garis pola dari gagang sampai cekungan sudu di sisi jerigen.", imageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60" },
-      { order: 3, title: "Potong dan Rapikan", description: "Potong mengikuti pola, lalu amplas sisi tajam sampai nyaman digenggam.", imageUri: "https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=500&auto=format&fit=crop&q=60", safetyWarning: "Potongan plastik HDPE bisa tajam; rapikan semua sisi sebelum digunakan." },
+      { order: 1, title: "Bilas Wadah", description: "Bersihkan sisa deterjen atau cairan lain sampai tidak berbau.", imageUri: IMG.sprayClean, safetyWarning: "Gunakan sarung tangan saat membersihkan wadah bekas bahan kimia rumah tangga." },
+      { order: 2, title: "Gambar Pola Sudu", description: "Buat garis pola dari gagang sampai cekungan sudu di sisi jerigen.", imageUri: IMG.whiteBottle },
+      { order: 3, title: "Potong dan Rapikan", description: "Potong mengikuti pola, lalu amplas sisi tajam sampai nyaman digenggam.", imageUri: IMG.drill, safetyWarning: "Potongan plastik HDPE bisa tajam; rapikan semua sisi sebelum digunakan." },
     ],
   },
   prod_kardus_1: {
     productId: "prod_kardus_1",
     toolsAndMaterials: ["Kardus tebal", "Penggaris", "Cutter", "Lem kertas", "Kertas pelapis"],
-    beforeImageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60",
-    afterImageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60",
-    mockupImageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60",
+    beforeImageUri: IMG.kraftBox,
+    afterImageUri: IMG.organizer,
+    mockupImageUri: IMG.organizer,
     steps: [
-      { order: 1, title: "Ukur Sekat", description: "Tentukan ukuran slot alat tulis, dokumen, dan ponsel sesuai kebutuhan meja.", imageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60" },
-      { order: 2, title: "Potong Kardus", description: "Potong panel dasar, sisi, dan sekat dengan penggaris agar bentuknya presisi.", imageUri: "https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=500&auto=format&fit=crop&q=60", safetyWarning: "Gunakan alas potong dan arahkan cutter menjauh dari tubuh." },
-      { order: 3, title: "Rakit Organizer", description: "Tempel sisi dan sekat secara bertahap, lalu tunggu lem mengering.", imageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60" },
-      { order: 4, title: "Lapisi Permukaan", description: "Bungkus dengan kertas pelapis agar tampilan lebih rapi dan siap dijual.", imageUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60" },
+      { order: 1, title: "Ukur Sekat", description: "Tentukan ukuran slot alat tulis, dokumen, dan ponsel sesuai kebutuhan meja.", imageUri: IMG.kraftBox },
+      { order: 2, title: "Potong Kardus", description: "Potong panel dasar, sisi, dan sekat dengan penggaris agar bentuknya presisi.", imageUri: IMG.drill, safetyWarning: "Gunakan alas potong dan arahkan cutter menjauh dari tubuh." },
+      { order: 3, title: "Rakit Organizer", description: "Tempel sisi dan sekat secara bertahap, lalu tunggu lem mengering.", imageUri: IMG.kraftBox },
+      { order: 4, title: "Lapisi Permukaan", description: "Bungkus dengan kertas pelapis agar tampilan lebih rapi dan siap dijual.", imageUri: IMG.organizer },
     ],
   },
   prod_kaleng_1: {
     productId: "prod_kaleng_1",
     toolsAndMaterials: ["Kaleng bekas", "Paku", "Palu", "Cat semprot", "Lampu LED kecil"],
-    beforeImageUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60",
-    afterImageUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60",
-    mockupImageUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60",
+    beforeImageUri: IMG.wasteCaps,
+    afterImageUri: IMG.lampPendant,
+    mockupImageUri: IMG.lampPendant,
     steps: [
-      { order: 1, title: "Bersihkan Kaleng", description: "Cuci bagian dalam kaleng dan keringkan sampai tidak ada sisa makanan atau minuman.", imageUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60", safetyWarning: "Tepi kaleng bisa tajam; gunakan sarung tangan pelindung." },
-      { order: 2, title: "Buat Pola Lubang", description: "Tandai titik-titik pola cahaya dengan spidol di permukaan kaleng.", imageUri: "https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=500&auto=format&fit=crop&q=60" },
-      { order: 3, title: "Lubangi Pola", description: "Lubangi titik pola secara perlahan memakai paku dan palu.", imageUri: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=60", safetyWarning: "Pastikan kaleng stabil saat dipukul agar paku tidak meleset." },
-      { order: 4, title: "Cat dan Pasang LED", description: "Cat bagian luar, tunggu kering, lalu masukkan lampu LED kecil.", imageUri: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60" },
+      { order: 1, title: "Bersihkan Kaleng", description: "Cuci bagian dalam kaleng dan keringkan sampai tidak ada sisa makanan atau minuman.", imageUri: IMG.sprayClean, safetyWarning: "Tepi kaleng bisa tajam; gunakan sarung tangan pelindung." },
+      { order: 2, title: "Buat Pola Lubang", description: "Tandai titik-titik pola cahaya dengan spidol di permukaan kaleng.", imageUri: IMG.drill },
+      { order: 3, title: "Lubangi Pola", description: "Lubangi titik pola secara perlahan memakai paku dan palu.", imageUri: IMG.drill, safetyWarning: "Pastikan kaleng stabil saat dipukul agar paku tidak meleset." },
+      { order: 4, title: "Cat dan Pasang LED", description: "Cat bagian luar, tunggu kering, lalu masukkan lampu LED kecil.", imageUri: IMG.lampPendant },
     ],
   },
   prod_kaca_1: {
     productId: "prod_kaca_1",
     toolsAndMaterials: ["Botol kaca", "String LED", "Tali rami", "Lap kering", "Stiker label"],
-    beforeImageUri: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60",
-    afterImageUri: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60",
-    mockupImageUri: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60",
+    beforeImageUri: IMG.bottleVase,
+    afterImageUri: IMG.lampDesk,
+    mockupImageUri: IMG.lampDesk,
     steps: [
-      { order: 1, title: "Cuci Botol", description: "Cuci botol kaca dan lepaskan label lama sampai permukaan bersih.", imageUri: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60", safetyWarning: "Jangan gunakan botol yang retak karena berisiko pecah saat dibersihkan." },
-      { order: 2, title: "Masukkan String LED", description: "Masukkan lampu LED kecil melalui mulut botol tanpa memotong kaca.", imageUri: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60" },
-      { order: 3, title: "Dekorasi Leher Botol", description: "Lilitkan tali rami pada leher botol dan tambahkan label produk.", imageUri: "https://images.unsplash.com/photo-1581783342605-292605fa659a?w=500&auto=format&fit=crop&q=60" },
+      { order: 1, title: "Cuci Botol", description: "Cuci botol kaca dan lepaskan label lama sampai permukaan bersih.", imageUri: IMG.sprayClean, safetyWarning: "Jangan gunakan botol yang retak karena berisiko pecah saat dibersihkan." },
+      { order: 2, title: "Masukkan String LED", description: "Masukkan lampu LED kecil melalui mulut botol tanpa memotong kaca.", imageUri: IMG.lampDesk },
+      { order: 3, title: "Dekorasi Leher Botol", description: "Lilitkan tali rami pada leher botol dan tambahkan label produk.", imageUri: IMG.soapKraft },
     ],
   },
   prod_sachet_1: {
     productId: "prod_sachet_1",
     toolsAndMaterials: ["Sachet bersih", "Gunting", "Jarum besar", "Benang nilon", "Resleting kecil"],
-    beforeImageUri: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60",
-    afterImageUri: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60",
-    mockupImageUri: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60",
+    beforeImageUri: IMG.tote,
+    afterImageUri: IMG.handbag,
+    mockupImageUri: IMG.handbag,
     steps: [
-      { order: 1, title: "Cuci dan Keringkan Sachet", description: "Belah sachet, cuci bagian dalam, lalu keringkan sampai tidak berminyak.", imageUri: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60" },
-      { order: 2, title: "Lipat Modul Anyaman", description: "Lipat sachet menjadi strip seragam agar pola dompet terlihat rapi.", imageUri: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=60" },
-      { order: 3, title: "Anyam Badan Dompet", description: "Susun strip secara silang sampai membentuk bidang dompet.", imageUri: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60" },
-      { order: 4, title: "Jahit Resleting", description: "Pasang resleting dengan benang nilon agar dompet bisa ditutup rapat.", imageUri: "https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=500&auto=format&fit=crop&q=60", safetyWarning: "Gunakan jarum besar dengan hati-hati dan simpan alat tajam setelah selesai." },
+      { order: 1, title: "Cuci dan Keringkan Sachet", description: "Belah sachet, cuci bagian dalam, lalu keringkan sampai tidak berminyak.", imageUri: IMG.sprayClean },
+      { order: 2, title: "Lipat Modul Anyaman", description: "Lipat sachet menjadi strip seragam agar pola dompet terlihat rapi.", imageUri: IMG.tote },
+      { order: 3, title: "Anyam Badan Dompet", description: "Susun strip secara silang sampai membentuk bidang dompet.", imageUri: IMG.tote },
+      { order: 4, title: "Jahit Resleting", description: "Pasang resleting dengan benang nilon agar dompet bisa ditutup rapat.", imageUri: IMG.handbag, safetyWarning: "Gunakan jarum besar dengan hati-hati dan simpan alat tajam setelah selesai." },
     ],
   },
 };

@@ -125,7 +125,12 @@ def test_gate2_low_rerank_score_falls_back(fake_sb, monkeypatch):
 
 def test_gate2_pass_returns_grounded(fake_sb, monkeypatch):
     strong = RetrievedChunk(
-        chunk_id="c1", skill_id="s1", content="langkah", metadata={}, rrf_score=0.03, rerank_score=0.92
+        chunk_id="c1",
+        skill_id="s1",
+        content="langkah",
+        metadata={},
+        rrf_score=0.03,
+        rerank_score=0.92,
     )
 
     async def strong_chunks(sb, query, material=None):
