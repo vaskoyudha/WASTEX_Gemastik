@@ -15,6 +15,7 @@ import {
   BackendScanResult,
   BackendTutorial,
   BackendPricing,
+  BackendSellingKit,
   Skill,
 } from "./types";
 import {
@@ -183,6 +184,24 @@ class ApiPricing implements PricingService {
   }
 }
 
+export function sellingKitFromBackend(kit: BackendSellingKit): SellingKit {
+  return {
+    productId: kit.skill_id,
+    productName: kit.product_name,
+    description: kit.description,
+    captions: kit.captions ?? [],
+    photoTips: kit.photo_tips ?? [],
+    packagingIdeas: kit.packaging_ideas ?? [],
+  };
+}
+
+class ApiSelling implements SellingAssistantService {
+  async getSellingKit(productId: string): Promise<SellingKit> {
+    const kit = (await apiClient.getSellingKit(productId)) as BackendSellingKit;
+    return sellingKitFromBackend(kit);
+  }
+}
+
 // Set EXPO_PUBLIC_USE_MOCK=false to call the real backend API.
 export const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK !== "false";
 
@@ -192,6 +211,7 @@ export const recommendation: RecommendationService = USE_MOCK
   : new ApiRecommendation();
 export const tutorial: TutorialService = USE_MOCK ? new MockTutorial() : new ApiTutorial();
 export const pricing: PricingService = USE_MOCK ? new MockPricing() : new ApiPricing();
-// No backend selling-kit endpoint yet; kit content stays local.
-export const selling: SellingAssistantService = new MockSelling();
+export const selling: SellingAssistantService = USE_MOCK
+  ? new MockSelling()
+  : new ApiSelling();
 export { impact } from "./impact";
