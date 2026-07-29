@@ -50,3 +50,10 @@ yarn-error.*
 # large proposal documents (kept locally, not in repo)
 *.docx
 .superpowers/
+
+# Environment variables
+.env
+*.local.json
+
+# Backend Python virtual environment
+backend/.venv/
