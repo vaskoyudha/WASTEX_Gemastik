@@ -1,0 +1,25 @@
+# WASTEX Backend Requirements
+# Run with: uv sync --group dev
+
+# Core Web Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.6.0
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+
+# AI/ML APIs
+openai>=1.54.0
+Pillow>=11.0.0
+
+# Database (Supabase)
+supabase>=2.6.0
+psycopg2-binary>=2.9.9
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+httpx>=0.27.0
+
+# Code Quality
+ruff>=0.7.0
