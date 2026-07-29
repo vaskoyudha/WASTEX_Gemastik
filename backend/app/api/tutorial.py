@@ -21,9 +21,7 @@ async def get_tutorial(skill_id: str, sb: Client = Depends(get_supabase)):
 
     skill = resp.data
     if not skill.get("steps"):
-        raise HTTPException(
-            status_code=404, detail="Tutorial not available for this skill"
-        )
+        raise HTTPException(status_code=404, detail="Tutorial not available for this skill")
 
     return {
         "skill_id": skill["id"],

@@ -31,7 +31,9 @@ async def recommend(
         material = material or (Material(res.data["material"]) if res.data["material"] else None)
         condition = condition or (res.data["condition"] or "")
     if material is None:
-        raise HTTPException(status_code=422, detail="material or scan_id with identified material required")
+        raise HTTPException(
+            status_code=422, detail="material or scan_id with identified material required"
+        )
     gate_path.append("vision_ok")
 
     query = build_query(material.value, condition, req.user_intent)
@@ -44,12 +46,16 @@ async def recommend(
         background_tasks.add_task(discover_skill, material, req.user_intent)
         package = generic_safe_procedure(material)
         _log_run(sb, req, query, [], gate_path, package.recommendation, started)
-        return RecommendResponse(status="generic_safe_procedure", package=package, gate_path=gate_path)
+        return RecommendResponse(
+            status="generic_safe_procedure", package=package, gate_path=gate_path
+        )
 
     gate_path.append("retrieval_ok")
     package = await generate_solution(query, chunks)
     gate_path.append("generation_ok")
-    _log_run(sb, req, query, [c.chunk_id for c in chunks], gate_path, package.recommendation, started)
+    _log_run(
+        sb, req, query, [c.chunk_id for c in chunks], gate_path, package.recommendation, started
+    )
     return RecommendResponse(status="grounded", package=package, gate_path=gate_path)
 
 

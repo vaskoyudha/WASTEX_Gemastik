@@ -30,12 +30,8 @@ async def get_product(product_id: str, sb: Client = Depends(get_supabase)):
 
 
 @router.get("/{product_id}/recommendations")
-async def get_recommendations(
-    product_id: str, limit: int = 5, sb: Client = Depends(get_supabase)
-):
-    product_resp = (
-        sb.table("skills").select("*").eq("id", product_id).single().execute()
-    )
+async def get_recommendations(product_id: str, limit: int = 5, sb: Client = Depends(get_supabase)):
+    product_resp = sb.table("skills").select("*").eq("id", product_id).single().execute()
 
     if not product_resp.data:
         raise HTTPException(status_code=404, detail="Product not found")

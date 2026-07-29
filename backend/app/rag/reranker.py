@@ -8,7 +8,6 @@ async def rerank(query: str, documents: list[str]) -> list[float]:
         return []
     s = get_settings()
     url = f"https://api.deepinfra.com/v1/inference/{s.rerank_model}"
-    last_err: Exception | None = None
     async with httpx.AsyncClient(timeout=30) as client:
         for _ in range(2):
             try:
@@ -19,6 +18,14 @@ async def rerank(query: str, documents: list[str]) -> list[float]:
                 )
                 r.raise_for_status()
                 return r.json()["scores"]
-            except httpx.HTTPError as e:
-                last_err = e
-    raise RuntimeError("rerank provider unavailable") from last_err
+            except httpx.HTTPError:
+                continue
+    return _keyword_scores(query, documents)
+
+
+def _keyword_scores(query: str, documents: list[str]) -> list[float]:
+    """Degraded-mode scoring by keyword overlap when the provider is down."""
+    query_words = set(query.lower().split())
+    if not query_words:
+        return [0.0] * len(documents)
+    return [len(query_words & set(doc.lower().split())) / len(query_words) for doc in documents]

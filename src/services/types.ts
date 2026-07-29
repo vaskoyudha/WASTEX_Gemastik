@@ -84,6 +84,7 @@ export interface Step {
   order: number;
   instruction: string;
   warning?: string;
+  visual_description?: string;
 }
 
 export interface Risk {
@@ -99,7 +100,33 @@ export interface SolutionPackage {
   est_cost_idr?: number;
   est_price_idr?: number;
   marketing_copy?: string;
+  est_time_minutes?: number;
   sources: string[];
+}
+
+// ---- Selling ----
+export interface SellingKit {
+  productId: string;
+  productName: string;
+  description: string;
+  captions: string[];
+  photoTips: string[];
+  packagingIdeas: string[];
+}
+
+export interface SellingAssistantService {
+  getSellingKit(productId: string): Promise<SellingKit>;
+}
+
+// ---- Backend Selling ----
+export interface BackendSellingKit {
+  skill_id: string;
+  product_name: string;
+  description: string;
+  captions: string[];
+  photo_tips: string[];
+  packaging_ideas: string[];
+  hashtags: string[];
 }
 
 // ---- Tutorial ----
@@ -164,32 +191,6 @@ export interface BackendPricing {
   currency: string;
 }
 
-// ---- Selling ----
-export interface SellingKit {
-  productId: string;
-  productName: string;
-  description: string;
-  captions: string[];
-  photoTips: string[];
-  packagingIdeas: string[];
-}
-
-export interface SellingAssistantService {
-  getSellingKit(productId: string): Promise<SellingKit>;
-}
-
-// ---- Backend Marketplace ----
-export interface MarketplaceItem {
-  id: string;
-  skill_id: string;
-  title: string;
-  description: string;
-  price: number;
-  seller_id: string;
-  status: 'available' | 'sold' | 'reserved';
-  created_at: string;
-}
-
 // ---- Backend Skills ----
 export interface Skill {
   id: string;
@@ -201,6 +202,8 @@ export interface Skill {
   tools: string[];
   steps: Step[];
   risks: Risk[];
+  est_cost_idr?: number;
+  est_price_idr?: number;
   status: SkillStatus;
   author_id?: string;
   created_at: string;
@@ -228,4 +231,51 @@ export interface ImpactService {
   getImpactSummary(): Promise<ImpactSummary>;
   deleteProject(id: string): Promise<void>;
   clearAll(): Promise<void>;
+}
+
+// ---- Auth ----
+export interface User {
+  id: string;
+  email: string;
+  accessToken: string | null;
+  profile: UserProfile | null;
+}
+
+export interface UserProfile {
+  id: string;
+  authUserId: string;
+  displayName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
+export interface UpdateProfileRequest {
+  displayName?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface AuthResult {
+  accessToken: string;
+  userId: string;
+  profile: UserProfile;
+}
+
+export interface AuthService {
+  signUp(email: string, password: string, displayName: string, data?: UpdateProfileRequest): Promise<AuthResult>;
+  signIn(email: string, password: string): Promise<AuthResult>;
+  signOut(): Promise<void>;
+  getUser(): User | null;
+  isLoggedIn(): boolean;
+  getAccessToken(): string | null;
+  updateProfile(data: UpdateProfileRequest): Promise<UserProfile>;
+  deleteAccount(): Promise<void>;
 }

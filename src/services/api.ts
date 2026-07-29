@@ -23,6 +23,9 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
     throw new Error(error.detail || `API error: ${response.status}`);
   }
 
+  if (response.status === 204) {
+    return undefined as unknown as T;
+  }
   return response.json();
 }
 
@@ -71,7 +74,70 @@ export const apiClient = {
     return request(`/skills/${id}/status`, { method: 'PATCH', body: data });
   },
 
+  async getProducts(params?: { limit?: number; offset?: number }) {
+    const query = params
+      ? `?${new URLSearchParams(
+          Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
+        )}`
+      : '';
+    return request(`/products${query}`);
+  },
+
+  async getProduct(id: string) {
+    return request(`/products/${id}`);
+  },
+
+  async getTutorial(skillId: string) {
+    return request(`/tutorial/${skillId}`);
+  },
+
+  async getPricing(skillId: string) {
+    return request(`/pricing/${skillId}`);
+  },
+
+  async getSellingKit(skillId: string) {
+    return request(`/selling/${skillId}`);
+  },
+
+  async logImpact(data: { skill_id?: string; material: string; waste_kg: number; est_value_idr: number }) {
+    return request('/impact', { method: 'POST', body: data });
+  },
+
+  async register(data: {
+    email: string;
+    password: string;
+    display_name: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    bio?: string | null;
+    phone?: string | null;
+  }) {
+    return request('/auth/register', { method: 'POST', body: data });
+  },
+
+  async login(data: { email: string; password: string }) {
+    return request('/auth/login', { method: 'POST', body: data });
+  },
+
+  async updateProfile(userId: string, data: {
+    display_name?: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    bio?: string | null;
+    phone?: string | null;
+    avatar_url?: string | null;
+  }) {
+    return request(`/auth/profile/${userId}`, { method: 'PATCH', body: data });
+  },
+
   async healthCheck() {
     return request('/health');
+  },
+
+  async deleteScan(scanId: string, token: string) {
+    return request(`/scan/${scanId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
   },
 };

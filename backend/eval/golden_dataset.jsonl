@@ -1,0 +1,12 @@
+{"query": "Material: plastik_pet. Tujuan pengguna: vas bunga dari botol", "material": "plastik_pet", "expected_titles": ["vas"]}
+{"query": "Material: plastik_pet. Tujuan pengguna: pot tanaman gantung", "material": "plastik_pet", "expected_titles": ["pot"]}
+{"query": "Material: plastik_hdpe. Tujuan pengguna: wadah penyimpanan dari jerigen", "material": "plastik_hdpe", "expected_titles": ["wadah"]}
+{"query": "Material: kardus. Tujuan pengguna: organizer meja dari kardus bekas", "material": "kardus", "expected_titles": ["organizer"]}
+{"query": "Material: kardus. Tujuan pengguna: mainan anak dari kardus", "material": "kardus", "expected_titles": ["mainan"]}
+{"query": "Material: kaleng. Tujuan pengguna: celengan dari kaleng bekas", "material": "kaleng", "expected_titles": ["celengan"]}
+{"query": "Material: kaleng. Tujuan pengguna: tempat pensil dari kaleng", "material": "kaleng", "expected_titles": ["pensil"]}
+{"query": "Material: kaca. Tujuan pengguna: lampu hias dari botol kaca", "material": "kaca", "expected_titles": ["lampu"]}
+{"query": "Material: kaca. Tujuan pengguna: toples penyimpanan bumbu", "material": "kaca", "expected_titles": ["toples"]}
+{"query": "Material: sachet. Tujuan pengguna: tas anyaman dari sachet kopi", "material": "sachet", "expected_titles": ["tas"]}
+{"query": "Material: sachet. Tujuan pengguna: dompet dari kemasan sachet", "material": "sachet", "expected_titles": ["dompet"]}
+{"query": "Material: plastik_hdpe. Tujuan pengguna: pot bibit dari botol sampo", "material": "plastik_hdpe", "expected_titles": ["pot"]}

@@ -1,0 +1,208 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../supabase/client";
+import { AuthResult, User, UserProfile, UpdateProfileRequest, AuthService } from "../types";
+
+const USER_STORAGE_KEY = "wastex.user.v1";
+
+export class LocalAuthService implements AuthService {
+  private user: User | null = null;
+  private readonly apiClient: any;
+
+  constructor(apiClientOverride?: any) {
+    this.apiClient = apiClientOverride;
+    this.loadUserFromStorage();
+  }
+
+  private loadUserFromStorage(): void {
+    try {
+      const stored = AsyncStorage.getItem(USER_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        this.user = parsed as User;
+      }
+    } catch {
+      this.user = null;
+    }
+  }
+
+  private saveUserToStorage(user: User): void {
+    try {
+      AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } catch {}
+  }
+
+  private clearUserStorage(): void {
+    try {
+      AsyncStorage.removeItem(USER_STORAGE_KEY);
+    } catch {}
+  }
+
+  async signUp(
+    email: string,
+    password: string,
+    displayName: string,
+    data?: UpdateProfileRequest
+  ): Promise<AuthResult> {
+    const response = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: displayName,
+          ...(data?.firstName && { first_name: data.firstName }),
+          ...(data?.lastName && { last_name: data.lastName }),
+        },
+      },
+    });
+
+    if (!response.data.user) {
+      throw new Error(response.error?.message || "Sign up failed");
+    }
+
+    // Fetch profile immediately after sign up (it might have been auto-created by trigger, or we fetch later)
+    // For now, create profile by calling the backend API directly via apiClient
+    const client = this.apiClient || await import("../api").then((m) => m.apiClient);
+    const profileResponse = await client.register({
+      email,
+      password,
+      display_name: displayName,
+      first_name: data?.firstName ?? null,
+      last_name: data?.lastName ?? null,
+      bio: data?.bio ?? null,
+      phone: data?.phone ?? null,
+    } as any);
+
+    const userProfile: UserProfile = {
+      id: profileResponse.profile.id,
+      authUserId: response.data.user.id,
+      displayName: profileResponse.profile.display_name,
+      firstName: profileResponse.profile.first_name,
+      lastName: profileResponse.profile.last_name,
+      bio: profileResponse.profile.bio,
+      phone: profileResponse.profile.phone,
+      avatarUrl: profileResponse.profile.avatar_url,
+      createdAt: profileResponse.profile.created_at,
+      updatedAt: profileResponse.profile.updated_at,
+    };
+
+    const user: User = {
+      id: response.data.user.id,
+      email,
+      accessToken: response.data.session?.access_token ?? profileResponse.access_token ?? null,
+      profile: userProfile,
+    };
+    this.user = user;
+    this.saveUserToStorage(user);
+
+    return {
+      accessToken: user.accessToken!,
+      userId: user.id,
+      profile: userProfile,
+    };
+  }
+
+  async signIn(email: string, password: string): Promise<AuthResult> {
+    const response = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!response.data.user) {
+      throw new Error(response.error?.message || "Sign in failed");
+    }
+
+    // Fetch profile from backend API
+    const client = this.apiClient || await import("../api").then((m) => m.apiClient);
+    const profileResponse = await client.login({ email, password } as any);
+
+    const userProfile: UserProfile = {
+      id: profileResponse.profile.id,
+      authUserId: response.data.user.id,
+      displayName: profileResponse.profile.display_name,
+      firstName: profileResponse.profile.first_name,
+      lastName: profileResponse.profile.last_name,
+      bio: profileResponse.profile.bio,
+      phone: profileResponse.profile.phone,
+      avatarUrl: profileResponse.profile.avatar_url,
+      createdAt: profileResponse.profile.created_at,
+      updatedAt: profileResponse.profile.updated_at,
+    };
+
+    const user: User = {
+      id: response.data.user.id,
+      email,
+      accessToken: response.data.session?.access_token ?? profileResponse.access_token ?? null,
+      profile: userProfile,
+    };
+    this.user = user;
+    this.saveUserToStorage(user);
+
+    return {
+      accessToken: user.accessToken!,
+      userId: user.id,
+      profile: userProfile,
+    };
+  }
+
+  async signOut(): Promise<void> {
+    await supabase.auth.signOut();
+    this.user = null;
+    this.clearUserStorage();
+  }
+
+  getUser(): User | null {
+    return this.user;
+  }
+
+  isLoggedIn(): boolean {
+    return this.user !== null;
+  }
+
+  getAccessToken(): string | null {
+    return this.user?.accessToken ?? null;
+  }
+
+  async updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
+    if (!this.user) {
+      throw new Error("Not logged in");
+    }
+
+    const client = this.apiClient || await import("../api").then((m) => m.apiClient);
+    const response = await client.updateProfile(this.user.id, data) as any;
+
+    const userProfile: UserProfile = {
+      id: response.id,
+      authUserId: this.user.id,
+      displayName: response.display_name,
+      firstName: response.first_name,
+      lastName: response.last_name,
+      bio: response.bio,
+      phone: response.phone,
+      avatarUrl: response.avatar_url,
+      createdAt: response.created_at,
+      updatedAt: response.updated_at,
+    };
+
+    this.user.profile = userProfile;
+    this.saveUserToStorage(this.user);
+
+    return userProfile;
+  }
+
+  async deleteAccount(): Promise<void> {
+    if (!this.user) {
+      throw new Error("Not logged in");
+    }
+
+    // Delete Supabase user
+    await supabase.auth.admin.deleteUser(this.user.id);
+    await this.signOut();
+  }
+}
+
+// Factory and singleton (for production usage without mocking)
+export function createAuthService(apiClientOverride?: any): AuthService {
+  return new LocalAuthService(apiClientOverride);
+}
+
+export const auth = createAuthService();

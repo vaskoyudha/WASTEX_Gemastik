@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     chat_model: str = "deepseek/deepseek-chat"
     vision_model: str = "openai/gpt-4o"
     vision_fallback_model: str = "google/gemini-2.5-flash"
+    image_model: str = "google/gemini-2.5-flash-image-preview"
     embedding_model: str = "BAAI/bge-m3"
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
 
@@ -25,7 +26,7 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = [
         "http://localhost:8081",  # Expo dev server
-        "http://localhost:19006", # Expo web
+        "http://localhost:19006",  # Expo web
         "exp://localhost:19000",  # Expo Go
     ]
 

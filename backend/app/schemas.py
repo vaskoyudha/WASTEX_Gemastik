@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Literal
 from uuid import UUID
@@ -42,6 +43,7 @@ class Step(BaseModel):
     order: int
     instruction: str
     warning: str | None = None
+    visual_description: str | None = None
 
 
 class Risk(BaseModel):
@@ -80,6 +82,7 @@ class SolutionPackage(BaseModel):
     est_cost_idr: int | None = None
     est_price_idr: int | None = None
     marketing_copy: str | None = None
+    est_time_minutes: int | None = None
     sources: list[str] = []
 
 
@@ -110,3 +113,97 @@ class SkillStatusUpdate(BaseModel):
 
 class IngestRequest(BaseModel):
     skill_ids: list[UUID] | None = None
+
+
+class SellingKit(BaseModel):
+    skill_id: str = ""
+    product_name: str
+    description: str
+    captions: list[str] = []
+    photo_tips: list[str] = []
+    packaging_ideas: list[str] = []
+    hashtags: list[str] = []
+
+
+class UserProfileCreate(BaseModel):
+    auth_user_id: UUID = Field(..., description="UUID from auth.users")
+    display_name: str = Field(..., min_length=1, max_length=64)
+    first_name: str | None = Field(None, max_length=64)
+    last_name: str | None = Field(None, max_length=64)
+    bio: str | None = Field(None, max_length=500)
+    phone: str | None = Field(None, max_length=24)
+    avatar_url: str | None = Field(None, max_length=512)
+
+
+class UserProfileUpdate(BaseModel):
+    display_name: str | None = Field(None, min_length=1, max_length=64)
+    first_name: str | None = Field(None, max_length=64)
+    last_name: str | None = Field(None, max_length=64)
+    bio: str | None = Field(None, max_length=500)
+    phone: str | None = Field(None, max_length=24)
+    avatar_url: str | None = Field(None, max_length=512)
+
+
+class UserProfileResponse(BaseModel):
+    id: UUID
+    auth_user_id: UUID
+    display_name: str
+    first_name: str | None = None
+    last_name: str | None = None
+    bio: str | None = None
+    phone: str | None = None
+    avatar_url: str | None = None
+    created_at: datetime
+    updated_at: datetime | None = None
+
+
+# Auth DTOs
+class RegisterRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+    password: str = Field(..., min_length=8)
+    display_name: str = Field(..., min_length=1, max_length=64)
+    first_name: str | None = Field(None, max_length=64)
+    last_name: str | None = Field(None, max_length=64)
+    bio: str | None = Field(None, max_length=500)
+    phone: str | None = Field(None, max_length=24)
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class AuthRegisterResponse(BaseModel):
+    access_token: str
+    user_id: str
+    profile: UserProfileResponse
+
+
+class AuthLoginResponse(BaseModel):
+    access_token: str
+    user_id: str
+    profile: UserProfileResponse
+
+
+class ImpactEventIn(BaseModel):
+    skill_id: UUID | None = None
+    material: Material
+    waste_kg: float = Field(ge=0)
+    est_value_idr: int = Field(ge=0)
+
+
+class ImpactSummary(BaseModel):
+    total_projects: int
+    total_waste_kg: float
+    total_value_idr: int
+
+
+class SkillFlagIn(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class FeedbackIn(BaseModel):
+    agent_run_id: UUID | None = None
+    rating: int = Field(ge=1, le=5)
+    flag_inaccurate: bool = False
+    comment: str | None = Field(default=None, max_length=1000)

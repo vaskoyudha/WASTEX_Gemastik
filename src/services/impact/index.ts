@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ImpactService, ImpactSummary, SavedProject } from "../types";
+import { apiClient } from "../api";
+import { impactEventFromProject } from "./mapper";
 
 export const HISTORY_STORAGE_KEY = "wastex.history.v1";
 const LEGACY_HISTORY_STORAGE_KEY = "@wastex_saved_projects_v1";
@@ -35,6 +37,15 @@ export class LocalImpactService implements ImpactService {
   async saveProject(project: SavedProject): Promise<void> {
     const existing = await readHistory();
     await writeHistory([project, ...existing]);
+
+    // Fire-and-forget backend sync (only if not using mocks)
+    if (process.env.EXPO_PUBLIC_USE_MOCK === "false") {
+      apiClient
+        .logImpact(impactEventFromProject(project))
+        .catch(() => {
+          // Offline-first: backend sync is best-effort, local history is source of truth.
+        });
+    }
   }
 
   async getHistory(): Promise<SavedProject[]> {

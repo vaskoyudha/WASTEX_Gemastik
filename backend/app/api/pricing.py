@@ -20,35 +20,35 @@ LABOR_RATES = {
     "mahir": 40000,
 }
 
+DEFAULT_MARGIN = 0.4
+
 
 @router.get("/{skill_id}")
 async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
     resp = (
         sb.table("skills")
-        .select("id, title, difficulty, materials, steps")
+        .select("id, title, material, difficulty, steps, est_cost_idr, est_price_idr")
         .eq("id", skill_id)
         .single()
         .execute()
     )
-
     if not resp.data:
         raise HTTPException(status_code=404, detail="Skill not found")
-
     skill = resp.data
-    materials = skill.get("materials", [])
-    difficulty = skill.get("difficulty", "menengah")
-    steps = skill.get("steps", [])
 
-    material_cost = sum(MATERIAL_COSTS.get(m.lower(), 500) for m in materials)
+    steps = skill.get("steps") or []
+    labor_rate = LABOR_RATES.get(skill.get("difficulty") or "menengah", 25000)
+    labor_cost = int(len(steps) * 0.5 * labor_rate)
 
-    estimated_hours = len(steps) * 0.5
-    labor_rate = LABOR_RATES.get(difficulty, 25000)
-    labor_cost = int(estimated_hours * labor_rate)
-
+    material_cost = skill.get("est_cost_idr") or MATERIAL_COSTS.get(skill.get("material"), 500)
     total_cost = material_cost + labor_cost
-    profit_margin = 0.4
-    suggested_price = int(total_cost * (1 + profit_margin))
-    suggested_price = round(suggested_price / 1000) * 1000
+
+    if skill.get("est_price_idr"):
+        suggested_price = skill["est_price_idr"]
+        profit_margin = round((suggested_price - total_cost) / total_cost, 2) if total_cost else 0
+    else:
+        profit_margin = DEFAULT_MARGIN
+        suggested_price = round(int(total_cost * (1 + profit_margin)) / 1000) * 1000
 
     return {
         "skill_id": skill["id"],
