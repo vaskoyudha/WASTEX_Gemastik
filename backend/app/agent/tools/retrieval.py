@@ -16,7 +16,9 @@ class RetrievedChunk:
     rerank_score: float = 0.0
 
 
-async def search_skills(sb: Client, query: str, material: str | None = None) -> list[RetrievedChunk]:
+async def search_skills(
+    sb: Client, query: str, material: str | None = None
+) -> list[RetrievedChunk]:
     s = get_settings()
     embedding = await embed_query(query)
     res = sb.rpc(

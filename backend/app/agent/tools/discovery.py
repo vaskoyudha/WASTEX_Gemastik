@@ -1,4 +1,5 @@
 import logging
+from difflib import SequenceMatcher
 from functools import lru_cache
 
 import yaml
@@ -26,12 +27,29 @@ Kembalikan safe dan daftar violations."""
 
 @lru_cache
 def _drafter() -> Agent:
-    return Agent(_openrouter_model(get_settings().chat_model), output_type=SkillDraft, system_prompt=DRAFT_PROMPT, retries=1)
+    return Agent(
+        _openrouter_model(get_settings().chat_model),
+        output_type=SkillDraft,
+        system_prompt=DRAFT_PROMPT,
+        retries=1,
+    )
 
 
 @lru_cache
 def _safety_checker() -> Agent:
-    return Agent(_openrouter_model(get_settings().chat_model), output_type=SafetyVerdict, system_prompt=SAFETY_RUBRIC, retries=1)
+    return Agent(
+        _openrouter_model(get_settings().chat_model),
+        output_type=SafetyVerdict,
+        system_prompt=SAFETY_RUBRIC,
+        retries=1,
+    )
+
+
+def is_duplicate_title(title: str, existing_titles: list[str], threshold: float = 0.85) -> bool:
+    norm = title.strip().lower()
+    return any(
+        SequenceMatcher(None, norm, t.strip().lower()).ratio() >= threshold for t in existing_titles
+    )
 
 
 async def discover_skill(material: Material, user_intent: str) -> None:
@@ -52,7 +70,21 @@ async def discover_skill(material: Material, user_intent: str) -> None:
 
         # Gate 3: failed drafts are stored as rejected for audit and never ingested.
         status = "draft" if verdict.safe else "rejected"
+
+        # Dedup check: skip inserting if title matches existing skill of same material
         sb = get_supabase()
+        existing = (
+            sb.table("skills").select("title, material").eq("material", material.value).execute()
+        )
+        titles = [
+            row["title"]
+            for row in (existing.data or [])
+            if row.get("material") == material.value and row.get("title")
+        ]
+        if is_duplicate_title(draft.title, titles):
+            logger.info("discovery skipped: duplicate of existing skill (%s)", draft.title)
+            return
+
         sb.table("skills").insert(
             {
                 **draft.model_dump(mode="json"),
@@ -60,6 +92,11 @@ async def discover_skill(material: Material, user_intent: str) -> None:
                 "origin": "discovered",
             }
         ).execute()
-        logger.info("discovery for %s stored with status=%s violations=%s", material.value, status, verdict.violations)
+        logger.info(
+            "discovery for %s stored with status=%s violations=%s",
+            material.value,
+            status,
+            verdict.violations,
+        )
     except Exception:
         logger.exception("discover_skill failed for material=%s", material.value)

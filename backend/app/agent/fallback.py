@@ -4,18 +4,19 @@ from app.schemas import Material, Risk, SolutionPackage, Step, ToolItem
 
 _MATERIAL_NOTES: dict[Material, tuple[str, str]] = {
     Material.plastik_pet: (
-        "botol PET", "Pastikan botol bebas residu minuman manis agar tidak mengundang serangga."
+        "botol PET",
+        "Pastikan botol bebas residu minuman manis agar tidak mengundang serangga.",
     ),
     Material.plastik_hdpe: (
-        "wadah HDPE", "Jangan memanaskan atau melelehkan plastik - uapnya berbahaya."
+        "wadah HDPE",
+        "Jangan memanaskan atau melelehkan plastik - uapnya berbahaya.",
     ),
     Material.kardus: ("kardus", "Simpan di tempat kering; kardus lembap kehilangan nilai jual."),
     Material.kaleng: ("kaleng", "Hati-hati tepi tajam bekas bukaan; gunakan sarung tangan."),
-    Material.kaca: (
-        "kaca", "Jangan memotong atau memecah kaca tanpa alat dan pelindung khusus."
-    ),
+    Material.kaca: ("kaca", "Jangan memotong atau memecah kaca tanpa alat dan pelindung khusus."),
     Material.sachet: (
-        "sachet multilayer", "Jangan dibakar - lapisan aluminium-plastik menghasilkan asap beracun."
+        "sachet multilayer",
+        "Jangan dibakar - lapisan aluminium-plastik menghasilkan asap beracun.",
     ),
 }
 
@@ -35,6 +36,11 @@ def generic_safe_procedure(material: Material) -> SolutionPackage:
             Step(order=4, instruction="Setorkan ke bank sampah atau pengepul terdekat."),
         ],
         tools=[ToolItem(name="sarung tangan", optional=True), ToolItem(name="air dan sabun")],
-        risks=[Risk(hazard="Kontaminasi residu", mitigation="Cuci bersih dan keringkan sebelum diproses.")],
+        risks=[
+            Risk(
+                hazard="Kontaminasi residu",
+                mitigation="Cuci bersih dan keringkan sebelum diproses.",
+            )
+        ],
         sources=[],
     )

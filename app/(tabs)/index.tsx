@@ -122,19 +122,16 @@ export default function HomeScreen() {
 
         <View className="px-5 mt-6">
           <Text className="text-base font-bold text-slate-900 tracking-tight">Bagaimana Cara Kerja?</Text>
-          <View className="mt-5">
+          <View className="mt-5 flex-row items-start justify-between">
             {steps.map((step, idx) => (
-              <View
-                key={step.label}
-                className={`flex-row items-start ${idx !== steps.length - 1 ? "pb-4 mb-4 border-b border-slate-100" : ""}`}
-              >
-                <View className="w-12 h-12 rounded-[20px] bg-emerald-50 items-center justify-center mr-4 border border-emerald-100">
+              <View key={step.label} className="flex-1 items-center px-1">
+                <View className="w-14 h-14 rounded-[22px] bg-emerald-50 items-center justify-center border border-emerald-100">
                   <step.icon size={24} color="#16a34a" strokeWidth={2.2} />
+                  <View className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-brand items-center justify-center">
+                    <Text className="text-[10px] font-bold text-white">{idx + 1}</Text>
+                  </View>
                 </View>
-                <View className="flex-1 pt-0.5">
-                  <Text className="text-base font-bold text-slate-900">{step.label}</Text>
-                  <Text className="text-sm text-gray-600 leading-5 mt-1">{step.description}</Text>
-                </View>
+                <Text className="text-xs font-bold text-slate-900 text-center mt-3 leading-4">{step.label}</Text>
               </View>
             ))}
           </View>
