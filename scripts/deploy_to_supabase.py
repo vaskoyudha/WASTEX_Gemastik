@@ -3,7 +3,6 @@
 
 import os
 import sys
-import re
 from pathlib import Path
 
 def read_env_file():
@@ -28,18 +27,11 @@ def read_env_file():
     missing = [k for k in required_keys if k not in env_vars]
     if missing:
         print(f"❌ Missing environment variables: {', '.join(missing)}")
-        print("\nPlease edit backend/database/.env with actual values:")
-        print("  1. Visit https://supabase.com/dashboard")
-        print("  2. Go to Settings → API")
-        print("  3. Copy URLs and keys into .env file")
-        print("  4. Also add DATABASE_PASSWORD from Settings → Database → Passwords")
         return None
     
-    # Validate URL format
     url = env_vars["SUPABASE_URL"]
     if "your-" in url or "xxx" in url:
         print("❌ SUPABASE_URL still contains placeholder value")
-        print("   Please replace 'https://xxx.supabase.co' with your actual project URL")
         return None
     
     return env_vars
@@ -54,7 +46,7 @@ def build_connection_string(env_vars):
     return conn_string
 
 def execute_migration(conn_string, migration_file):
-    """Execute a single SQL migration file."""
+    """Execute a single SQL migration file using psql."""
     print(f"\n📄 Applying: {os.path.basename(migration_file)}")
     
     try:
@@ -68,30 +60,25 @@ def execute_migration(conn_string, migration_file):
         )
         
         if result.returncode == 0:
-            lines = result.stdout.strip().split("\n")[-3:] if result.stdout else []
-            if lines[0] if lines else False else True:
-                print(f"   ✅ Success!")
-                return True
-            else:
-                print(f"   ✅ Migrations applied successfully")
-                return True
+            print(f"   ✅ Success!")
+            return True
         else:
             print(f"   ❌ Failed:")
             print(result.stderr[:500])
             return False
             
     except FileNotFoundError:
-        print("   ⚠️  psql not found, trying alternative method...")
+        print("   ⚠️  psql not found, trying Python fallback...")
         return execute_via_python(conn_string, migration_file)
     except Exception as e:
-        print(f"   ❌ Error executing migration: {e}")
+        print(f"   ❌ Error: {e}")
         return False
 
 def execute_via_python(conn_string, migration_file):
-    """Fallback: Execute migration using Python's psycopg2."""
+    """Fallback using Python psycopg2."""
     import psycopg2
     
-    print(f"📄 Applying: {os.path.basename(migration_file)} (via Python)")
+    print(f"📄 Applying via Python: {os.path.basename(migration_file)}")
     
     try:
         conn = psycopg2.connect(conn_string)
@@ -109,7 +96,7 @@ def execute_via_python(conn_string, migration_file):
         return True
         
     except Exception as e:
-        print(f"   ❌ Python execution failed: {e}")
+        print(f"   ❌ Python failed: {e}")
         return False
 
 def verify_deployment(conn_string):
@@ -124,7 +111,9 @@ def verify_deployment(conn_string):
         
         # Check pgvector extension
         cursor.execute("SELECT * FROM pg_extension WHERE extname='vector';")
-        if cursor.fetchone():
+        vector_exists = cursor.fetchone() is not None
+        
+        if vector_exists:
             print("   ✅ pgvector extension enabled")
         else:
             print("   ⚠️  pgvector extension NOT enabled")
@@ -173,7 +162,6 @@ def main():
     print("WASTEX Database Migration Deployer")
     print("=" * 70)
     
-    # Step 1: Read environment
     print("\n🔑 Reading configuration...")
     env_vars = read_env_file()
     
@@ -181,24 +169,20 @@ def main():
         sys.exit(1)
     
     print(f"   ✅ Found project: {env_vars['SUPABASE_URL']}")
-    
-    # Step 2: Build connection string
-    conn_string = build_connection_string(env_vars)
     print(f"   📡 Connection configured")
     
-    # Step 3: Check migrations exist
     migrations = [
-        ("backend/database/000_initial_schema.sql", "Schema migrations"),
-        ("backend/database/002_rls_policies.sql", "RLS security policies")
+        ("backend/database/000_initial_schema.sql", "Schema"),
+        ("backend/database/002_rls_policies.sql", "RLS Policies")
     ]
     
-    for migration_path, description in migrations:
-        if not os.path.exists(migration_path):
-            print(f"❌ Missing: {migration_path}")
+    for path, desc in migrations:
+        if os.path.exists(path):
+            print(f"   ✓ {desc} ready")
+        else:
+            print(f"❌ Missing: {path}")
             sys.exit(1)
-        print(f"   ✓ {description} ready")
     
-    # Step 4: Execute migrations
     print("\n🚀 Executing migrations...")
     
     success_count = 0
@@ -209,24 +193,19 @@ def main():
             break
     
     if success_count != len(migrations):
-        print(f"\n❌ Only {success_count}/{len(migrations)} migrations succeeded")
+        print(f"\n❌ Only {success_count}/{len(migrations)} succeeded")
         sys.exit(1)
     
-    # Step 5: Verify deployment
     if verify_deployment(conn_string):
         print("\n" + "=" * 70)
         print("✅ ALL MIGRATIONS DEPLOYED SUCCESSFULLY!")
         print("=" * 70)
-        
-        print("\n🎉 Next steps:")
-        print("  1. Seed knowledge base (optional):")
-        print("     cd scripts && python seed_skills.py")
-        print("  \n  2. Plan 2: Implement authentication system")
-        print("  3. Start building mobile app features")
-        
         return 0
     
     return 1
 
 if __name__ == "__main__":
+    env_vars = read_env_file()
+    if env_vars:
+        conn_string = build_connection_string(env_vars)
     sys.exit(main())
