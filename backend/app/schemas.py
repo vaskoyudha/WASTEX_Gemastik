@@ -23,6 +23,7 @@ class Difficulty(str, Enum):
 
 class SkillStatus(str, Enum):
     draft = "draft"
+    pending = "pending"
     approved = "approved"
     rejected = "rejected"
     needs_revision = "needs_revision"
