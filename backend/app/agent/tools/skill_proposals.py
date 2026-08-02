@@ -21,12 +21,12 @@ Aturan wajib:
 - Kondisi bahan: {condition}. Sesuaikan ide dengan kondisi tersebut.
 
 Jawab HANYA dengan JSON valid berformat:
-{"proposals": [{"title": "...", "description": "...",
+{{"proposals": [{{"title": "...", "description": "...",
   "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
   "difficulty": "pemula|menengah|mahir",
-  "steps": [{"order": 1, "instruction": "...", "warning": "..."}],
-  "tools": [{"name": "...", "optional": false}],
-  "est_cost_idr": 5000, "est_price_idr": 25000}]}"""
+  "steps": [{{"order": 1, "instruction": "...", "warning": "..."}}],
+  "tools": [{{"name": "...", "optional": false}}],
+  "est_cost_idr": 5000, "est_price_idr": 25000}}]}}"""
 
 SKILL_VERIFY_PROMPT = """Kamu adalah validator skill daur ulang yang ketat. Periksa draft skill berikut.
 
@@ -37,9 +37,9 @@ Periksa 4 aspek:
 4. Kelengkapan: apakah urutan langkah lengkap dari awal sampai produk jadi?
 
 Jawab HANYA dengan JSON valid berformat:
-{"verdict": "layak" atau "perbaiki",
+{{"verdict": "layak" atau "perbaiki",
  "feedback": ["<satu kalimat per masalah>", "..."],
- "suggestions": ["<saran perbaikan spesifik>", "..."]}
+ "suggestions": ["<saran perbaikan spesifik>", "..."]}}
 Jika semua aspek lolos, verdict = "layak" dan feedback kosong."""
 
 
