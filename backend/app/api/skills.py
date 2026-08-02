@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from app.auth import get_current_user
-from app.deps import get_supabase, require_service_role
+from app.deps import get_supabase, require_expert_or_service
 from app.rag.ingest import ingest_skill
 from app.schemas import SkillFlagIn, SkillStatus, SkillStatusUpdate
 from supabase import Client
@@ -54,7 +54,7 @@ def list_skills(
     return q.order("created_at", desc=True).execute().data
 
 
-@router.patch("/{skill_id}/status", dependencies=[Depends(require_service_role)])
+@router.patch("/{skill_id}/status", dependencies=[Depends(require_expert_or_service)])
 async def update_status(
     skill_id: UUID,
     body: SkillStatusUpdate,

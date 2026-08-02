@@ -7,6 +7,7 @@ import app.api.recommend as recommend_module
 import app.api.scan as scan_module
 import app.api.skills as skills_module
 from app.agent.tools.retrieval import RetrievedChunk
+from app.auth import create_test_token
 from app.deps import get_supabase
 from app.main import app
 from app.schemas import (
@@ -224,6 +225,92 @@ def test_gate4_rejection_does_not_ingest(fake_sb, monkeypatch):
 
 
 def test_gate4_requires_service_role(fake_sb):
+    r = client.patch(
+        f"/skills/{SKILL_ID}/status",
+        json={"status": "approved"},
+        headers={"Authorization": "Bearer wrong-key"},
+    )
+    assert r.status_code == 403
+
+
+# ---- Gate 5: expert authorization gate ----------------------------------
+
+
+def _token(sub):
+    return {"Authorization": f"Bearer {create_test_token({'sub': sub})}"}
+
+
+def _seed_skill(fake_sb, status="draft"):
+    fake_sb.table("skills").insert({"id": SKILL_ID, "status": status, "title": "Vas"})
+    fake_sb.table("profiles").insert(
+        {"auth_user_id": "expert1", "display_name": "E", "role": "expert"}
+    )
+
+
+def test_gate5_patch_accepts_expert_jwt(fake_sb, monkeypatch):
+    _seed_skill(fake_sb)
+    ingested = []
+
+    async def fake_ingest(sb, skill_id):
+        ingested.append(str(skill_id))
+
+    monkeypatch.setattr(skills_module, "ingest_skill", fake_ingest)
+    r = client.patch(
+        f"/skills/{SKILL_ID}/status", json={"status": "approved"}, headers=_token("expert1")
+    )
+    assert r.status_code == 200
+    assert ingested == [SKILL_ID]
+
+
+def test_gate5_patch_accepts_admin_jwt(fake_sb, monkeypatch):
+    fake_sb.table("skills").insert({"id": SKILL_ID, "status": "draft", "title": "Vas"})
+    fake_sb.table("profiles").insert(
+        {"auth_user_id": "admin1", "display_name": "A", "role": "admin"}
+    )
+    ingested = []
+
+    async def fake_ingest(sb, skill_id):
+        ingested.append(str(skill_id))
+
+    monkeypatch.setattr(skills_module, "ingest_skill", fake_ingest)
+    r = client.patch(
+        f"/skills/{SKILL_ID}/status", json={"status": "approved"}, headers=_token("admin1")
+    )
+    assert r.status_code == 200
+    assert ingested == [SKILL_ID]
+
+
+def test_gate5_patch_rejects_normal_user(fake_sb):
+    _seed_skill(fake_sb)
+    fake_sb.table("profiles").insert({"auth_user_id": "user1", "display_name": "U", "role": "user"})
+    r = client.patch(
+        f"/skills/{SKILL_ID}/status", json={"status": "approved"}, headers=_token("user1")
+    )
+    assert r.status_code == 403
+
+
+def test_gate5_patch_rejects_user_without_profile(fake_sb):
+    _seed_skill(fake_sb)
+    r = client.patch(
+        f"/skills/{SKILL_ID}/status", json={"status": "approved"}, headers=_token("nobody")
+    )
+    assert r.status_code == 403
+
+
+def test_gate5_patch_service_key_still_works(fake_sb, monkeypatch):
+    _seed_skill(fake_sb)
+
+    async def fake_ingest(sb, skill_id):
+        pass
+
+    monkeypatch.setattr(skills_module, "ingest_skill", fake_ingest)
+    r = client.patch(
+        f"/skills/{SKILL_ID}/status", json={"status": "approved"}, headers=SERVICE_AUTH
+    )
+    assert r.status_code == 200
+
+
+def test_gate5_patch_wrong_key_rejected(fake_sb):
     r = client.patch(
         f"/skills/{SKILL_ID}/status",
         json={"status": "approved"},
