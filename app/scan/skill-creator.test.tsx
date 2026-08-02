@@ -5,6 +5,8 @@ import SkillCreatorScreen from './skill-creator';
 
 const mockGetProposals = jest.fn();
 const mockRouterPush = jest.fn();
+const mockVerify = jest.fn();
+const mockCreate = jest.fn();
 
 const scanResult = {
   materialType: 'plastik_pet',
@@ -28,6 +30,8 @@ jest.mock('../../src/store/useScanStore', () => ({
 jest.mock('../../src/services/api', () => ({
   apiClient: {
     getSkillProposals: (...args: unknown[]) => mockGetProposals(...args),
+    verifySkill: (...args: unknown[]) => mockVerify(...args),
+    createSkill: (...args: unknown[]) => mockCreate(...args),
   },
 }));
 
@@ -86,5 +90,34 @@ describe('SkillCreatorScreen ideas stage', () => {
     const { getByText, findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Generate Ulang'));
     expect(mockGetProposals).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('SkillCreatorScreen verify + submit', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetProposals.mockResolvedValue(proposals);
+    mockVerify.mockResolvedValue({ verdict: 'layak', feedback: [], suggestions: [] });
+    mockCreate.mockResolvedValue({ id: 'new-skill' });
+  });
+
+  it('opens verify popup and shows verdict', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    fireEvent.press(await findByText('Verifikasi dengan AI'));
+    expect(await findByText('Skill layak dikirim')).toBeTruthy();
+    expect(mockVerify).toHaveBeenCalledWith(
+      expect.objectContaining({ chat_history: expect.any(Array) }),
+    );
+  });
+
+  it('submit disabled until layak verdict', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    fireEvent.press(await findByText('Verifikasi dengan AI'));
+    await findByText('Skill layak dikirim');
+    fireEvent.press(getByText('Kirim Skill untuk Verifikasi'));
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pot Gantung PET' }));
+    expect(await findByText('Skill Terkirim')).toBeTruthy();
   });
 });
