@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     chat_model: str = "deepseek/deepseek-chat"
     vision_model: str = "openai/gpt-4o"
     vision_fallback_model: str = "google/gemini-2.5-flash"
+    chat_fallback_model: str = "google/gemini-2.5-flash"
     image_model: str = "google/gemini-2.5-flash-image-preview"
     embedding_model: str = "BAAI/bge-m3"
     rerank_model: str = "BAAI/bge-reranker-v2-m3"

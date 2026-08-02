@@ -84,3 +84,41 @@ async def _post_json(
     )
     r.raise_for_status()
     return json.loads(r.json()["choices"][0]["message"]["content"])
+
+
+class SkillGenUnavailable(Exception):
+    pass
+
+
+async def _call_until_success(messages, parse, client_factory):
+    from app.config import get_settings
+
+    settings = get_settings()
+    last_err: Exception | None = None
+    async with client_factory(timeout=120) as client:
+        for model in (settings.chat_model, settings.chat_fallback_model):
+            for _ in range(2):
+                try:
+                    payload = await _post_json(client, messages, model, settings.openrouter_api_key)
+                    return parse(payload)
+                except Exception as e:
+                    last_err = e
+    raise SkillGenUnavailable("all chat providers failed") from last_err
+
+
+async def generate_proposals(
+    material: str, condition: str, client_factory=httpx.AsyncClient
+) -> list[SkillProposal]:
+    messages = _build_proposal_messages(material, condition)
+    return await _call_until_success(
+        messages, lambda p: _parse_proposals(p, material), client_factory
+    )
+
+
+async def verify_draft(
+    draft: SkillProposal,
+    chat_history: list[dict],
+    client_factory=httpx.AsyncClient,
+) -> SkillVerifyResponse:
+    messages = _build_verify_messages(draft, chat_history)
+    return await _call_until_success(messages, _parse_verdict, client_factory)
