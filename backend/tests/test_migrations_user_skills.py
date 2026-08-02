@@ -2,12 +2,7 @@ from pathlib import Path
 
 from app.schemas import SkillStatus
 
-SQL = (
-    Path(__file__).parents[1]
-    / "supabase"
-    / "migrations"
-    / "20260803000001_user_skills.sql"
-)
+SQL = Path(__file__).parents[1] / "supabase" / "migrations" / "20260803000001_user_skills.sql"
 
 
 def test_skill_status_has_pending():
