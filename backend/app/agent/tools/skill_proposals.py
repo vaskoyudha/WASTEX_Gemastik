@@ -37,9 +37,9 @@ Periksa 4 aspek:
 4. Kelengkapan: apakah urutan langkah lengkap dari awal sampai produk jadi?
 
 Jawab HANYA dengan JSON valid berformat:
-{{"verdict": "layak" atau "perbaiki",
+{"verdict": "layak" atau "perbaiki",
  "feedback": ["<satu kalimat per masalah>", "..."],
- "suggestions": ["<saran perbaikan spesifik>", "..."]}}
+ "suggestions": ["<saran perbaikan spesifik>", "..."]}
 Jika semua aspek lolos, verdict = "layak" dan feedback kosong."""
 
 
