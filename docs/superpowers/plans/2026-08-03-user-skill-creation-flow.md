@@ -1478,7 +1478,7 @@ describe('SkillCreatorScreen ideas stage', () => {
   it('selecting a proposal moves to edit stage', async () => {
     const { getByText, findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    expect(getByText('Edit Draft Skill')).toBeTruthy();
+    expect(await findByText('Edit Draft Skill')).toBeTruthy();
   });
 
   it('regenerate refetches proposals', async () => {
