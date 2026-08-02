@@ -78,10 +78,10 @@ export default function SkillCreatorScreen() {
     setChatHistory([]);
     setVerdict(null);
     setVerifyVisible(true);
-    runCheck();
+    runCheck([]);
   };
 
-  const runCheck = async () => {
+  const runCheck = async (history: ChatMessage[] = chatHistory) => {
     if (!draft) return;
     setChecking(true);
     const userMsg: ChatMessage = {
@@ -91,7 +91,7 @@ export default function SkillCreatorScreen() {
     try {
       const result = await apiClient.verifySkill({
         draft,
-        chat_history: [...chatHistory, userMsg],
+        chat_history: [...history, userMsg],
       });
       setVerdict(result);
       setChatHistory((h) => [
@@ -113,7 +113,7 @@ export default function SkillCreatorScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!draft) return;
+    if (!draft || submitting) return;
     setSubmitting(true);
     try {
       await apiClient.createSkill(draft);
@@ -265,7 +265,12 @@ export default function SkillCreatorScreen() {
           />
         )}
       </ScrollView>
-      <Modal visible={verifyVisible} animationType="slide" transparent>
+      <Modal
+        visible={verifyVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setVerifyVisible(false)}
+      >
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-[32px] p-6 max-h-[75%]">
             <View className="flex-row items-center justify-between mb-4">
@@ -293,7 +298,7 @@ export default function SkillCreatorScreen() {
             </ScrollView>
 
             <View className="flex-row gap-3">
-              <Button title="Cek Lagi" onPress={runCheck} variant="secondary" fullWidth={false} disabled={checking} />
+              <Button title="Cek Lagi" onPress={() => runCheck()} variant="secondary" fullWidth={false} disabled={checking} />
               <View className="flex-1">
                 <Button
                   title="Kirim Skill untuk Verifikasi"
