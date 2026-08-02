@@ -2,10 +2,19 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
+from app.agent.tools.skill_proposals import SkillGenUnavailable, generate_proposals, verify_draft
 from app.auth import get_current_user
 from app.deps import get_supabase, require_expert_or_service
 from app.rag.ingest import ingest_skill
-from app.schemas import SkillFlagIn, SkillStatus, SkillStatusUpdate
+from app.schemas import (
+    SkillFlagIn,
+    SkillProposal,
+    SkillProposalRequest,
+    SkillStatus,
+    SkillStatusUpdate,
+    SkillVerifyRequest,
+    SkillVerifyResponse,
+)
 from supabase import Client
 
 router = APIRouter()
@@ -38,6 +47,28 @@ def flag_skill(
         status = "needs_revision"
         sb.table("skills").update({"status": status}).eq("id", skill_id).execute()
     return {"flag_count": count, "status": status}
+
+
+@router.post("/proposals", response_model=list[SkillProposal])
+async def skill_proposals(
+    body: SkillProposalRequest,
+    user: dict = Depends(get_current_user),
+) -> list[SkillProposal]:
+    try:
+        return await generate_proposals(body.material.value, body.condition)
+    except SkillGenUnavailable:
+        raise HTTPException(status_code=503, detail="AI unavailable")
+
+
+@router.post("/verify", response_model=SkillVerifyResponse)
+async def verify_skill(
+    body: SkillVerifyRequest,
+    user: dict = Depends(get_current_user),
+) -> SkillVerifyResponse:
+    try:
+        return await verify_draft(body.draft, body.chat_history)
+    except SkillGenUnavailable:
+        raise HTTPException(status_code=503, detail="AI unavailable")
 
 
 @router.get("")
