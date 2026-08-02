@@ -1,3 +1,5 @@
+import type { ChatMessage, SkillProposal, SkillVerifyResponse } from './types';
+
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface ApiOptions {
@@ -29,6 +31,16 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
   return response.json();
 }
 
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const { auth } = require('./auth');
+    const token = auth.getAccessToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 export const apiClient = {
   async scan(imageUri: string) {
     // Convert URI to FormData for file upload
@@ -57,21 +69,33 @@ export const apiClient = {
     });
   },
 
-  async getSkills(params?: { status?: string; material?: string }) {
-    const query = params ? `?${new URLSearchParams(params)}` : '';
-    return request(`/skills${query}`);
+  async getSkills(params?: { status?: string; material?: string; mine?: boolean }) {
+    const parts: string[] = [];
+    if (params?.status) parts.push(`status=${params.status}`);
+    if (params?.material) parts.push(`material=${params.material}`);
+    if (params?.mine) parts.push('mine=true');
+    const query = parts.length ? `?${parts.join('&')}` : '';
+    return request(`/skills${query}`, { headers: await authHeaders() });
   },
 
   async getSkill(id: string) {
     return request(`/skills/${id}`);
   },
 
-  async createSkill(data: any) {
-    return request('/skills', { method: 'POST', body: data });
+  async createSkill(data: SkillProposal) {
+    return request('/skills', { method: 'POST', body: data, headers: await authHeaders() });
   },
 
   async updateSkillStatus(id: string, data: { status: string; reviewed_by?: string }) {
     return request(`/skills/${id}/status`, { method: 'PATCH', body: data });
+  },
+
+  async getSkillProposals(data: { material: string; condition: string }): Promise<SkillProposal[]> {
+    return request('/skills/proposals', { method: 'POST', body: data, headers: await authHeaders() });
+  },
+
+  async verifySkill(data: { draft: SkillProposal; chat_history: ChatMessage[] }): Promise<SkillVerifyResponse> {
+    return request('/skills/verify', { method: 'POST', body: data, headers: await authHeaders() });
   },
 
   async getProducts(params?: { limit?: number; offset?: number }) {
