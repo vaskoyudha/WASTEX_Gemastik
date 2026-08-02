@@ -107,3 +107,82 @@ def test_build_verify_messages_appends_history():
     msgs = _build_verify_messages(draft, history)
     assert len(msgs) == 2
     assert msgs[1] == history[0]
+
+
+import json
+
+from app.agent.tools.skill_proposals import (
+    SkillGenUnavailable,
+    generate_proposals,
+    verify_draft,
+)
+
+VALID_PAYLOAD = {"proposals": [VALID_PROPOSAL]}
+VERDICT_PAYLOAD = {"verdict": "layak", "feedback": [], "suggestions": []}
+
+
+class FakeResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return {"choices": [{"message": {"content": json.dumps(self._payload)}}]}
+
+
+class FakeClient:
+    def __init__(self, payload, failures=0):
+        self._payload = payload
+        self._failures = failures
+        self.post_calls = 0
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return False
+
+    async def post(self, url, headers, json):
+        self.post_calls += 1
+        if self.post_calls <= self._failures:
+            raise RuntimeError("provider down")
+        return FakeResponse(self._payload)
+
+
+class FailingClient(FakeClient):
+    async def post(self, url, headers, json):
+        raise RuntimeError("provider down")
+
+
+def _factory(payload, failures=0):
+    client = FakeClient(payload, failures)
+    return lambda **kw: client, client
+
+
+async def test_generate_proposals_returns_parsed_list():
+    make, _ = _factory(VALID_PAYLOAD)
+    result = await generate_proposals("plastik_pet", "bersih", client_factory=make)
+    assert len(result) == 1
+    assert isinstance(result[0], SkillProposal)
+
+
+async def test_generate_proposals_retries_then_falls_back():
+    make, client = _factory(VALID_PAYLOAD, failures=3)
+    result = await generate_proposals("plastik_pet", "bersih", client_factory=make)
+    assert len(result) == 1
+    assert client.post_calls == 4  # 2 retries on chat_model + 2 on fallback
+
+
+async def test_generate_proposals_raises_when_all_fail():
+    client = FailingClient(VALID_PAYLOAD)
+    with pytest.raises(SkillGenUnavailable):
+        await generate_proposals("plastik_pet", "bersih", client_factory=lambda **kw: client)
+
+
+async def test_verify_draft_returns_verdict():
+    draft = SkillProposal.model_validate(VALID_PROPOSAL)
+    make, _ = _factory(VERDICT_PAYLOAD)
+    result = await verify_draft(draft, [], client_factory=make)
+    assert result.verdict == "layak"
