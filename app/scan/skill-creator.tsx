@@ -82,7 +82,7 @@ export default function SkillCreatorScreen() {
   };
 
   const runCheck = async (history: ChatMessage[] = chatHistory) => {
-    if (!draft) return;
+    if (!draft || checking) return;
     setChecking(true);
     const userMsg: ChatMessage = {
       role: 'user',
