@@ -24,12 +24,15 @@ def require_service_role(authorization: str = Header(default="")) -> None:
         raise HTTPException(status_code=403, detail="service role required")
 
 
-def get_optional_user_id(authorization: str = Header(default="")) -> str | None:
+def get_optional_user_id(
+    authorization: str = Header(default=""),
+    sb: Client = Depends(get_supabase),
+) -> str | None:
     token = _bearer_token(authorization)
     if not token:
         return None
     try:
-        user = get_supabase().auth.get_user(token)
+        user = sb.auth.get_user(token)
         return user.user.id if user and user.user else None
     except Exception:
         return None

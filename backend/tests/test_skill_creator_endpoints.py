@@ -84,3 +84,51 @@ def test_verify_rejects_invalid_draft(fake_sb):
         "/skills/verify", json={"draft": {**PROPOSAL, "material": "baja"}}, headers=_auth()
     )
     assert r.status_code == 422
+
+
+def test_create_skill_requires_auth(fake_sb):
+    r = TestClient(app).post("/skills", json=PROPOSAL)
+    assert r.status_code == 401
+
+
+def test_create_skill_inserts_pending(fake_sb):
+    r = TestClient(app).post("/skills", json=PROPOSAL, headers=_auth("u1"))
+    assert r.status_code == 201
+    row = fake_sb.table("skills").inserted[0]
+    assert row["status"] == "pending"
+    assert row["origin"] == "user"
+    assert row["created_by"] == "u1"
+    assert row["title"] == PROPOSAL["title"]
+
+
+def test_create_skill_duplicate_409(fake_sb):
+    fake_sb.table("skills").insert(
+        {**PROPOSAL, "id": "s1", "status": "pending", "origin": "user", "created_by": "u1"}
+    )
+    r = TestClient(app).post("/skills", json=PROPOSAL, headers=_auth("u1"))
+    assert r.status_code == 409
+
+
+def test_create_skill_same_title_other_user_ok(fake_sb):
+    fake_sb.table("skills").insert(
+        {**PROPOSAL, "id": "s1", "status": "pending", "origin": "user", "created_by": "other"}
+    )
+    r = TestClient(app).post("/skills", json=PROPOSAL, headers=_auth("u1"))
+    assert r.status_code == 201
+
+
+def test_list_mine_requires_auth(fake_sb):
+    r = TestClient(app).get("/skills?mine=true")
+    assert r.status_code == 401
+
+
+def test_list_mine_returns_skills(fake_sb):
+    fake_sb.table("skills").insert(
+        [
+            {**PROPOSAL, "id": "s1", "status": "pending", "origin": "user", "created_by": "u1"},
+            {**PROPOSAL, "id": "s2", "status": "approved", "origin": "user", "created_by": "u2"},
+        ]
+    )
+    r = TestClient(app).get("/skills?mine=true", headers=_auth("u1"))
+    assert r.status_code == 200
+    assert len(r.json()) == 2  # FakeSupabase does not filter eq(); rows are unfiltered
