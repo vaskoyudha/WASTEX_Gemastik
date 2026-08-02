@@ -1,13 +1,18 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, EmptyState, Header, LoadingSpinner } from '../../src/components/ui';
 import { useServiceCall } from '../../src/hooks/useServiceCall';
 import { safeBack } from '../../src/lib/navigation';
 import { apiClient } from '../../src/services/api';
-import type { BackendDifficulty, SkillProposal } from '../../src/services/types';
+import type {
+  BackendDifficulty,
+  ChatMessage,
+  SkillProposal,
+  SkillVerifyResponse,
+} from '../../src/services/types';
 import { useScanStore } from '../../src/store/useScanStore';
-import { Sparkles } from 'lucide-react-native';
+import { Bot, CheckCircle2, Sparkles, XCircle } from 'lucide-react-native';
 
 type Stage = 'ideas' | 'edit' | 'verify' | 'done';
 
@@ -19,6 +24,11 @@ export default function SkillCreatorScreen() {
   const [stage, setStage] = useState<Stage>('ideas');
   const [selected, setSelected] = useState<SkillProposal | null>(null);
   const [draft, setDraft] = useState<SkillProposal | null>(null);
+  const [verifyVisible, setVerifyVisible] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [verdict, setVerdict] = useState<SkillVerifyResponse | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const generateArgs = useMemo<[string, string] | undefined>(
     () => (scanResult ? [scanResult.materialType, scanResult.condition] : undefined),
@@ -62,6 +72,58 @@ export default function SkillCreatorScreen() {
       ...draft,
       steps: draft.steps.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
     });
+  };
+
+  const openVerify = () => {
+    setChatHistory([]);
+    setVerdict(null);
+    setVerifyVisible(true);
+    runCheck();
+  };
+
+  const runCheck = async () => {
+    if (!draft) return;
+    setChecking(true);
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: `Draft skill: ${draft.title}\n${draft.description}`,
+    };
+    try {
+      const result = await apiClient.verifySkill({
+        draft,
+        chat_history: [...chatHistory, userMsg],
+      });
+      setVerdict(result);
+      setChatHistory((h) => [
+        ...h,
+        userMsg,
+        {
+          role: 'assistant',
+          content:
+            result.verdict === 'layak'
+              ? 'Skill layak dikirim'
+              : `Perlu perbaikan:\n${result.feedback.join('\n')}`,
+        },
+      ]);
+    } catch {
+      Alert.alert('Verifikasi Gagal', 'AI tidak bisa memverifikasi saat ini. Coba lagi.');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!draft) return;
+    setSubmitting(true);
+    try {
+      await apiClient.createSkill(draft);
+      setVerifyVisible(false);
+      setStage('done');
+    } catch {
+      Alert.alert('Gagal Kirim', 'Skill belum bisa dikirim. Coba lagi.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderIdeas = () => {
@@ -163,7 +225,7 @@ export default function SkillCreatorScreen() {
             />
           </Card>
         ))}
-        <Button title="Verifikasi dengan AI" onPress={() => setStage('verify')} />
+        <Button title="Verifikasi dengan AI" onPress={openVerify} />
       </View>
     );
   };
@@ -203,6 +265,62 @@ export default function SkillCreatorScreen() {
           />
         )}
       </ScrollView>
+      <Modal visible={verifyVisible} animationType="slide" transparent>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-[32px] p-6 max-h-[75%]">
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center">
+                <Bot size={18} color="#16a34a" />
+                <Text className="text-lg font-bold text-slate-900 ml-2">Verifikasi AI</Text>
+              </View>
+              <TouchableOpacity onPress={() => setVerifyVisible(false)} className="p-1">
+                <Text className="text-slate-400 text-xl">✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView className="flex-1 mb-4" showsVerticalScrollIndicator={false}>
+              {chatHistory.map((msg, i) => (
+                <View
+                  key={i}
+                  className={`mb-2 max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                    msg.role === 'user' ? 'self-end bg-emerald-100' : 'self-start bg-slate-100'
+                  }`}
+                >
+                  <Text className="text-xs leading-5 text-slate-800">{msg.content}</Text>
+                </View>
+              ))}
+              {checking && <Text className="text-xs text-slate-500 mb-2">AI sedang memeriksa...</Text>}
+            </ScrollView>
+
+            <View className="flex-row gap-3">
+              <Button title="Cek Lagi" onPress={runCheck} variant="secondary" fullWidth={false} disabled={checking} />
+              <View className="flex-1">
+                <Button
+                  title="Kirim Skill untuk Verifikasi"
+                  onPress={handleSubmit}
+                  disabled={verdict?.verdict !== 'layak' || submitting}
+                />
+              </View>
+            </View>
+            {verdict?.verdict === 'perbaiki' && (
+              <View className="flex-row items-start mt-3">
+                <XCircle size={14} color="#dc2626" />
+                <Text className="text-xs text-red-600 ml-2 flex-1">
+                  Perbaiki draft dulu, lalu cek lagi.
+                </Text>
+              </View>
+            )}
+            {verdict?.verdict === 'layak' && (
+              <View className="flex-row items-start mt-3">
+                <CheckCircle2 size={14} color="#16a34a" />
+                <Text className="text-xs text-green-700 ml-2 flex-1">
+                  Draft dinyatakan layak. Tekan tombol kirim untuk mengirim ke verifikasi expert.
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
