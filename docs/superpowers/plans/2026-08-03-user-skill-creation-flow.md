@@ -316,9 +316,12 @@ from pydantic import ValidationError
 from app.agent.tools.skill_proposals import (
     SKILL_PROPOSAL_PROMPT,
     SKILL_VERIFY_PROMPT,
+    _build_proposal_messages,
+    _build_verify_messages,
     _parse_proposals,
     _parse_verdict,
 )
+from app.schemas import SkillProposal
 
 VALID_PROPOSAL = {
     "title": "Pot Gantung dari Botol PET",
@@ -389,6 +392,31 @@ def test_parse_verdict_valid():
 def test_parse_verdict_rejects_invalid():
     with pytest.raises(ValidationError):
         _parse_verdict({"verdict": "nope"})
+
+
+def test_build_proposal_messages_formats_without_errors():
+    msgs = _build_proposal_messages("kardus", "basah")
+    assert msgs[0]["role"] == "user"
+    assert "kardus" in msgs[0]["content"]
+    assert "basah" in msgs[0]["content"]
+    assert "{material}" not in msgs[0]["content"]
+    assert "{condition}" not in msgs[0]["content"]
+
+
+def test_build_verify_messages_includes_draft():
+    draft = SkillProposal.model_validate(VALID_PROPOSAL)
+    msgs = _build_verify_messages(draft, [])
+    assert msgs[0]["role"] == "user"
+    assert "Pot Gantung" in msgs[0]["content"]
+    assert "{verdict}" not in msgs[0]["content"]
+
+
+def test_build_verify_messages_appends_history():
+    draft = SkillProposal.model_validate(VALID_PROPOSAL)
+    history = [{"role": "user", "content": "cek lagi"}]
+    msgs = _build_verify_messages(draft, history)
+    assert len(msgs) == 2
+    assert msgs[1] == history[0]
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -424,12 +452,12 @@ Aturan wajib:
 - Kondisi bahan: {condition}. Sesuaikan ide dengan kondisi tersebut.
 
 Jawab HANYA dengan JSON valid berformat:
-{"proposals": [{"title": "...", "description": "...",
+{{"proposals": [{{"title": "...", "description": "...",
   "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
   "difficulty": "pemula|menengah|mahir",
-  "steps": [{"order": 1, "instruction": "...", "warning": "..."}],
-  "tools": [{"name": "...", "optional": false}],
-  "est_cost_idr": 5000, "est_price_idr": 25000}]}"""
+  "steps": [{{"order": 1, "instruction": "...", "warning": "..."}}],
+  "tools": [{{"name": "...", "optional": false}}],
+  "est_cost_idr": 5000, "est_price_idr": 25000}}]}}"""
 
 SKILL_VERIFY_PROMPT = """Kamu adalah validator skill daur ulang yang ketat. Periksa draft skill berikut.
 
@@ -440,9 +468,9 @@ Periksa 4 aspek:
 4. Kelengkapan: apakah urutan langkah lengkap dari awal sampai produk jadi?
 
 Jawab HANYA dengan JSON valid berformat:
-{"verdict": "layak" atau "perbaiki",
+{{"verdict": "layak" atau "perbaiki",
  "feedback": ["<satu kalimat per masalah>", "..."],
- "suggestions": ["<saran perbaikan spesifik>", "..."]}
+ "suggestions": ["<saran perbaikan spesifik>", "..."]}}
 Jika semua aspek lolos, verdict = "layak" dan feedback kosong."""
 
 
