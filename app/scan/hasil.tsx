@@ -1,13 +1,15 @@
-import React, { useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { Alert, View, Text, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { Header, Button, Card, Badge } from "../../src/components/ui";
 import { useScanStore } from "../../src/store/useScanStore";
 import { MaterialType } from "../../src/services/types";
+import type { Skill } from "../../src/services/types";
+import { apiClient } from "../../src/services/api";
 import { recommendation } from "../../src/services";
 import { safeBack } from "../../src/lib/navigation";
 import { useServiceCall } from "../../src/hooks/useServiceCall";
-import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight } from "lucide-react-native";
+import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight, Sparkles } from "lucide-react-native";
 
 const materialTraits: Record<string, string[]> = {
   plastik_pet: ["Ringan", "Tahan Air", "Mudah Dipotong", "Daur Ulang"],
@@ -28,6 +30,25 @@ export default function HasilScreen() {
   const router = useRouter();
   const { imageUri, scanResult, updateScanResultMaterial, setRecommendations } = useScanStore();
   const [modalVisible, setModalVisible] = useState(false);
+  const [verifiedSkills, setVerifiedSkills] = useState<Skill[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const skills = (await apiClient.getSkills({
+          status: 'approved',
+          material: scanResult?.materialType,
+        })) as Skill[];
+        if (active) setVerifiedSkills(skills.slice(0, 3));
+      } catch {
+        if (active) setVerifiedSkills([]);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [scanResult?.materialType]);
 
   const loadManualRecommendations = useCallback(
     async (type: MaterialType, label: string, currentResult: NonNullable<typeof scanResult>) => {
@@ -167,6 +188,33 @@ export default function HasilScreen() {
           <Edit3 size={16} color="#16a34a" />
           <Text className="text-brand-dark font-semibold text-sm ml-2">Bukan material ini? Pilih manual</Text>
         </TouchableOpacity>
+
+        <View className="mb-6">
+          <TouchableOpacity
+            onPress={() => router.push("/scan/skill-creator")}
+            className="flex-row items-center justify-center py-3 px-4 rounded-xl bg-brand mb-5"
+            activeOpacity={0.7}
+          >
+            <Sparkles size={16} color="#ffffff" />
+            <Text className="text-white font-semibold text-sm ml-2">Buat Skill Baru dari Material Ini</Text>
+          </TouchableOpacity>
+
+          <Text className="text-sm font-bold text-slate-900 mb-3">Skill Terverifikasi</Text>
+          {verifiedSkills.length === 0 ? (
+            <Text className="text-xs text-slate-500">
+              Belum ada skill terverifikasi untuk material ini.
+            </Text>
+          ) : (
+            verifiedSkills.map((skill) => (
+              <Card key={skill.id} className="p-4 border border-slate-100 mb-2">
+                <Text className="text-sm font-bold text-slate-900 mb-1">{skill.title}</Text>
+                <Text className="text-[10px] font-semibold text-brand-dark bg-emerald-50 self-start px-2 py-0.5 rounded-full">
+                  {skill.difficulty}
+                </Text>
+              </Card>
+            ))
+          )}
+        </View>
 
         <Button
           title="Lihat Rekomendasi Produk"
