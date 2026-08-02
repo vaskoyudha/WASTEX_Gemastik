@@ -69,7 +69,6 @@ export default function SkillCreatorScreen() {
       return <LoadingSpinner fullScreen message="AI sedang menyusun ide skill..." />;
     }
     if (generateCall.error) {
-      console.log('DEBUG skill-creator error:', generateCall.error.message);
       return (
         <EmptyState
           title="Ide Gagal Dimuat"
