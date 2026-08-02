@@ -22,7 +22,7 @@ export type BackendMaterial =
 
 export type BackendDifficulty = 'pemula' | 'menengah' | 'mahir';
 
-export type SkillStatus = 'draft' | 'approved' | 'rejected' | 'needs_revision';
+export type SkillStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'needs_revision';
 
 // ---- Scanner ----
 export interface ScanResult {
@@ -208,6 +208,28 @@ export interface Skill {
   author_id?: string;
   created_at: string;
   updated_at?: string;
+}
+
+export interface SkillProposal {
+  title: string;
+  description: string;
+  material: BackendMaterial;
+  difficulty: BackendDifficulty;
+  steps: Step[];
+  tools: ToolItem[];
+  est_cost_idr?: number | null;
+  est_price_idr?: number | null;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface SkillVerifyResponse {
+  verdict: 'layak' | 'perbaiki';
+  feedback: string[];
+  suggestions: string[];
 }
 
 // ---- Impact / History (local) ----
