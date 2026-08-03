@@ -6,6 +6,8 @@ import { auth } from "../../src/services/auth";
 import { impact } from "../../src/services";
 import { Award, Info, Shield, Trash2, User, LogOut, Edit, Save } from "lucide-react-native";
 import { Input } from "../../src/components/ui/Input";
+import { apiClient } from "../../src/services/api";
+import type { Skill } from "../../src/services/types";
 
 export default function ProfilScreen() {
   const router = useRouter();
@@ -17,6 +19,7 @@ export default function ProfilScreen() {
   const [bio, setBio] = useState(user?.profile?.bio ?? "");
   const [phone, setPhone] = useState(user?.profile?.phone ?? "");
   const [loading, setLoading] = useState(false);
+  const [mySkills, setMySkills] = useState<Skill[]>([]);
 
   useEffect(() => {
     if (user?.profile) {
@@ -27,6 +30,27 @@ export default function ProfilScreen() {
       setPhone(user.profile.phone ?? "");
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const skills = (await apiClient.getSkills({ mine: true })) as Skill[];
+        setMySkills(skills);
+      } catch {
+        setMySkills([]);
+      }
+    })();
+  }, [user]);
+
+  const statusLabel = (status: string): string =>
+    status === "pending"
+      ? "Menunggu"
+      : status === "approved"
+      ? "Disetujui"
+      : status === "rejected"
+      ? "Ditolak"
+      : "Perlu Revisi";
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -227,6 +251,23 @@ export default function ProfilScreen() {
                 />
               </View>
             </Card>
+          )}
+
+          {/* Skill Saya Section */}
+          {user && mySkills.length > 0 && (
+            <View className="mt-6">
+              <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-6">Skill Saya</Text>
+              {mySkills.map((skill) => (
+                <Card key={skill.id} className="mx-6 mb-3 p-4 border border-slate-100">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-sm font-bold text-slate-900 flex-1 mr-3">{skill.title}</Text>
+                    <Text className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                      {statusLabel(skill.status)}
+                    </Text>
+                  </View>
+                </Card>
+              ))}
+            </View>
           )}
 
           {/* Mode Ahli Section */}

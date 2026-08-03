@@ -5,13 +5,41 @@ import ProfilScreen from "./profil";
 
 const mockClearAll = jest.fn();
 const mockReplace = jest.fn();
+const mockGetSkills = jest.fn();
+
+const mockUser = {
+  id: "u1",
+  email: "user@test.com",
+  accessToken: "token",
+  profile: {
+    id: "p1",
+    authUserId: "u1",
+    displayName: "Test User",
+    firstName: "Test",
+    lastName: "User",
+    createdAt: "2026-01-01",
+  },
+};
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
 }));
 
+jest.mock("../../src/services/auth", () => ({
+  auth: {
+    getUser: () => mockUser,
+    updateProfile: jest.fn(),
+    signOut: jest.fn(),
+    deleteAccount: jest.fn(),
+  },
+}));
+
 jest.mock("../../src/services", () => ({
   impact: { clearAll: mockClearAll },
+}));
+
+jest.mock("../../src/services/api", () => ({
+  apiClient: { getSkills: (...args: unknown[]) => mockGetSkills(...args) },
 }));
 
 jest.mock("../../src/components/ui", () => ({
@@ -24,7 +52,10 @@ jest.mock("../../src/components/ui", () => ({
 
 jest.mock("lucide-react-native", () => ({
   Award: () => null,
+  Edit: () => null,
   Info: () => null,
+  LogOut: () => null,
+  Save: () => null,
   Shield: () => null,
   Trash2: () => null,
   User: () => null,
@@ -52,5 +83,23 @@ describe("ProfilScreen clear-data action", () => {
     expect(mockClearAll).not.toHaveBeenCalled();
     alertSpy.mockRestore();
   });
+});
 
+describe("ProfilScreen skill submissions", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetSkills.mockResolvedValue([
+      { id: "k1", title: "Tas dari Plastik", status: "pending" },
+      { id: "k2", title: "Vas Kaca", status: "approved" },
+    ]);
+  });
+
+  it("renders user skill submissions with status", async () => {
+    const { getByText } = await render(<ProfilScreen />);
+    expect(await getByText("Skill Saya")).toBeTruthy();
+    expect(getByText("Tas dari Plastik")).toBeTruthy();
+    expect(getByText("Menunggu")).toBeTruthy();
+    expect(getByText("Disetujui")).toBeTruthy();
+    expect(mockGetSkills).toHaveBeenCalledWith({ mine: true });
+  });
 });
