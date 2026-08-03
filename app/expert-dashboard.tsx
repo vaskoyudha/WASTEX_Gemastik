@@ -50,7 +50,6 @@ export default function ExpertDashboardScreen() {
   }, [load]);
 
   const setStatus = async (id: string, status: SkillStatus) => {
-    console.log("DEBUG setStatus entered", id, status, typeof apiClient.updateSkillStatus);
     try {
       await apiClient.updateSkillStatus(id, { status, reviewed_by: user?.id });
       await load();
