@@ -87,7 +87,11 @@ export const apiClient = {
   },
 
   async updateSkillStatus(id: string, data: { status: string; reviewed_by?: string }) {
-    return request(`/skills/${id}/status`, { method: 'PATCH', body: data });
+    return request(`/skills/${id}/status`, {
+      method: 'PATCH',
+      body: data,
+      headers: await authHeaders(),
+    });
   },
 
   async getSkillProposals(data: { material: string; condition: string }): Promise<SkillProposal[]> {
