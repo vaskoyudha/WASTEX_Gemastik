@@ -1,11 +1,21 @@
 from uuid import uuid4
 
+import jwt
+
 
 class FakeAuth:
     """Mock Supabase auth for testing."""
 
     def __init__(self):
         self.users = []
+
+    def get_user(self, token: str) -> object:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        user_id = payload.get("sub")
+        if not user_id:
+            raise ValueError("token has no sub")
+        user = type("User", (), {"id": user_id})()
+        return type("Response", (), {"user": user})()
 
     async def sign_up(self, params: dict) -> object:
         """Mock user registration."""

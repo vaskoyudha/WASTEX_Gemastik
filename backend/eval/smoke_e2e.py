@@ -107,6 +107,19 @@ def smoke_skills_status_requires_auth(base: str, client: httpx.Client) -> bool:
     return _check("PATCH /skills without auth -> 403", r.status_code == 403)
 
 
+def smoke_skills_create_requires_auth(base: str, client: httpx.Client) -> bool:
+    print("\n-- Skills Create (no auth) --")
+    r = client.post(f"{base}/skills", json={"title": "x"})
+    ok = r.status_code == 401
+    if not ok:
+        return _check("POST /skills without auth -> 401", ok, r.text[:200])
+    r = client.get(f"{base}/skills?mine=true")
+    ok = r.status_code == 401
+    if not ok:
+        return _check("GET /skills?mine=true without auth -> 401", ok, r.text[:200])
+    return _check("POST /skills + GET /skills?mine=true require auth (401)", True)
+
+
 def smoke_ingest_requires_auth(base: str, client: httpx.Client) -> bool:
     print("\n-- Ingest (no auth) --")
     fake_id = "00000000-0000-0000-0000-000000000000"
@@ -132,6 +145,7 @@ def main() -> None:
             smoke_recommend_fallback,
             smoke_skills_list,
             smoke_skills_status_requires_auth,
+            smoke_skills_create_requires_auth,
             smoke_ingest_requires_auth,
         ]:
             try:

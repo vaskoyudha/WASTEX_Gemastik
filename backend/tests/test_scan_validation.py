@@ -1,6 +1,18 @@
+import pytest
 from fastapi.testclient import TestClient
 
+from app.deps import get_supabase
 from app.main import app
+from app.schemas import Material, MaterialIdentification
+from tests.fakes import FakeSupabase
+
+
+@pytest.fixture()
+def fake_sb():
+    fake = FakeSupabase()
+    app.dependency_overrides[get_supabase] = lambda: fake
+    yield fake
+    app.dependency_overrides.clear()
 
 
 def test_scan_file_too_large():
@@ -23,10 +35,16 @@ def test_scan_invalid_file_type():
     assert "unsupported" in response.json()["detail"].lower()
 
 
-def test_scan_valid_png_type():
-    """Valid PNG type should pass validation."""
+def test_scan_valid_png_type(fake_sb, monkeypatch):
+    """Valid PNG type should pass validation and reach identification."""
+    import app.api.scan as scan_module
+
+    async def fake_scan(image_bytes, content_type="image/png"):
+        return MaterialIdentification(material=Material.kardus, condition="bersih", confidence=0.95)
+
+    monkeypatch.setattr(scan_module, "scan_material", fake_scan)
     client = TestClient(app)
-    # Small file with PNG content type - will fail at vision but passes validation
+    # Small file with PNG content type
     files = {"file": ("test.png", b"\x89PNG", "image/png")}
     response = client.post("/scan", files=files)
     # Should not be 413 or 415 - validation passed

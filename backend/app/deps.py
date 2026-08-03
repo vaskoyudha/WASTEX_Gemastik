@@ -1,7 +1,9 @@
 from functools import lru_cache
 
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials
 
+from app.auth import get_current_user
 from app.config import get_settings
 from supabase import Client, create_client
 
@@ -22,12 +24,38 @@ def require_service_role(authorization: str = Header(default="")) -> None:
         raise HTTPException(status_code=403, detail="service role required")
 
 
-def get_optional_user_id(authorization: str = Header(default="")) -> str | None:
+def get_optional_user_id(
+    authorization: str = Header(default=""),
+    sb: Client = Depends(get_supabase),
+) -> str | None:
     token = _bearer_token(authorization)
     if not token:
         return None
     try:
-        user = get_supabase().auth.get_user(token)
+        user = sb.auth.get_user(token)
         return user.user.id if user and user.user else None
     except Exception:
         return None
+
+
+def require_expert_or_service(
+    authorization: str = Header(default=""),
+    sb: Client = Depends(get_supabase),
+) -> None:
+    token = _bearer_token(authorization)
+    if not token:
+        raise HTTPException(status_code=403, detail="service role or expert required")
+    if token == get_settings().supabase_service_key:
+        return
+    try:
+        user = get_current_user(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token))
+    except HTTPException:
+        raise HTTPException(status_code=403, detail="service role or expert required")
+    rows = sb.table("profiles").select("role").eq("auth_user_id", user["user_id"]).execute()
+    profile = next(
+        (row for row in (rows.data or []) if row.get("auth_user_id") == user["user_id"]),
+        None,
+    )
+    if profile and profile.get("role") in ("expert", "admin"):
+        return
+    raise HTTPException(status_code=403, detail="expert role required")

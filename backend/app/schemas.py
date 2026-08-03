@@ -23,6 +23,7 @@ class Difficulty(str, Enum):
 
 class SkillStatus(str, Enum):
     draft = "draft"
+    pending = "pending"
     approved = "approved"
     rejected = "rejected"
     needs_revision = "needs_revision"
@@ -207,3 +208,34 @@ class FeedbackIn(BaseModel):
     rating: int = Field(ge=1, le=5)
     flag_inaccurate: bool = False
     comment: str | None = Field(default=None, max_length=1000)
+
+
+class SkillProposal(BaseModel):
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=10, max_length=2000)
+    material: Material
+    difficulty: Difficulty
+    steps: list[Step] = []
+    tools: list[ToolItem] = []
+    est_cost_idr: int | None = None
+    est_price_idr: int | None = None
+
+
+class SkillProposalRequest(BaseModel):
+    material: Material
+    condition: str = ""
+
+
+class SkillVerifyRequest(BaseModel):
+    draft: SkillProposal
+    chat_history: list[dict] = []
+
+
+class SkillVerifyResponse(BaseModel):
+    verdict: Literal["layak", "perbaiki"]
+    feedback: list[str] = []
+    suggestions: list[str] = []
+
+
+class SkillCreateRequest(SkillProposal):
+    pass

@@ -1,0 +1,123 @@
+import React from 'react';
+import { fireEvent, render } from '@testing-library/react-native';
+import { Pressable as MockPressable, Text as MockText } from 'react-native';
+import SkillCreatorScreen from './skill-creator';
+
+const mockGetProposals = jest.fn();
+const mockRouterPush = jest.fn();
+const mockVerify = jest.fn();
+const mockCreate = jest.fn();
+
+const scanResult = {
+  materialType: 'plastik_pet',
+  materialLabel: 'Botol PET',
+  condition: 'Bersih',
+  confidence: 0.9,
+  riskLevel: 'aman' as const,
+  safetyNotes: [],
+  potentialUses: [],
+};
+
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ canGoBack: () => true, back: jest.fn(), push: mockRouterPush }),
+}));
+
+jest.mock('../../src/store/useScanStore', () => ({
+  useScanStore: (selector: (state: { scanResult: typeof scanResult }) => unknown) =>
+    selector({ scanResult }),
+}));
+
+jest.mock('../../src/services/api', () => ({
+  apiClient: {
+    getSkillProposals: (...args: unknown[]) => mockGetProposals(...args),
+    verifySkill: (...args: unknown[]) => mockVerify(...args),
+    createSkill: (...args: unknown[]) => mockCreate(...args),
+  },
+}));
+
+jest.mock('../../src/components/ui', () => ({
+  Header: ({ title }: { title: string }) => <MockText>{title}</MockText>,
+  Card: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  Button: ({ title, onPress }: { title: string; onPress: () => void }) => (
+    <MockPressable onPress={onPress}><MockText>{title}</MockText></MockPressable>
+  ),
+  LoadingSpinner: ({ message }: { message: string }) => <MockText>{message}</MockText>,
+  EmptyState: ({ title }: { title: string }) => <MockText>{title}</MockText>,
+}));
+
+jest.mock('lucide-react-native', () => ({
+  Sparkles: () => null,
+  Bot: () => null,
+  CheckCircle2: () => null,
+  XCircle: () => null,
+}));
+
+const proposals = [
+  {
+    title: 'Pot Gantung PET',
+    description: 'Pot gantung dari botol bekas.',
+    material: 'plastik_pet',
+    difficulty: 'pemula',
+    steps: [{ order: 1, instruction: 'Cuci botol', warning: 'Sarung tangan' }],
+    tools: [{ name: 'gunting' }],
+    est_cost_idr: 5000,
+    est_price_idr: 25000,
+  },
+];
+
+describe('SkillCreatorScreen ideas stage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetProposals.mockResolvedValue(proposals);
+  });
+
+  it('generates proposals on mount and renders them', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    expect(await findByText('Pot Gantung PET')).toBeTruthy();
+    expect(mockGetProposals).toHaveBeenCalledWith({
+      material: 'plastik_pet',
+      condition: 'Bersih',
+    });
+  });
+
+  it('selecting a proposal moves to edit stage', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    expect(await findByText('Edit Draft Skill')).toBeTruthy();
+  });
+
+  it('regenerate refetches proposals', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Generate Ulang'));
+    expect(mockGetProposals).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('SkillCreatorScreen verify + submit', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetProposals.mockResolvedValue(proposals);
+    mockVerify.mockResolvedValue({ verdict: 'layak', feedback: [], suggestions: [] });
+    mockCreate.mockResolvedValue({ id: 'new-skill' });
+  });
+
+  it('opens verify popup and shows verdict', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    fireEvent.press(await findByText('Verifikasi dengan AI'));
+    expect(await findByText('Skill layak dikirim')).toBeTruthy();
+    expect(mockVerify).toHaveBeenCalledWith(
+      expect.objectContaining({ chat_history: expect.any(Array) }),
+    );
+  });
+
+  it('submit disabled until layak verdict', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    fireEvent.press(await findByText('Verifikasi dengan AI'));
+    await findByText('Skill layak dikirim');
+    fireEvent.press(getByText('Kirim Skill untuk Verifikasi'));
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pot Gantung PET' }));
+    expect(await findByText('Skill Terkirim')).toBeTruthy();
+  });
+});
