@@ -40,9 +40,7 @@ def test_scan_valid_png_type(fake_sb, monkeypatch):
     import app.api.scan as scan_module
 
     async def fake_scan(image_bytes, content_type="image/png"):
-        return MaterialIdentification(
-            material=Material.kardus, condition="bersih", confidence=0.95
-        )
+        return MaterialIdentification(material=Material.kardus, condition="bersih", confidence=0.95)
 
     monkeypatch.setattr(scan_module, "scan_material", fake_scan)
     client = TestClient(app)
