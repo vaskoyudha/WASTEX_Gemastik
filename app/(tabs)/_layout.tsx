@@ -88,6 +88,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }: { color: string; size: number }) => <User size={size} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="login"
+        options={{ href: null } as any}
+      />
+      <Tabs.Screen
+        name="register"
+        options={{ href: null } as any}
+      />
     </Tabs>
   );
 }

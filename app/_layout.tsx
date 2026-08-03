@@ -41,8 +41,6 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(tabs)/login" />
-        <Stack.Screen name="(tabs)/register" />
         <Stack.Screen name="scan/upload" />
         <Stack.Screen name="scan/hasil" />
         <Stack.Screen name="scan/rekomendasi" />
