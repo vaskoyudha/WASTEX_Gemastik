@@ -81,4 +81,13 @@ describe('apiClient skill methods', () => {
     expect(url).toContain('/skills');
     expect(url).not.toContain('?');
   });
+
+  it('updateSkillStatus patches status with bearer token', async () => {
+    await apiClient.updateSkillStatus('s1', { status: 'approved', reviewed_by: 'expert-1' });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain('/skills/s1/status');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body)).toEqual({ status: 'approved', reviewed_by: 'expert-1' });
+    expect(init.headers.Authorization).toBe('Bearer tok-123');
+  });
 });
