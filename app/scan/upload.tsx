@@ -66,30 +66,35 @@ export default function UploadScreen() {
   });
 
   const pickImage = async (mode: "camera" | "gallery") => {
-    let result;
-    if (mode === "camera") {
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert("Izin Ditolak", "Butuh izin akses kamera untuk mengambil foto sampah.");
-        return;
+    try {
+      let result;
+      if (mode === "camera") {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert("Izin Ditolak", "Butuh izin akses kamera untuk mengambil foto sampah.");
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+      } else {
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
       }
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-    } else {
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-    }
 
-    if (!result.canceled && result.assets[0].uri) {
-      setImage(result.assets[0].uri);
+      if (!result.canceled && result.assets[0].uri) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("ImagePicker failed:", error);
+      Alert.alert("Gagal Membuka Galeri", "Tidak dapat membuka pemilih foto. Coba lagi.");
     }
   };
 

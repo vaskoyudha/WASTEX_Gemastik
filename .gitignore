@@ -57,3 +57,8 @@ yarn-error.*
 
 # Backend Python virtual environment
 backend/.venv/
+
+# Playwright artifacts
+.playwright-mcp/
+backend/supabase/.temp/
+*.png

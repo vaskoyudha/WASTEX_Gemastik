@@ -5,28 +5,14 @@ import HasilScreen from './hasil';
 
 const mockGetSkills = jest.fn();
 const mockPush = jest.fn();
+const mockUseScanStore = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ canGoBack: () => true, back: jest.fn(), push: mockPush, replace: jest.fn() }),
 }));
 
 jest.mock('../../src/store/useScanStore', () => ({
-  useScanStore: () => ({
-    imageUri: null,
-    scanResult: {
-      materialType: 'plastik_pet',
-      materialLabel: 'Botol PET',
-      condition: 'Bersih',
-      confidence: 0.9,
-      riskLevel: 'aman' as const,
-      difficulty: 'mudah' as const,
-      potentialValue: 'sedang' as const,
-      safetyNotes: [],
-      potentialUses: [],
-    },
-    updateScanResultMaterial: jest.fn(),
-    setRecommendations: jest.fn(),
-  }),
+  useScanStore: () => mockUseScanStore(),
 }));
 
 jest.mock('../../src/services/api', () => ({
@@ -78,6 +64,22 @@ describe('HasilScreen skill section', () => {
     mockGetSkills.mockResolvedValue([
       { id: 'v1', title: 'Pot Gantung PET', difficulty: 'pemula', material: 'plastik_pet' },
     ]);
+    mockUseScanStore.mockReturnValue({
+      imageUri: null,
+      scanResult: {
+        materialType: 'plastik_pet',
+        materialLabel: 'Botol PET',
+        condition: 'Bersih',
+        confidence: 0.9,
+        riskLevel: 'aman' as const,
+        difficulty: 'mudah' as const,
+        potentialValue: 'sedang' as const,
+        safetyNotes: [],
+        potentialUses: [],
+      },
+      updateScanResultMaterial: jest.fn(),
+      setRecommendations: jest.fn(),
+    });
   });
 
   it('navigates to skill creator', async () => {
@@ -93,5 +95,29 @@ describe('HasilScreen skill section', () => {
       status: 'approved',
       material: 'plastik_pet',
     });
+  });
+
+  it('shows verification banner and auto-opens modal when needsVerification', async () => {
+    mockUseScanStore.mockReturnValue({
+      imageUri: null,
+      scanResult: {
+        materialType: 'plastik_hdpe',
+        materialLabel: 'Botol Plastik HDPE',
+        condition: 'Warna solid',
+        confidence: 0.5,
+        riskLevel: 'aman' as const,
+        difficulty: 'mudah' as const,
+        potentialValue: 'sedang' as const,
+        safetyNotes: [],
+        potentialUses: [],
+        needsVerification: true,
+      },
+      updateScanResultMaterial: jest.fn(),
+      setRecommendations: jest.fn(),
+    });
+
+    const { findByText } = await render(<HasilScreen />);
+    expect(await findByText(/Keyakinan AI rendah/)).toBeTruthy();
+    expect(await findByText('Verifikasi Material')).toBeTruthy();
   });
 });

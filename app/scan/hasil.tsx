@@ -33,6 +33,12 @@ export default function HasilScreen() {
   const [verifiedSkills, setVerifiedSkills] = useState<Skill[]>([]);
 
   useEffect(() => {
+    if (scanResult?.needsVerification) {
+      setModalVisible(true);
+    }
+  }, [scanResult?.needsVerification]);
+
+  useEffect(() => {
     let active = true;
     (async () => {
       try {
@@ -133,6 +139,16 @@ export default function HasilScreen() {
           </TouchableOpacity>
         </Card>
 
+        {/* Low-confidence verification banner */}
+        {scanResult.needsVerification && (
+          <View className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5 flex-row items-center">
+            <ShieldCheck size={16} color="#b45309" />
+            <Text className="text-amber-800 text-xs font-semibold ml-2 flex-1">
+              Keyakinan AI rendah. Pilih material yang benar agar rekomendasinya akurat.
+            </Text>
+          </View>
+        )}
+
         {/* Material Header */}
         <View className="flex-row items-end justify-between mb-5">
           <View>
@@ -229,7 +245,9 @@ export default function HasilScreen() {
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-[32px] p-6 max-h-[70%]">
             <View className="flex-row justify-between items-center mb-4 pb-2 border-b border-slate-100">
-              <Text className="text-lg font-bold text-slate-900">Pilih Material Manual</Text>
+              <Text className="text-lg font-bold text-slate-900">
+                {scanResult.needsVerification ? "Verifikasi Material" : "Pilih Material Manual"}
+              </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)} className="p-1">
                 <X size={24} color="#64748b" />
               </TouchableOpacity>

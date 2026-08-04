@@ -35,6 +35,7 @@ export interface ScanResult {
   potentialValue?: "rendah" | "sedang" | "tinggi";
   safetyNotes: string[];
   potentialUses: string[];
+  needsVerification?: boolean;
 }
 
 export interface WasteScannerService {

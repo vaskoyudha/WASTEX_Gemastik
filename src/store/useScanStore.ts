@@ -52,6 +52,7 @@ export const useScanStore = create<ScanStoreState>((set) => ({
             materialType,
             materialLabel,
             confidence: 1.0, // Set to 1.0 after manual correction
+            needsVerification: false,
           }
         : null,
     })),
