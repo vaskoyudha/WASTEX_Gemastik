@@ -27,7 +27,7 @@ def fake_sb():
 
 @pytest.fixture()
 def stub_image(monkeypatch):
-    async def fake_generate(prompt):
+    async def fake_generate(prompt, reference_images=None):
         return b"fake-png-bytes"
 
     monkeypatch.setattr(visuals_api, "generate_image", fake_generate)
@@ -59,7 +59,7 @@ def test_cached_visual_skips_generation(fake_sb, monkeypatch):
         {"skill_id": "s1", "kind": "mockup", "step_order": None, "image_path": "v/s1-mockup.png"}
     )
 
-    async def boom(prompt):
+    async def boom(prompt, reference_images=None):
         raise AssertionError("must not generate when cached")
 
     monkeypatch.setattr(visuals_api, "generate_image", boom)
@@ -88,7 +88,7 @@ def test_generate_all_generates_steps_in_order(fake_sb, monkeypatch):
     )
     prompts = []
 
-    async def fake_generate(prompt):
+    async def fake_generate(prompt, reference_images=None):
         prompts.append(prompt)
         return b"fake-png-bytes"
 
@@ -130,7 +130,7 @@ def test_generate_all_skips_cached_and_continues_on_failure(fake_sb, monkeypatch
     )
     prompts = []
 
-    async def fake_generate(prompt):
+    async def fake_generate(prompt, reference_images=None):
         if "step 2" in prompt:
             raise visuals_api.ImageGenUnavailable("down")
         prompts.append(prompt)
@@ -151,7 +151,7 @@ def test_generate_all_unapproved_skill_noop(fake_sb, monkeypatch):
     fake_sb.table("skills").insert({**SKILL, "status": "pending"})
     called = []
 
-    async def fake_generate(prompt):
+    async def fake_generate(prompt, reference_images=None):
         called.append(prompt)
         return b"fake-png-bytes"
 
@@ -162,3 +162,38 @@ def test_generate_all_unapproved_skill_noop(fake_sb, monkeypatch):
 
     asyncio.run(run())
     assert called == []
+
+
+def test_generate_all_threads_previous_panel(fake_sb, monkeypatch):
+    fake_sb.table("skills").insert(
+        {
+            **SKILL,
+            "reference_image_path": "photo-1.jpg",
+            "steps": [
+                {"order": 1, "instruction": "Cuci botol", "warning": None},
+                {"order": 2, "instruction": "Potong botol", "warning": None},
+            ],
+        }
+    )
+    calls = []
+
+    async def fake_generate(prompt, reference_images=None):
+        calls.append((prompt, reference_images))
+        return b"fake-png-bytes"
+
+    async def fake_load_ref(sb, skill):
+        return [b"photo-bytes"]
+
+    monkeypatch.setattr(visuals_api, "generate_image", fake_generate)
+    monkeypatch.setattr(visuals_api, "_load_reference_bytes", fake_load_ref)
+
+    async def run():
+        await visuals_api.generate_all_visuals(fake_sb, "s1")
+
+    asyncio.run(run())
+    assert len(calls) == 4  # 2 storyboards + before_after + mockup
+    # step 1: no previous panel yet -> photo only
+    assert calls[0][1] == [b"photo-bytes"]
+    assert "illustrator of a single DIY upcycling tutorial panel" in calls[0][0]
+    # step 2: previous panel output is the primary reference, photo second
+    assert calls[1][1] == [b"fake-png-bytes", b"photo-bytes"]

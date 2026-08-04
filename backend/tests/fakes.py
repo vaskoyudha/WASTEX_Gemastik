@@ -114,9 +114,14 @@ class FakeStorageBucket:
     def __init__(self):
         self.uploads = []
         self.removed = []
+        self._stored: dict[str, bytes] = {}
 
     def upload(self, path, data, file_options=None):
         self.uploads.append((path, len(data), file_options))
+        self._stored[path] = data if isinstance(data, bytes) else bytes(data)
+
+    def download(self, path):
+        return self._stored.get(path, b"")
 
     def remove(self, paths):
         self.removed.extend(paths)

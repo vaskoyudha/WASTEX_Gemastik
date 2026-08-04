@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.agent.tools.image_gen import (
     ImageGenUnavailable,
     build_before_after_prompt,
+    build_master_prompt,
     build_mockup_prompt,
     build_storyboard_prompt,
     generate_image,
@@ -42,7 +43,25 @@ def _cached_visual(sb: Client, skill_id: str, kind: str, step: int | None) -> di
     )
 
 
-async def _generate_visual(sb: Client, skill: dict, kind: Kind, step: int | None) -> dict:
+async def _load_reference_bytes(sb: Client, skill: dict) -> list[bytes]:
+    """Return the scan photo bytes (secondary anchor), empty list if none."""
+    path = skill.get("reference_image_path")
+    if not path:
+        return []
+    try:
+        data = sb.storage.from_("scans").download(path)
+        return [data if isinstance(data, bytes) else bytes(data)]
+    except Exception:
+        return []
+
+
+async def _generate_visual(
+    sb: Client,
+    skill: dict,
+    kind: Kind,
+    step: int | None,
+    reference_images: list[bytes] | None = None,
+) -> dict:
     if kind == "storyboard":
         target = _step_by_order(skill, step)
         if target is None:
@@ -53,17 +72,21 @@ async def _generate_visual(sb: Client, skill: dict, kind: Kind, step: int | None
     else:
         prompt = build_mockup_prompt(skill)
 
-    image = await generate_image(prompt)
+    refs = reference_images or []
+    final_prompt = build_master_prompt(prompt, has_references=bool(refs))
+    image = await generate_image(final_prompt, refs)
 
     path = _cache_key(skill["id"], kind, step)
     sb.storage.from_("visuals").upload(path, image, {"content-type": "image/png"})
+    ref_path = skill.get("reference_image_path")
     sb.table("generated_visuals").insert(
         {
             "skill_id": skill["id"],
             "kind": kind,
             "step_order": step,
             "image_path": path,
-            "prompt": prompt,
+            "prompt": final_prompt,
+            "reference_image_path": ref_path,
         }
     ).execute()
     return {
@@ -73,6 +96,11 @@ async def _generate_visual(sb: Client, skill: dict, kind: Kind, step: int | None
         "image_path": path,
         "cached": False,
     }
+
+
+async def _load_panel_bytes(sb: Client, image_path: str) -> bytes:
+    data = sb.storage.from_("visuals").download(image_path)
+    return data if isinstance(data, bytes) else bytes(data)
 
 
 async def generate_all_visuals(sb: Client, skill_id: str) -> None:
@@ -87,23 +115,35 @@ async def generate_all_visuals(sb: Client, skill_id: str) -> None:
     cached = sb.table("generated_visuals").select("*").eq("skill_id", skill_id).execute()
     have = {(row.get("kind"), row.get("step_order")) for row in (cached.data or [])}
 
+    photo = await _load_reference_bytes(sb, skill)
+    last_panel: bytes | None = None
+
     orders = sorted(
         st.get("order") for st in (skill.get("steps") or []) if st.get("order") is not None
     )
     for order in orders:
         if ("storyboard", order) in have:
+            row = next(
+                r
+                for r in (cached.data or [])
+                if (r.get("kind"), r.get("step_order")) == ("storyboard", order)
+            )
+            last_panel = await _load_panel_bytes(sb, row["image_path"])
             continue
         try:
-            await _generate_visual(sb, skill, "storyboard", order)
+            refs = [last_panel] + photo if last_panel is not None else list(photo)
+            out = await _generate_visual(sb, skill, "storyboard", order, refs)
+            last_panel = await _load_panel_bytes(sb, out["image_path"])
         except ImageGenUnavailable:
-            continue
+            last_panel = None
 
     extra: list[tuple[Kind, None]] = [("before_after", None), ("mockup", None)]
     for kind, step in extra:
         if (kind, step) in have:
             continue
         try:
-            await _generate_visual(sb, skill, kind, step)
+            refs = [last_panel] + photo if last_panel is not None else list(photo)
+            await _generate_visual(sb, skill, kind, step, refs[:3])
         except ImageGenUnavailable:
             continue
 
