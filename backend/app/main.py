@@ -24,15 +24,7 @@ from app.config import get_settings
 
 app = FastAPI(title="WASTEX AI Pipeline", version="0.1.0")
 
-# Add CORS middleware
 settings = get_settings()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Simple in-memory rate limiter (per-IP sliding window)
 request_counts: dict[str, list[float]] = defaultdict(list)
@@ -55,6 +47,17 @@ async def rate_limit_middleware(request, call_next):
 
     request_counts[client_ip].append(now)
     return await call_next(request)
+
+
+# CORS must be registered last so it wraps the rate limiter: 429 responses
+# from the limiter pass back through CORSMiddleware and keep CORS headers.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(scan.router, prefix="/scan", tags=["scan"])
