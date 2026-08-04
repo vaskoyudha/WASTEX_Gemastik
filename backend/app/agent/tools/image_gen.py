@@ -1,8 +1,7 @@
-import base64
+import base64 as b64
 
 import httpx
 
-from app.agent.tools.vision import parse_proxy_json
 from app.config import get_settings
 
 _MATERIAL_EN = {
@@ -60,23 +59,49 @@ class ImageGenUnavailable(Exception):
     pass
 
 
-async def generate_image(prompt: str) -> bytes:
+_REFERENCE_FIELD_NAMES = {
+    "codex": "image",  # codex accepts images[]; single primary ref via "image" for now
+}
+
+_MASTER_PROMPT = (
+    "Helpful, objective illustrator of a single DIY upcycling tutorial panel. "
+    "Rules: draw ONLY the action the step describes; never render text, letters, "
+    "numbers or watermarks in the image; single object centered, front-left 3/4 "
+    "view; composition and item must stay consistent across all panels that "
+    "share a reference image."
+)
+
+_REFERENCE_POLICY = (
+    " The previous panel is the truth for the item's look and style - match it. "
+    "The scan photo keeps the real object's shape/color/material accurate."
+)
+
+
+def build_master_prompt(step_prompt: str, has_references: bool) -> str:
+    policy = _REFERENCE_POLICY if has_references else ""
+    return f"{_MASTER_PROMPT}{policy}\n\n{step_prompt}"
+
+
+async def generate_image(prompt: str, reference_images: list[bytes] | None = None) -> bytes:
     s = get_settings()
+
+    payload: dict = {
+        "model": s.image_model,
+        "prompt": prompt,
+        "size": "1024x1024",
+    }
+    primary = reference_images[0] if reference_images else None
+    if primary is not None:
+        field = _REFERENCE_FIELD_NAMES.get(s.image_model.split("/")[0], "image")
+        payload[field] = b64.b64encode(primary).decode()
+        if field == "image" and s.image_model.split("/")[0] == "codex":
+            payload["image_detail"] = "high"
+
     async with httpx.AsyncClient(timeout=120) as client:
         r = await client.post(
-            f"{s.openrouter_base_url}/chat/completions",
+            f"{s.openrouter_base_url}/images/generations?response_format=binary",
             headers={"Authorization": f"Bearer {s.openrouter_api_key}"},
-            json={
-                "model": s.image_model,
-                "modalities": ["image", "text"],
-                "messages": [{"role": "user", "content": prompt}],
-            },
+            json=payload,
         )
         r.raise_for_status()
-        try:
-            data_url = parse_proxy_json(r.text)["choices"][0]["message"]["images"][0]["image_url"][
-                "url"
-            ]
-            return base64.b64decode(data_url.split(",", 1)[1])
-        except (KeyError, IndexError) as e:
-            raise ImageGenUnavailable("no image in provider response") from e
+        return r.content
