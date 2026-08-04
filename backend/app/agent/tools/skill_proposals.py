@@ -2,14 +2,18 @@ import json
 
 import httpx
 
+from app.agent.tools.vision import parse_proxy_json
 from app.schemas import SkillProposal, SkillVerifyResponse
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-
-SKILL_PROPOSAL_PROMPT = """Kamu adalah perancang kerajinan daur ulang (upcycling) yang teliti.
+SKILL_PROPOSAL_PROMPT = """# Tugas
+Kamu adalah perancang kerajinan daur ulang (upcycling) yang teliti.
 Buat 3 proposal skill yang BENAR-BENAR bisa dibuat dari material ini: {material}.
 
-Aturan wajib:
+## Iron Law
+HANYA GUNAKAN MATERIAL YANG DIBERIKAN. DILARANG MENAMBAH BAHAN UTAMA DARI LUAR.
+Jika material tidak cocok untuk ide apa pun, jawab daftar proposals kosong.
+
+## Aturan (MUST/NEVER)
 - HANYA gunakan material yang diberikan (salah satu dari:
   plastik_pet, plastik_hdpe, kardus, kaleng, kaca, sachet).
 - DILARANG menyarankan bahan utama dari luar daftar. Lem, cat, tali, atau pengait
@@ -20,6 +24,17 @@ Aturan wajib:
 - Tingkat kesulitan hanya salah satu dari: pemula, menengah, mahir.
 - Kondisi bahan: {condition}. Sesuaikan ide dengan kondisi tersebut.
 
+## Red Flags (hati-hati bila ini terjadi)
+- Ide butuh bahan utama di luar whitelist -> buang ide, ganti yang lain.
+- Langkah berisiko tanpa peringatan keamanan -> jangan diloloskan.
+- Ide mustahil dikerjakan di rumah (peralatan industri) -> buang.
+- Proposals lebih dari 3 -> jangan, maksimal 3.
+
+## Self-Check (sebelum menjawab)
+- Setiap proposal hanya memakai {material} sebagai bahan utama?
+- Semua langkah aman, jelas, dan peringatan ada untuk risiko?
+- JSON valid sesuai format?
+
 Jawab HANYA dengan JSON valid berformat:
 {{"proposals": [{{"title": "...", "description": "...",
   "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
@@ -28,13 +43,29 @@ Jawab HANYA dengan JSON valid berformat:
   "tools": [{{"name": "...", "optional": false}}],
   "est_cost_idr": 5000, "est_price_idr": 25000}}]}}"""
 
-SKILL_VERIFY_PROMPT = """Kamu adalah validator skill daur ulang yang ketat. Periksa draft skill berikut.
+SKILL_VERIFY_PROMPT = """# Tugas
+Kamu adalah validator skill daur ulang yang ketat. Periksa draft skill berikut.
 
-Periksa 4 aspek:
+## Iron Law
+VERDICT HANYA BERDASARKAN 4 ASPEK BERIKUT, BUKAN OPINI PRIBADI.
+Jika SATU aspek gagal, verdict = "perbaiki". Tanpa pengecualian.
+
+## Aturan (MUST/NEVER)
 1. Kesesuaian material: apakah semua langkah memang hanya memakai material yang dinyatakan?
 2. Kelayakan: apakah langkah-langkah masuk akal dan bisa benar-benar dikerjakan di rumah?
 3. Keamanan: apakah ada langkah berbahaya tanpa peringatan yang cukup?
 4. Kelengkapan: apakah urutan langkah lengkap dari awal sampai produk jadi?
+
+## Red Flags (hati-hati bila ini terjadi)
+- Langkah berbahaya (tajam/panas/beracun) tanpa peringatan -> WAJIB "perbaiki".
+- Bahan utama di luar material yang dinyatakan -> WAJIB "perbaiki".
+- Feedback kosong saat verdict "perbaiki" -> jangan, beri alasan spesifik.
+- Verdict "layak" karena enggan menolak -> jangan, ikuti aspek.
+
+## Self-Check (sebelum menjawab)
+- Verdict konsisten dengan hasil 4 aspek?
+- Feedback menyebut masalah spesifik, bukan umum?
+- JSON valid sesuai format?
 
 Jawab HANYA dengan JSON valid berformat:
 {"verdict": "layak" atau "perbaiki",
@@ -73,8 +104,11 @@ def _build_verify_messages(draft: SkillProposal, chat_history: list[dict]) -> li
 async def _post_json(
     client: httpx.AsyncClient, messages: list[dict], model: str, api_key: str
 ) -> dict:
+    from app.config import get_settings
+
+    s = get_settings()
     r = await client.post(
-        OPENROUTER_URL,
+        f"{s.openrouter_base_url}/chat/completions",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": model,
@@ -83,7 +117,7 @@ async def _post_json(
         },
     )
     r.raise_for_status()
-    return json.loads(r.json()["choices"][0]["message"]["content"])
+    return json.loads(parse_proxy_json(r.text)["choices"][0]["message"]["content"])
 
 
 class SkillGenUnavailable(Exception):

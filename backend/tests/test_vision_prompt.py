@@ -13,6 +13,18 @@ def test_prompt_handles_ambiguity():
     assert "0.6" in VISION_PROMPT
 
 
+def test_prompt_has_behavioral_contract():
+    assert "Iron Law" in VISION_PROMPT
+    assert "MUST" in VISION_PROMPT or "WAJIB" in VISION_PROMPT
+    assert "Red Flags" in VISION_PROMPT
+    assert "Self-Check" in VISION_PROMPT
+    assert "confusion pairs" in VISION_PROMPT.lower()
+
+
+def test_prompt_forbids_guessing():
+    assert "Jangan tebak" in VISION_PROMPT or "jangan menebak" in VISION_PROMPT.lower()
+
+
 def test_messages_use_detail_high():
     messages = build_vision_messages("data:image/jpeg;base64,AAAA")
     image_part = messages[0]["content"][1]

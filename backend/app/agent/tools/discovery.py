@@ -13,15 +13,50 @@ from app.schemas import Material, SafetyVerdict, SkillDraft
 
 logger = logging.getLogger(__name__)
 
-DRAFT_PROMPT = """Kamu menyusun draft keterampilan upcycling untuk knowledge base WASTEX.
-Gunakan HANYA sumber dari whitelist yang diberikan - kutip di field sources.
-Jika whitelist tidak memuat informasi yang cukup, buat draft konservatif dan aman.
-Langkah harus konkret, alat terjangkau, risiko disertai mitigasi."""
+DRAFT_PROMPT = """# Tugas
+Kamu menyusun draft keterampilan upcycling untuk knowledge base WASTEX.
 
-SAFETY_RUBRIC = """Periksa draft keterampilan upcycling terhadap rubrik keselamatan.
+## Iron Law
+GUNAKAN HANYA SUMBER DARI WHITELIST YANG DIBERIKAN. DILARANG MENGARANG.
+Kutip setiap sumber di field sources. Jika whitelist tidak memuat informasi yang cukup,
+buat draft konservatif dan aman - jangan mengisi kekosongan dengan dugaan.
+
+## Aturan (MUST/NEVER)
+1. Gunakan HANYA sumber dari whitelist yang diberikan - kutip di field sources.
+2. Jika whitelist tidak memuat informasi yang cukup, buat draft konservatif dan aman.
+3. Langkah harus konkret, alat terjangkau, risiko disertai mitigasi.
+4. JANGAN menambahkan langkah, teknik, atau bahan yang tidak ada di sumber.
+
+## Red Flags (hati-hati bila ini terjadi)
+- Draft mengandalkan pengetahuan di luar whitelist -> buang, ganti dengan sumber.
+- Langkah berisiko tanpa mitigasi -> perbaiki.
+- Alat yang tidak terjangkau rumah tangga -> ganti.
+- Sources kosong/tidak mengutip -> perbaiki.
+
+## Self-Check (sebelum menjawab)
+- Setiap klaim keterampilan ada di whitelist dan dikutip?
+- Draft aman, konkret, alat terjangkau, risiko punya mitigasi?"""
+
+SAFETY_RUBRIC = """# Tugas
+Periksa draft keterampilan upcycling terhadap rubrik keselamatan.
+
+## Iron Law
+SAFE = FALSE JIKA ADA SATU PELANGGARAN PUN. Tidak ada keselamatan yang "hampir lolos".
+
+## Aturan (WAJIB)
 DILARANG (safe=false jika ada): melelehkan/membakar PVC atau plastik apa pun,
 memotong kaca untuk tingkat pemula, api terbuka dekat aerosol/bahan mudah terbakar,
 bahan kimia korosif tanpa APD, langkah tanpa mitigasi untuk bahaya tajam/panas.
+
+## Red Flags (hati-hati bila ini terjadi)
+- Langkah berbahaya tapi terloloskan -> jangan, WAJIB safe=false.
+- Kaca/violation lain untuk pemula -> WAJIB safe=false.
+- Daftar violations kosong saat draft mengandung risiko -> jangan.
+
+## Self-Check (sebelum menjawab)
+- Semua langkah diperiksa terhadap 5 larangan di atas?
+- Violations mencantumkan semua pelanggaran yang ditemukan?
+
 Kembalikan safe dan daftar violations."""
 
 

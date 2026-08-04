@@ -20,7 +20,10 @@ async def search_skills(
     sb: Client, query: str, material: str | None = None
 ) -> list[RetrievedChunk]:
     s = get_settings()
-    embedding = await embed_query(query)
+    try:
+        embedding = await embed_query(query)
+    except Exception:
+        return []
     res = sb.rpc(
         "hybrid_search",
         {

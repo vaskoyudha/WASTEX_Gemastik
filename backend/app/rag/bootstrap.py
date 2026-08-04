@@ -12,10 +12,28 @@ from app.schemas import Difficulty, Material, SkillDraft
 
 SOURCES_PATH = Path(__file__).resolve().parents[2] / "sources.yaml"
 
-SEED_PROMPT = """Kamu menyusun draft keterampilan upcycling untuk knowledge base WASTEX.
-Gunakan HANYA sumber dari whitelist yang diberikan - kutip di field sources.
-Keterampilan harus aman, konkret, dengan alat terjangkau; setiap risiko wajib punya mitigasi.
-Sesuaikan kompleksitas dengan tingkat kesulitan yang diminta."""
+SEED_PROMPT = """# Tugas
+Kamu menyusun draft keterampilan upcycling untuk knowledge base WASTEX.
+
+## Iron Law
+GUNAKAN HANYA SUMBER DARI WHITELIST YANG DIBERIKAN. DILARANG MENGARANG.
+Kutip setiap sumber di field sources. Jika whitelist tidak memuat informasi yang cukup,
+buat draft konservatif dan aman - jangan mengisi kekosongan dengan dugaan.
+
+## Aturan (MUST/NEVER)
+1. Gunakan HANYA sumber dari whitelist yang diberikan - kutip di field sources.
+2. Keterampilan harus aman, konkret, dengan alat terjangkau; setiap risiko wajib punya mitigasi.
+3. Sesuaikan kompleksitas dengan tingkat kesulitan yang diminta.
+4. JANGAN menambahkan langkah, teknik, atau bahan yang tidak ada di sumber.
+
+## Red Flags (hati-hati bila ini terjadi)
+- Draft mengandalkan pengetahuan di luar whitelist -> buang, ganti dengan sumber.
+- Langkah berisiko tanpa mitigasi -> perbaiki.
+- Kompleksitas tidak sesuai tingkat kesulitan yang diminta -> perbaiki.
+
+## Self-Check (sebelum menjawab)
+- Setiap klaim keterampilan ada di whitelist dan dikutip?
+- Draft aman, konkret, alat terjangkau, risiko punya mitigasi?"""
 
 
 def load_sources() -> list[dict]:

@@ -2,9 +2,8 @@ import base64
 
 import httpx
 
+from app.agent.tools.vision import parse_proxy_json
 from app.config import get_settings
-
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 _MATERIAL_EN = {
     "plastik_pet": "clear PET plastic bottle",
@@ -65,7 +64,7 @@ async def generate_image(prompt: str) -> bytes:
     s = get_settings()
     async with httpx.AsyncClient(timeout=120) as client:
         r = await client.post(
-            OPENROUTER_URL,
+            f"{s.openrouter_base_url}/chat/completions",
             headers={"Authorization": f"Bearer {s.openrouter_api_key}"},
             json={
                 "model": s.image_model,
@@ -75,7 +74,9 @@ async def generate_image(prompt: str) -> bytes:
         )
         r.raise_for_status()
         try:
-            data_url = r.json()["choices"][0]["message"]["images"][0]["image_url"]["url"]
+            data_url = parse_proxy_json(r.text)["choices"][0]["message"]["images"][0]["image_url"][
+                "url"
+            ]
             return base64.b64decode(data_url.split(",", 1)[1])
         except (KeyError, IndexError) as e:
             raise ImageGenUnavailable("no image in provider response") from e

@@ -131,6 +131,10 @@ class FakeResponse:
     def json(self):
         return {"choices": [{"message": {"content": json.dumps(self._payload)}}]}
 
+    @property
+    def text(self):
+        return json.dumps(self.json())
+
 
 class FakeClient:
     def __init__(self, payload, failures=0):
