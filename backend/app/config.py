@@ -7,14 +7,15 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     openrouter_api_key: str
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
     deepinfra_api_key: str
     supabase_url: str
     supabase_service_key: str
     database_url: str = ""
 
     chat_model: str = "deepseek/deepseek-chat"
-    vision_model: str = "openai/gpt-4o"
-    vision_fallback_model: str = "google/gemini-2.5-flash"
+    vision_model: str = "oc/mimo-v2.5-free"
+    vision_fallback_model: str = "oc/mimo-v2.5-free"
     chat_fallback_model: str = "google/gemini-2.5-flash"
     image_model: str = "google/gemini-2.5-flash-image-preview"
     embedding_model: str = "BAAI/bge-m3"
