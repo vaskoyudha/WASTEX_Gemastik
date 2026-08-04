@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from app.agent.tools.skill_proposals import SkillGenUnavailable, generate_proposals, verify_draft
+from app.api.visuals import generate_all_visuals
 from app.auth import get_current_user
 from app.deps import get_optional_user_id, get_supabase, require_expert_or_service
 from app.rag.ingest import ingest_skill
@@ -134,4 +135,5 @@ async def update_status(
     # Gate 4: approval triggers chunk+embed; only then is the skill retrievable.
     if body.status == SkillStatus.approved:
         background_tasks.add_task(ingest_skill, sb, skill_id)
+        background_tasks.add_task(generate_all_visuals, sb, skill_id)
     return res.data[0]

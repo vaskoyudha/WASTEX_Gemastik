@@ -209,6 +209,28 @@ def test_gate4_approve_triggers_ingest(fake_sb, monkeypatch):
     assert ingested == [SKILL_ID]
 
 
+def test_gate4_approve_triggers_eager_visual_generation(fake_sb, monkeypatch):
+    fake_sb.tables["skills"] = FakeTable(
+        [{"id": SKILL_ID, "status": "draft", "steps": [{"order": 1}]}]
+    )
+    ingested = []
+    generated = []
+
+    async def fake_ingest(sb, skill_id):
+        ingested.append(str(skill_id))
+
+    async def fake_visuals(sb, skill_id):
+        generated.append(str(skill_id))
+
+    monkeypatch.setattr(skills_module, "ingest_skill", fake_ingest)
+    monkeypatch.setattr(skills_module, "generate_all_visuals", fake_visuals)
+    r = client.patch(
+        f"/skills/{SKILL_ID}/status", json={"status": "approved"}, headers=SERVICE_AUTH
+    )
+    assert r.status_code == 200
+    assert generated == [SKILL_ID]
+
+
 def test_gate4_rejection_does_not_ingest(fake_sb, monkeypatch):
     fake_sb.tables["skills"] = FakeTable([{"id": SKILL_ID, "status": "draft"}])
     ingested = []
