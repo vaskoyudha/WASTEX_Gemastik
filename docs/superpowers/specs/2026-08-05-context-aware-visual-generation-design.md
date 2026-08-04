@@ -34,7 +34,7 @@ Make WASTEX skill visuals (storyboard panels, before/after, mockup) reference th
 - Audit trail of which reference image(s) fed a given panel (photo path, previous panel path, or both)
 - Populated along with the existing `prompt` column
 
-**Frontend:** skill-creator already has the scan (`ScanResult.scan_id`); the create-skill payload gains `reference_image_path` — backend resolves the scan row to its `image_url` object path. No public URL needed; storage is internal (same service account).
+**Frontend:** the backend `scan` response already carries `scan_id` (`BackendScanResult.scan_id`), but the frontend `ApiScanner.scan()` currently **drops it** — `ScanResult` must gain a `scan_id` field, populated from the backend response, and `skill-creator` must pass it in the create-skill payload. The backend resolves the scan row (`scans.id = scan_id`) to its `image_url` object path and writes it as `skills.reference_image_path`. No public URL needed; storage is internal (same service account).
 
 ### 2. Image generation request (backend/app/agent/tools/image_gen.py)
 
