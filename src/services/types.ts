@@ -36,6 +36,7 @@ export interface ScanResult {
   safetyNotes: string[];
   potentialUses: string[];
   needsVerification?: boolean;
+  scan_id?: string;
 }
 
 export interface WasteScannerService {

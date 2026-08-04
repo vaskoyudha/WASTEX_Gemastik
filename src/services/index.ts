@@ -119,6 +119,7 @@ class ApiScanner implements WasteScannerService {
       condition: result.identification?.condition ?? base.condition,
       confidence: result.identification?.confidence ?? 0,
       needsVerification: result.status === "needs_manual_verification",
+      scan_id: result.scan_id,
     };
   }
 

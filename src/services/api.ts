@@ -82,7 +82,7 @@ export const apiClient = {
     return request(`/skills/${id}`);
   },
 
-  async createSkill(data: SkillProposal) {
+  async createSkill(data: SkillProposal & { reference_scan_id?: string }) {
     return request('/skills', { method: 'POST', body: data, headers: await authHeaders() });
   },
 

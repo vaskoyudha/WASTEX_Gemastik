@@ -116,7 +116,7 @@ export default function SkillCreatorScreen() {
     if (!draft || submitting) return;
     setSubmitting(true);
     try {
-      await apiClient.createSkill(draft);
+      await apiClient.createSkill({ ...draft, reference_scan_id: scanResult?.scan_id });
       setVerifyVisible(false);
       setStage('done');
     } catch {
