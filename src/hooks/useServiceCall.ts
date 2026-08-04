@@ -23,6 +23,7 @@ export function useServiceCall<T, Args extends any[] = any[]>(
   const { autoCall = false, onSuccess, onError } = options;
   const initialArgs = options.initialArgs ?? (EMPTY_ARGS as Args);
   const initialArgsRef = useRef(initialArgs);
+  const lastFiredArgsRef = useRef<Args | null>(null);
 
   useEffect(() => {
     initialArgsRef.current = initialArgs;
@@ -69,9 +70,18 @@ export function useServiceCall<T, Args extends any[] = any[]>(
   }, []);
 
   useEffect(() => {
-    if (autoCall) {
-      execute(...initialArgsRef.current);
+    if (!autoCall) return;
+    const args = initialArgsRef.current;
+    const prev = lastFiredArgsRef.current;
+    const sameValues =
+      prev !== null &&
+      args.length === prev.length &&
+      args.every((value, i) => Object.is(value, prev[i]));
+    if (!sameValues) {
+      lastFiredArgsRef.current = args;
+      execute(...args);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoCall, execute, initialArgs]);
 
   return {

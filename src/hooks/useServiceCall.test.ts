@@ -58,5 +58,55 @@ describe("useServiceCall", () => {
     await waitFor(() => expect(result.current.data).toBe("second"));
     expect(service).toHaveBeenLastCalledWith("latest");
   });
+
+  it("auto-calls once even when initialArgs is a fresh array every render", async () => {
+    const service = jest.fn().mockResolvedValue("ok");
+    const arg = { id: "scan-1" };
+
+    const { rerender } = await renderHook(
+      ({ args }: { args: [{ id: string }] }) =>
+        useServiceCall<{ id: string }, [{ id: string }]>(service, {
+          autoCall: true,
+          initialArgs: args,
+        }),
+      { initialProps: { args: [arg] } }
+    );
+
+    await waitFor(() => expect(service).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      rerender({ args: [arg] });
+    });
+    await act(async () => {
+      rerender({ args: [arg] });
+    });
+    await act(async () => {
+      rerender({ args: [arg] });
+    });
+
+    expect(service).toHaveBeenCalledTimes(1);
+  });
+
+  it("auto-calls again when the initialArgs values change", async () => {
+    const service = jest.fn().mockResolvedValue("ok");
+
+    const { rerender } = await renderHook(
+      ({ args }: { args: [string] }) =>
+        useServiceCall<string, [string]>(service, {
+          autoCall: true,
+          initialArgs: args,
+        }),
+      { initialProps: { args: ["a"] } }
+    );
+
+    await waitFor(() => expect(service).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      rerender({ args: ["b"] });
+    });
+
+    await waitFor(() => expect(service).toHaveBeenCalledTimes(2));
+    expect(service).toHaveBeenLastCalledWith("b");
+  });
 });
 
