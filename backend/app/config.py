@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     supabase_service_key: str
     database_url: str = ""
 
-    chat_model: str = "deepseek/deepseek-chat"
+    chat_model: str = "oc/mimo-v2.5-free"
     vision_model: str = "oc/mimo-v2.5-free"
     vision_fallback_model: str = "oc/mimo-v2.5-free"
     chat_fallback_model: str = "google/gemini-2.5-flash"
