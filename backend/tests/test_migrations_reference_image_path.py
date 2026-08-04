@@ -11,7 +11,4 @@ SQL = MIG_PATH.read_text()
 
 def test_migration_adds_reference_image_path_columns():
     assert "alter table skills add column if not exists reference_image_path text" in SQL
-    assert (
-        "alter table generated_visuals add column if not exists reference_image_path text"
-        in SQL
-    )
+    assert "alter table generated_visuals add column if not exists reference_image_path text" in SQL
