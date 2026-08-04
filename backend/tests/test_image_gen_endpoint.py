@@ -1,7 +1,11 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from app.agent.tools.image_gen import build_master_prompt, generate_image
+from app.agent.tools.image_gen import (
+    ImageGenUnavailable,
+    build_master_prompt,
+    generate_image,
+)
 
 
 def asyncio_run(coro):
@@ -54,6 +58,31 @@ def test_generate_image_sends_reference_image():
             import base64
 
             assert captured["image"] == base64.b64encode(b"\x89PNG-prev").decode()
+
+
+def test_generate_image_raises_unavailable_on_provider_error():
+    import httpx
+
+    async def fake_post(url, headers=None, json=None):
+        response = AsyncMock()
+        response.raise_for_status = lambda: (_ for _ in ()).throw(
+            httpx.HTTPStatusError("503", request=httpx.Request("POST", url), response=response)
+        )
+        return response
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_client.return_value.__aenter__.return_value.post = fake_post
+        with patch("app.agent.tools.image_gen.get_settings") as mock_settings:
+            mock_settings.return_value.openrouter_base_url = "http://proxy/v1"
+            mock_settings.return_value.openrouter_api_key = "key"
+            mock_settings.return_value.image_model = "oc/test-image-model"
+
+            exc = None
+            try:
+                asyncio_run(generate_image("a bottle"))
+            except ImageGenUnavailable as e:
+                exc = e
+            assert exc is not None
 
 
 def test_master_prompt_layers():

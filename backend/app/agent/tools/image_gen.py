@@ -98,10 +98,13 @@ async def generate_image(prompt: str, reference_images: list[bytes] | None = Non
             payload["image_detail"] = "high"
 
     async with httpx.AsyncClient(timeout=120) as client:
-        r = await client.post(
-            f"{s.openrouter_base_url}/images/generations?response_format=binary",
-            headers={"Authorization": f"Bearer {s.openrouter_api_key}"},
-            json=payload,
-        )
-        r.raise_for_status()
+        try:
+            r = await client.post(
+                f"{s.openrouter_base_url}/images/generations?response_format=binary",
+                headers={"Authorization": f"Bearer {s.openrouter_api_key}"},
+                json=payload,
+            )
+            r.raise_for_status()
+        except httpx.HTTPError as e:
+            raise ImageGenUnavailable("image provider error") from e
         return r.content
