@@ -238,4 +238,4 @@ class SkillVerifyResponse(BaseModel):
 
 
 class SkillCreateRequest(SkillProposal):
-    pass
+    reference_scan_id: UUID | None = None

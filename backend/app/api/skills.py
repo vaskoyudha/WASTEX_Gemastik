@@ -111,8 +111,36 @@ def create_skill(
     if any(str(row.get("created_by")) == user["user_id"] for row in dup.data):
         raise HTTPException(status_code=409, detail="skill serupa sudah pernah dibuat")
 
+    reference_image_path = None
+    if body.reference_scan_id is not None:
+        scans = (
+            sb.table("scans")
+            .select("id, user_id, image_url")
+            .eq("id", str(body.reference_scan_id))
+            .limit(1)
+            .execute()
+        )
+        scan_row = next(
+            (
+                r
+                for r in (scans.data or [])
+                if r.get("id") == str(body.reference_scan_id) and r.get("image_url")
+            ),
+            None,
+        )
+        if scan_row is not None and str(scan_row.get("user_id", "")) == user["user_id"]:
+            reference_image_path = scan_row["image_url"]
+
     payload = body.model_dump(mode="json")
-    payload.update({"status": "pending", "origin": "user", "created_by": user["user_id"]})
+    payload.pop("reference_scan_id", None)
+    payload.update(
+        {
+            "status": "pending",
+            "origin": "user",
+            "created_by": user["user_id"],
+            "reference_image_path": reference_image_path,
+        }
+    )
     res = sb.table("skills").insert(payload).execute()
     return res.data[0]
 
