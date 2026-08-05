@@ -105,6 +105,41 @@ describe("AuthService", () => {
     });
   });
 
+  it("falls back to backend login when supabase is unreachable", async () => {
+    (supabase.auth.signInWithPassword as jest.Mock).mockRejectedValue(
+      new Error("network error")
+    );
+
+    (apiClient.login as jest.Mock).mockResolvedValue({
+      access_token: "es256-token",
+      user_id: "user-456",
+      profile: {
+        id: "prof-456",
+        auth_user_id: "user-456",
+        display_name: "Fallback User",
+        first_name: null,
+        last_name: null,
+        bio: null,
+        phone: null,
+        avatar_url: null,
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: null,
+      },
+    });
+
+    const authService = createAuthService(apiClient);
+    const result = await authService.signIn("test@example.com", "password123");
+
+    expect(result.userId).toBe("user-456");
+    expect(result.accessToken).toBe("es256-token");
+    expect(result.profile.displayName).toBe("Fallback User");
+    expect(authService.isLoggedIn()).toBe(true);
+    expect(apiClient.login).toHaveBeenCalledWith({
+      email: "test@example.com",
+      password: "password123",
+    });
+  });
+
   it("signs out and clears storage", async () => {
     (supabase.auth.signUp as jest.Mock).mockReturnValue(
       Promise.resolve({ data: { user: { id: "user-123" } }, error: null })

@@ -102,22 +102,45 @@ export class LocalAuthService implements AuthService {
   }
 
   async signIn(email: string, password: string): Promise<AuthResult> {
-    const response = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const client = this.apiClient || await import("../api").then((m) => m.apiClient);
 
-    if (!response.data.user) {
-      throw new Error(response.error?.message || "Sign in failed");
+    try {
+      const response = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (response.data.user) {
+        const profileResponse = await client.login({ email, password } as any);
+        return this.persistSession(
+          email,
+          response.data.user.id,
+          response.data.session?.access_token ?? profileResponse.access_token ?? null,
+          profileResponse
+        );
+      }
+    } catch {
+      // Supabase unreachable (e.g. web dev without local Supabase) — fall back to backend login.
     }
 
-    // Fetch profile from backend API
-    const client = this.apiClient || await import("../api").then((m) => m.apiClient);
     const profileResponse = await client.login({ email, password } as any);
+    return this.persistSession(
+      email,
+      profileResponse.user_id,
+      profileResponse.access_token ?? null,
+      profileResponse
+    );
+  }
 
+  private persistSession(
+    email: string,
+    userId: string,
+    accessToken: string | null,
+    profileResponse: any
+  ): AuthResult {
     const userProfile: UserProfile = {
       id: profileResponse.profile.id,
-      authUserId: response.data.user.id,
+      authUserId: userId,
       displayName: profileResponse.profile.display_name,
       firstName: profileResponse.profile.first_name,
       lastName: profileResponse.profile.last_name,
@@ -129,9 +152,9 @@ export class LocalAuthService implements AuthService {
     };
 
     const user: User = {
-      id: response.data.user.id,
+      id: userId,
       email,
-      accessToken: response.data.session?.access_token ?? profileResponse.access_token ?? null,
+      accessToken,
       profile: userProfile,
     };
     this.user = user;
