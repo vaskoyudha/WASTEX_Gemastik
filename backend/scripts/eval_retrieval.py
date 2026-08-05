@@ -4,7 +4,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from app.agent.tools.retrieval import search_skills
+from app.agent.tools.retrieval import search_corpus
 from app.deps import get_supabase
 from app.eval.metrics import hit_at_k, mean_reciprocal_rank
 
@@ -22,11 +22,13 @@ async def main() -> None:
     lines = [ln for ln in DATASET.read_text().splitlines() if ln.strip()]
     for line in lines:
         case = json.loads(line)
-        chunks = await search_skills(sb, case["query"], case["material"])
+        chunks = await search_corpus(sb, case["query"], case["material"])
         retrieved_ids = []
         for c in chunks:
-            if c.skill_id not in retrieved_ids:
-                retrieved_ids.append(c.skill_id)
+            if c.source_type != "skill":
+                continue
+            if c.source_id not in retrieved_ids:
+                retrieved_ids.append(c.source_id)
         expected_ids = [
             sid
             for sid, title in title_by_id.items()
