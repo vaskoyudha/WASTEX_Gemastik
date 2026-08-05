@@ -43,7 +43,7 @@ class ToolItem(BaseModel):
 class AdditionalMaterial(BaseModel):
     name: str
     category: Literal["tali", "cat", "lem", "tanah_tanaman", "pengait", "alat", "lainnya"]
-    est_cost_idr: int = 0
+    est_cost_idr: int = Field(default=0, ge=0)
     purpose: str = ""
 
 
@@ -225,7 +225,7 @@ class SkillProposal(BaseModel):
     steps: list[Step] = []
     tools: list[ToolItem] = []
     additional_materials: list[AdditionalMaterial] = []
-    est_cost_idr: int | None = None
+    est_cost_idr: int | None = Field(default=None, ge=0)
     est_price_idr: int | None = None
 
 

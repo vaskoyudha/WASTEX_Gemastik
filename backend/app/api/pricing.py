@@ -46,7 +46,8 @@ async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
     material_cost = skill.get("est_cost_idr") or MATERIAL_COSTS.get(skill.get("material"), 500)
 
     additional_items = skill.get("additional_materials") or []
-    additional_materials_cost = skill.get("additional_materials_cost_idr") or sum(
+    stored_additional_cost = skill.get("additional_materials_cost_idr")
+    additional_materials_cost = stored_additional_cost or sum(
         int(item.get("est_cost_idr") or 0) for item in additional_items
     )
     total_cost = material_cost + labor_cost + additional_materials_cost

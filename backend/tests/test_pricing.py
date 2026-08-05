@@ -88,3 +88,27 @@ def test_pricing_includes_additional_materials(fake_sb):
     assert body["additional_materials_cost"] == 3000
     assert body["additional_materials"][0]["name"] == "tali"
     assert body["total_cost"] == body["material_cost"] + body["labor_cost"] + 3000
+
+
+def test_pricing_falls_back_to_item_sum_when_stored_zero(fake_sb):
+    fake_sb.table("skills").insert(
+        {
+            "id": "s4",
+            "title": "Pot Gantung Legacy",
+            "material": "kaleng",
+            "difficulty": "pemula",
+            "steps": [{"order": 1, "instruction": "x"}],
+            "est_cost_idr": 800,
+            "est_price_idr": None,
+            "additional_materials": [
+                {"name": "tali", "category": "tali", "est_cost_idr": 3000, "purpose": "gantungan"},
+                {"name": "cat", "category": "cat", "est_cost_idr": 2000, "purpose": "finishing"},
+            ],
+            "additional_materials_cost_idr": 0,
+        }
+    )
+    client = TestClient(app)
+    r = client.get("/pricing/s4")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["additional_materials_cost"] == 5000

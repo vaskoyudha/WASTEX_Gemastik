@@ -70,6 +70,11 @@ def test_additional_material_unknown_category_rejected():
         AdditionalMaterial(name="x", category="nuklir")
 
 
+def test_additional_material_rejects_negative_cost():
+    with pytest.raises(ValidationError):
+        AdditionalMaterial(name="tali", category="tali", est_cost_idr=-1)
+
+
 def test_skill_proposal_accepts_additional_materials():
     p = SkillProposal.model_validate(
         {
@@ -88,3 +93,14 @@ def test_skill_proposal_accepts_additional_materials():
         }
     )
     assert p.additional_materials[0].name == "tali"
+
+
+def test_skill_proposal_rejects_negative_est_cost():
+    with pytest.raises(ValidationError):
+        SkillProposal(
+            title="Pot dari Kaleng",
+            description="Pot gantung dari kaleng bekas.",
+            material=Material.kaleng,
+            difficulty="pemula",
+            est_cost_idr=-5000,
+        )
