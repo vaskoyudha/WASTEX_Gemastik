@@ -139,10 +139,49 @@ coverage report), builder query uji, dan logika PASS/FAIL — test file baru
 `backend/tests/test_corpus_scripts.py` dengan FakeSupabase + monkeypatch (pola
 yang sudah ada). Script utama tetap tipis (orchestrasi + I/O), helper di-test.
 
-## 8. Scope
+## 9. E2E Testing — Alur AI Lengkap
+
+### 9.1 Backend E2E — `backend/eval/e2e_skill_flow.py` (baru)
+
+Jalan melawan live server + Supabase asli (pola `smoke_e2e.py` yang sudah ada;
+butuh key asli, bukan gate CI):
+
+```
+1. POST /scan (foto asli) → material teridentifikasi
+2. POST /recommend → status grounded (RAG jalan)
+3. POST /skills/proposals → 3 ide muncul
+4. POST /skills/verify → verdict "layak"
+5. POST /skills → status pending
+6. PATCH /skills/{id}/status (service role) → approved → ingest
+7. POST /recommend ulang → skill baru TER-RETRIEVE (bukti masuk korpus)
+```
+
+- Assertion tiap langkah; exit non-zero kalau ada yang gagal.
+- Langkah 7 adalah bukti end-to-end: skill yang baru dibuat benar-benar
+  menjawab user lewat RAG.
+- Catatan: langkah 6 men-set status tanpa melewati expert gate (service role)
+  — hanya untuk E2E; skill uji diberi judul ber-awalan `[E2E]` dan dihapus
+  setelah selesai (cleanup: hapus row skills + chunks terkait).
+
+### 9.2 Frontend E2E — Playwright (e2e/ dir sudah ada)
+
+Perjalanan user di app (Expo web):
+
+```
+1. Expo web → scan (upload foto) → hasil material
+2. Klik "Buat Skill Baru dari Material Ini" → skill-creator
+3. 3 proposal muncul → pilih → edit → verify → submit
+4. Status pending muncul di "Skill Saya"
+```
+
+- Butuh: Expo dev server + backend + Supabase asli — **manual/opsional, bukan gate CI**.
+- Script Playwright di `e2e/` (direktori sudah ada, saat ini kosong).
+
+## 10. Scope
 
 - **Baru:** `backend/scripts/seed_corpus.py`, `approve_corpus.py`,
   `ingest_documents.py`, `check_coverage.py`, `backend/tests/test_corpus_scripts.py`,
+  `backend/eval/e2e_skill_flow.py`, script Playwright di `e2e/`,
   kurasi berkelanjutan di `sources.yaml` (living document).
 - **Reuse:** `draft_seed_skills`, `_safety_checker`, `ingest_skill`,
   `ingest_document`, `search_corpus`, storage bucket `documents`.
