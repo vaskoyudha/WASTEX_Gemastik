@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.config import get_settings
 from app.rag.embeddings import embed_query
@@ -9,14 +9,15 @@ from supabase import Client
 @dataclass
 class RetrievedChunk:
     chunk_id: str
-    skill_id: str
-    content: str
-    metadata: dict
-    rrf_score: float
+    source_type: str = "skill"
+    source_id: str = ""
+    content: str = ""
+    metadata: dict = field(default_factory=dict)
+    rrf_score: float = 0.0
     rerank_score: float = 0.0
 
 
-async def search_skills(
+async def search_corpus(
     sb: Client, query: str, material: str | None = None
 ) -> list[RetrievedChunk]:
     s = get_settings()
@@ -37,7 +38,8 @@ async def search_skills(
     chunks = [
         RetrievedChunk(
             chunk_id=r["chunk_id"],
-            skill_id=r["skill_id"],
+            source_type=r.get("source_type", "skill"),
+            source_id=r.get("source_id", r.get("skill_id", "")),
             content=r["content"],
             metadata=r["metadata"],
             rrf_score=r["score"],

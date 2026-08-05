@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from app.agent.fallback import generic_safe_procedure
 from app.agent.orchestrator import build_query, generate_solution
 from app.agent.tools.discovery import discover_skill
-from app.agent.tools.retrieval import search_skills
+from app.agent.tools.retrieval import search_corpus
 from app.config import get_settings
 from app.deps import get_supabase
 from app.schemas import Material, RecommendRequest, RecommendResponse
@@ -37,7 +37,7 @@ async def recommend(
     gate_path.append("vision_ok")
 
     query = build_query(material.value, condition, req.user_intent)
-    chunks = await search_skills(sb, query, material.value)
+    chunks = await search_corpus(sb, query, material.value)
 
     # Gate 2: knowledge gap -> fire discovery, answer with generic safe procedure.
     threshold = get_settings().rerank_score_threshold

@@ -97,7 +97,7 @@ def test_gate2_no_results_fires_discovery_and_falls_back(fake_sb, monkeypatch):
     async def record_discover(material, user_intent):
         calls.append((material, user_intent))
 
-    monkeypatch.setattr(recommend_module, "search_skills", no_chunks)
+    monkeypatch.setattr(recommend_module, "search_corpus", no_chunks)
     monkeypatch.setattr(recommend_module, "discover_skill", record_discover)
     r = client.post("/recommend", json={"material": "sachet", "user_intent": "dompet"})
     body = r.json()
@@ -109,7 +109,13 @@ def test_gate2_no_results_fires_discovery_and_falls_back(fake_sb, monkeypatch):
 
 def test_gate2_low_rerank_score_falls_back(fake_sb, monkeypatch):
     weak = RetrievedChunk(
-        chunk_id="c1", skill_id="s1", content="x", metadata={}, rrf_score=0.03, rerank_score=0.10
+        chunk_id="c1",
+        source_type="skill",
+        source_id="s1",
+        content="x",
+        metadata={},
+        rrf_score=0.03,
+        rerank_score=0.10,
     )
 
     async def weak_chunks(sb, query, material=None):
@@ -118,7 +124,7 @@ def test_gate2_low_rerank_score_falls_back(fake_sb, monkeypatch):
     async def record_discover(material, user_intent):
         pass
 
-    monkeypatch.setattr(recommend_module, "search_skills", weak_chunks)
+    monkeypatch.setattr(recommend_module, "search_corpus", weak_chunks)
     monkeypatch.setattr(recommend_module, "discover_skill", record_discover)
     r = client.post("/recommend", json={"material": "kaca", "user_intent": "vas"})
     assert r.json()["status"] == "generic_safe_procedure"
@@ -127,7 +133,8 @@ def test_gate2_low_rerank_score_falls_back(fake_sb, monkeypatch):
 def test_gate2_pass_returns_grounded(fake_sb, monkeypatch):
     strong = RetrievedChunk(
         chunk_id="c1",
-        skill_id="s1",
+        source_type="skill",
+        source_id="s1",
         content="langkah",
         metadata={},
         rrf_score=0.03,
@@ -140,7 +147,7 @@ def test_gate2_pass_returns_grounded(fake_sb, monkeypatch):
     async def fake_generate(query, chunks):
         return SolutionPackage(recommendation="Buat pot dari botol.", sources=["s1"])
 
-    monkeypatch.setattr(recommend_module, "search_skills", strong_chunks)
+    monkeypatch.setattr(recommend_module, "search_corpus", strong_chunks)
     monkeypatch.setattr(recommend_module, "generate_solution", fake_generate)
     r = client.post("/recommend", json={"material": "plastik_pet", "user_intent": "pot"})
     body = r.json()
