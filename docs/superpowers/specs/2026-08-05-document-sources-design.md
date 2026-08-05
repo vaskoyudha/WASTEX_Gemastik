@@ -45,18 +45,25 @@ create table document_chunks (
   content text not null,
   embedding vector(1024) not null,
   fts tsvector generated always as (to_tsvector('indonesian', content)) stored,
-  metadata jsonb not null default '{}'   -- {material, section, page}
+  metadata jsonb not null default '{}'   -- {materials, section, page}
 );
 ```
 
 - `fts` sebagai generated column — meniru `skill_chunks` (init migration), sehingga
   `hybrid_search` memperlakukan kedua sumber secara identik.
+- **Material mapping:** dokumen boleh dipetakan ke **satu atau lebih** dari 6 material
+  (buku pengolahan sampah umumnya lintas material). Nilai divalidasi di backend saat
+  upload (`POST /documents` menolak 400 jika ada nilai di luar taksonomi
+  `plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet`). Semua chunk dokumen
+  mewarisi **seluruh array** `materials` — lihat §4.1 untuk aturan filter.
 - Index: HNSW (`embedding vector_cosine_ops`), GIN (`fts`), `documents (status)`,
   `document_chunks (document_id)`.
 - Trigger `set_updated_at` untuk `documents` (sama seperti `skills`).
-- RLS: `documents` readable hanya jika `status = 'approved'`; `document_chunks`
-  readable semua (chunks hanya ada untuk dokumen approved). Writes dibatasi via
-  service role / expert.
+- RLS: policy select `status = 'approved'` untuk anon/authenticated; **akses expert
+  (daftar semua status, approve, delete) via service-role client** — backend sudah
+  memakai service key (`get_supabase`) yang bypass RLS, mengikuti pola endpoint
+  skill yang ada. `document_chunks` readable semua (chunks hanya ada untuk dokumen
+  approved).
 - Storage: bucket baru `documents` (mengikuti pola bucket `scans`).
 - Catatan: root `supabase/migrations/` adalah duplikat untracked — edit hanya di
   `backend/supabase/migrations/` (kanonik).
@@ -70,8 +77,8 @@ extract_url(url)    → teks utama + heading    (httpx + BeautifulSoup, dependen
 ingest_document(sb, document_id):
   - gate: hanya status='approved' (ValueError jika bukan, sama seperti ingest_skill)
   - delete-then-insert chunk per document_id (re-ingest aman, tanpa duplikat)
-  - PDF: chunk per halaman → metadata {page, material}
-  - URL: deteksi heading (h1/h2) → metadata {section, material}
+  - PDF: chunk per halaman → metadata {page, materials}
+  - URL: deteksi heading (h1/h2) → metadata {section, materials}
   - embed dengan embed_texts (bge-m3) yang sudah ada
   - sukses → documents.indexed_at = now()
   - gagal → log error; indexed_at tetap null (retry via reingest)
@@ -93,8 +100,10 @@ create or replace function hybrid_search(
                  content text, metadata jsonb, score double precision)
 
 - vec/lex CTE dari skill_chunks (seperti sekarang; source_type='skill')
-- vec/lex CTE dari document_chunks (source_type='document';
-  material_filter diterapkan ke metadata->>'material')
+- vec/lex CTE dari document_chunks (source_type='document')
+- Filter material per sumber:
+  - skill: `metadata->>'material' = material_filter` (skalar, seperti sekarang)
+  - dokumen: `metadata->'materials' ? material_filter` (jsonb array contains)
 - UNION semua → RRF 1/(rrf_k + rank) dari rank gabungan → limit match_count
 - skill_id lama → source_id + source_type='skill' (backward-compatible)
 ```
@@ -117,7 +126,7 @@ create or replace function hybrid_search(
 |---|---|---|
 | `POST /documents` (JSON) | expert/service | `{title, source_type:"url", url, materials[]}` → fetch URL untuk validasi (fail fast 400) → insert `pending` |
 | `POST /documents` (multipart) | expert/service | Upload PDF → validasi extract saat upload (fail fast 400) → simpan ke storage bucket `documents` → `file_path` → insert `pending` |
-| `GET /documents?status=` | expert (semua) / anon (approved via RLS) | Daftar dokumen |
+| `GET /documents?status=` | expert (via service role, semua status) / anon (approved via RLS) | Daftar dokumen |
 | `PATCH /documents/{id}/status` | expert | approve → background task `ingest_document`; reject → update status saja |
 | `POST /documents/{id}/reingest` | expert | retry manual bila `indexed_at` null (jalur repair) |
 | `DELETE /documents/{id}` | expert | hapus dokumen + chunks (cascade) + file storage |
