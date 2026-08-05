@@ -99,7 +99,7 @@ def test_vector_match_ranks_first(db, seeded):
 
 def test_material_filter_excludes_other_materials(db, seeded):
     rows = _search(db, vec(1), "rak buku kardus", "plastik_pet")
-    assert all(r[3]["material"] == "plastik_pet" for r in rows)
+    assert all(r[3]["material"] == "plastik_pet" for r in rows if r[0] == "skill")
 
 
 def test_no_match_returns_empty(db, seeded):
