@@ -4,8 +4,10 @@ from unittest.mock import AsyncMock, patch
 from app.agent.tools.image_gen import (
     ImageGenUnavailable,
     build_master_prompt,
+    build_storyboard_prompt,
     generate_image,
 )
+from app.schemas import ObjectIdentity
 
 
 def asyncio_run(coro):
@@ -89,10 +91,44 @@ def test_master_prompt_layers():
     step = "Step 2 instruction text"
     with_refs = build_master_prompt(step, has_references=True)
     assert "illustrator of a single DIY upcycling tutorial panel" in with_refs
-    assert "previous panel is the truth" in with_refs
+    assert "match it exactly" in with_refs
+    assert "only the action changes" in with_refs
+    assert "never photorealistic" in with_refs
     assert "Step 2 instruction text" in with_refs
-    assert "scan photo keeps the real object" in with_refs
 
     without_refs = build_master_prompt(step, has_references=False)
-    assert "previous panel is the truth" not in without_refs
+    assert "only the action changes" not in without_refs
     assert "Step 2 instruction text" in without_refs
+
+
+def test_storyboard_prompt_includes_identity_block():
+    skill = {"title": "Vas Botol PET", "material": "plastik_pet"}
+    step = {"order": 1, "instruction": "Cuci botol", "warning": None}
+    identity = ObjectIdentity(
+        shape="tall clear bottle with narrow neck",
+        dominant_colors=["transparent", "blue"],
+        material="plastik_pet",
+        notable_features=["white cap"],
+    )
+    prompt = build_storyboard_prompt(skill, step, identity=identity)
+    assert "Object identity is FIXED for every panel" in prompt
+    assert "tall clear bottle with narrow neck" in prompt
+    assert "transparent" in prompt
+    assert "white cap" in prompt
+
+
+def test_storyboard_prompt_includes_timeline():
+    skill = {"title": "Vas Botol PET", "material": "plastik_pet"}
+    step = {"order": 2, "instruction": "Potong botol", "warning": None}
+    prompt = build_storyboard_prompt(skill, step, step_count=3)
+    assert "step 2 of 3" in prompt
+
+
+def test_storyboard_prompt_without_identity_and_count_unchanged_shape():
+    skill = {"title": "Vas Botol PET", "material": "plastik_pet"}
+    step = {"order": 1, "instruction": "Cuci botol", "warning": "Hati-hati gunting"}
+    prompt = build_storyboard_prompt(skill, step)
+    assert "Object identity is FIXED" not in prompt
+    assert "step 1" in prompt
+    assert "Cuci botol" in prompt
+    assert "Hati-hati gunting" in prompt

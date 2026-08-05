@@ -3,6 +3,7 @@ import base64 as b64
 import httpx
 
 from app.config import get_settings
+from app.schemas import ObjectIdentity
 
 _MATERIAL_EN = {
     "plastik_pet": "clear PET plastic bottle",
@@ -25,13 +26,33 @@ _STYLE_PHOTO = (
 )
 
 
-def build_storyboard_prompt(skill: dict, step: dict) -> str:
+def build_identity_block(identity: ObjectIdentity | None) -> str:
+    if identity is None:
+        return ""
+    colors = ", ".join(identity.dominant_colors) or "unknown"
+    features = "; ".join(identity.notable_features) or "none"
+    return (
+        f" Object identity is FIXED for every panel: {identity.shape}, "
+        f"material {identity.material}, dominant colors {colors}, "
+        f"notable features {features}. Keep this identity identical in every panel."
+    )
+
+
+def build_storyboard_prompt(
+    skill: dict,
+    step: dict,
+    identity: ObjectIdentity | None = None,
+    step_count: int | None = None,
+) -> str:
     material = _MATERIAL_EN.get(skill.get("material", ""), "recycled household waste")
     warning = step.get("warning")
     safety = f" Emphasize safe handling: {warning}." if warning else ""
+    panel = (
+        f"step {step.get('order')} of {step_count}" if step_count else f"step {step.get('order')}"
+    )
     return (
-        f"Instructional storyboard panel for an upcycling craft tutorial, step "
-        f"{step.get('order')}. Project: {skill.get('title')} made from {material}. "
+        f"Instructional storyboard panel for an upcycling craft tutorial, {panel}. "
+        f"Project: {skill.get('title')} made from {material}.{build_identity_block(identity)} "
         f"Show this action clearly: {step.get('instruction')}.{safety} {_STYLE_STORYBOARD}"
     )
 
@@ -72,8 +93,11 @@ _MASTER_PROMPT = (
 )
 
 _REFERENCE_POLICY = (
-    " The previous panel is the truth for the item's look and style - match it. "
-    "The scan photo keeps the real object's shape/color/material accurate."
+    " Study the reference image carefully and match it exactly: keep the object's "
+    "shape, colors, materials, and illustration style IDENTICAL to the previous panel; "
+    "only the action changes. The scan photo is ONLY a source for the real object's "
+    "shape/color/material - always render it in flat illustration style, never "
+    "photorealistic, never blending photo texture into the panel."
 )
 
 
