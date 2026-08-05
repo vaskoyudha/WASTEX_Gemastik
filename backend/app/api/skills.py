@@ -133,6 +133,9 @@ def create_skill(
 
     payload = body.model_dump(mode="json")
     payload.pop("reference_scan_id", None)
+    payload["additional_materials_cost_idr"] = sum(
+        m.est_cost_idr for m in body.additional_materials
+    )
     payload.update(
         {
             "status": "pending",
