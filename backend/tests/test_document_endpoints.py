@@ -160,3 +160,132 @@ def test_list_documents_filters_status(fake_sb):
     r = client.get("/documents?status=approved", headers=SERVICE_AUTH)
     assert r.status_code == 200
     assert [d["title"] for d in r.json()] == ["B"]
+
+
+async def _ingest(sb, document_id):
+    return 3
+
+
+def test_patch_approve_triggers_ingest(fake_sb, monkeypatch):
+    fake_sb.table("documents").insert(
+        {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "A",
+            "source_type": "url",
+            "url": "https://x.com",
+            "materials": ["plastik_pet"],
+            "status": "pending",
+            "created_by": "u1",
+        }
+    )
+    calls = []
+
+    async def fake_ingest(sb, document_id):
+        calls.append(str(document_id))
+        return 3
+
+    monkeypatch.setattr("app.api.documents.ingest_document", fake_ingest)
+    r = client.patch(
+        "/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6/status",
+        json={"status": "approved", "reviewed_by": "expert1"},
+        headers=SERVICE_AUTH,
+    )
+    assert r.status_code == 200
+    assert r.json()["status"] == "approved"
+    # TestClient runs Starlette BackgroundTasks synchronously before returning.
+    assert calls == ["3fa85f64-5717-4562-b3fc-2c963f66afa6"]
+
+
+def test_patch_status_unknown_404(fake_sb):
+    r = client.patch(
+        "/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6/status",
+        json={"status": "rejected", "reviewed_by": "expert1"},
+        headers=SERVICE_AUTH,
+    )
+    assert r.status_code == 404
+
+
+def test_reingest_requires_approved(fake_sb, monkeypatch):
+    fake_sb.table("documents").insert(
+        {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "A",
+            "source_type": "url",
+            "url": "https://x.com",
+            "materials": [],
+            "status": "pending",
+            "created_by": "u1",
+        }
+    )
+    monkeypatch.setattr("app.api.documents.ingest_document", _ingest)
+    r = client.post(
+        "/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6/reingest", headers=SERVICE_AUTH
+    )
+    assert r.status_code == 400
+
+
+def test_reingest_returns_count(fake_sb, monkeypatch):
+    fake_sb.table("documents").insert(
+        {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "A",
+            "source_type": "url",
+            "url": "https://x.com",
+            "materials": [],
+            "status": "approved",
+            "created_by": "u1",
+            "indexed_at": None,
+        }
+    )
+    monkeypatch.setattr("app.api.documents.ingest_document", _ingest)
+    r = client.post(
+        "/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6/reingest", headers=SERVICE_AUTH
+    )
+    assert r.status_code == 200
+    assert r.json() == {"ingested": 3}
+
+
+def test_reingest_500_on_failure(fake_sb, monkeypatch):
+    fake_sb.table("documents").insert(
+        {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "A",
+            "source_type": "url",
+            "url": "https://x.com",
+            "materials": [],
+            "status": "approved",
+            "created_by": "u1",
+        }
+    )
+
+    async def boom(sb, document_id):
+        raise ValueError("extract failed")
+
+    monkeypatch.setattr("app.api.documents.ingest_document", boom)
+    r = client.post(
+        "/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6/reingest", headers=SERVICE_AUTH
+    )
+    assert r.status_code == 500
+
+
+def test_delete_removes_row_and_storage(fake_sb):
+    fake_sb.table("documents").insert(
+        {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "A",
+            "source_type": "pdf",
+            "file_path": "documents/x.pdf",
+            "materials": [],
+            "status": "approved",
+            "created_by": "u1",
+        }
+    )
+    r = client.delete("/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6", headers=SERVICE_AUTH)
+    assert r.status_code == 200
+    assert fake_sb.storage.from_("documents").removed == ["documents/x.pdf"]
+    assert fake_sb.table("documents").rows == []
+
+
+def test_delete_unknown_404(fake_sb):
+    r = client.delete("/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6", headers=SERVICE_AUTH)
+    assert r.status_code == 404

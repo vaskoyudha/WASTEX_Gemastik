@@ -1,10 +1,10 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 
 from app.deps import get_optional_user_id, get_supabase, require_expert_or_service
-from app.rag.document_ingest import extract_pdf, extract_url
-from app.schemas import DocumentCreateRequest
+from app.rag.document_ingest import extract_pdf, extract_url, ingest_document
+from app.schemas import DocumentCreateRequest, DocumentStatusUpdate
 from supabase import Client
 
 router = APIRouter()
@@ -93,3 +93,52 @@ def list_documents(
     if status:
         rows = [r for r in rows if r.get("status") == status]
     return rows
+
+
+@router.patch("/{document_id}/status", dependencies=[Depends(require_expert_or_service)])
+async def update_status(
+    document_id: UUID,
+    body: DocumentStatusUpdate,
+    background_tasks: BackgroundTasks,
+    sb: Client = Depends(get_supabase),
+) -> dict:
+    res = (
+        sb.table("documents")
+        .update({"status": body.status, "reviewed_by": body.reviewed_by})
+        .eq("id", str(document_id))
+        .execute()
+    )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="document not found")
+    if body.status == "approved":
+        background_tasks.add_task(ingest_document, sb, document_id)
+    return res.data[0]
+
+
+@router.post("/{document_id}/reingest", dependencies=[Depends(require_expert_or_service)])
+async def reingest(
+    document_id: UUID,
+    sb: Client = Depends(get_supabase),
+) -> dict:
+    res = sb.table("documents").select("*").eq("id", str(document_id)).single().execute()
+    if not res.data or res.data["status"] != "approved":
+        raise HTTPException(status_code=400, detail="document must be approved first")
+    try:
+        count = await ingest_document(sb, document_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"reingest failed: {exc}")
+    return {"ingested": count}
+
+
+@router.delete("/{document_id}", dependencies=[Depends(require_expert_or_service)])
+def delete_document(
+    document_id: UUID,
+    sb: Client = Depends(get_supabase),
+) -> dict:
+    res = sb.table("documents").select("*").eq("id", str(document_id)).single().execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="document not found")
+    if res.data.get("file_path"):
+        sb.storage.from_("documents").remove([res.data["file_path"]])
+    sb.table("documents").delete().eq("id", str(document_id)).execute()
+    return {"deleted": str(document_id)}
