@@ -51,7 +51,12 @@ def require_expert_or_service(
         user = get_current_user(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token))
     except HTTPException:
         raise HTTPException(status_code=403, detail="service role or expert required")
-    rows = sb.table("profiles").select("role").eq("auth_user_id", user["user_id"]).execute()
+    rows = (
+        sb.table("profiles")
+        .select("role, auth_user_id")
+        .eq("auth_user_id", user["user_id"])
+        .execute()
+    )
     profile = next(
         (row for row in (rows.data or []) if row.get("auth_user_id") == user["user_id"]),
         None,
