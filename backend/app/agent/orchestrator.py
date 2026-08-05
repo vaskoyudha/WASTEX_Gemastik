@@ -21,6 +21,8 @@ Jika informasi tidak ada di konteks, tulis "tidak tersedia" - tidak pernah meneb
 2. Jika informasi tidak ada di konteks, tulis "tidak tersedia" - jangan mengarang.
 3. Setiap klaim harus mengutip skill sumbernya; isi field sources dengan skill_id yang dikutip.
 4. JANGAN pernah menambahkan langkah, alat, biaya, atau waktu yang tidak ada di konteks.
+5. Klaim dari dokumen mengutip document_id; klaim dari skill mengutip skill_id.
+   Jangan mencampur keduanya dalam satu kutipan.
 
 ## Aturan keselamatan (WAJIB, prioritas tertinggi)
 - Jangan pernah menyarankan memotong kaca untuk pemula atau melelehkan/membakar plastik.
@@ -73,7 +75,15 @@ def build_query(material: str, condition: str, user_intent: str) -> str:
 
 
 async def generate_solution(query: str, chunks: list[RetrievedChunk]) -> SolutionPackage:
-    context = "\n\n".join(f"[skill_id: {c.skill_id}]\n{c.content}" for c in chunks)
+    labeled = []
+    for c in chunks:
+        label = (
+            f"[document_id: {c.source_id}]"
+            if c.source_type == "document"
+            else f"[skill_id: {c.source_id}]"
+        )
+        labeled.append(f"{label}\n{c.content}")
+    context = "\n\n".join(labeled)
     prompt = f"Konteks:\n{context}\n\nPermintaan:\n{query}"
     result = await generation_agent().run(prompt)
     return result.output
