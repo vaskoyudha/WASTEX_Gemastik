@@ -50,6 +50,7 @@ jest.mock('lucide-react-native', () => ({
   Bot: () => null,
   CheckCircle2: () => null,
   XCircle: () => null,
+  AlertTriangle: () => null,
 }));
 
 const proposals = [
@@ -62,6 +63,10 @@ const proposals = [
     tools: [{ name: 'gunting' }],
     est_cost_idr: 5000,
     est_price_idr: 25000,
+    additional_materials: [
+      { name: 'tali', category: 'tali', est_cost_idr: 3000, purpose: 'untuk gantungan' },
+      { name: 'cat', category: 'cat', est_cost_idr: 12000, purpose: 'untuk dekorasi' },
+    ],
   },
 ];
 
@@ -119,5 +124,19 @@ describe('SkillCreatorScreen verify + submit', () => {
     fireEvent.press(getByText('Kirim Skill untuk Verifikasi'));
     expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pot Gantung PET' }));
     expect(await findByText('Skill Terkirim')).toBeTruthy();
+  });
+
+  it('shows additional materials badge on proposal card', async () => {
+    const { findByText } = await render(<SkillCreatorScreen />);
+    expect(await findByText('Bahan tambahan: tali, cat')).toBeTruthy();
+  });
+
+  it('shows warning in verify popup when laidak with additional materials', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    fireEvent.press(await findByText('Verifikasi dengan AI'));
+    expect(
+      await findByText(/Butuh bahan tambahan di luar hasil scan: tali, cat/i),
+    ).toBeTruthy();
   });
 });
