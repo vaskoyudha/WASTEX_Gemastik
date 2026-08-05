@@ -43,6 +43,9 @@ values ('documents', 'documents', false)
 on conflict (id) do nothing;
 
 -- Unified hybrid retrieval over skill + document chunks (spec §4.1).
+-- DROP first: the return type (OUT params) changed, so CREATE OR REPLACE
+-- alone fails on databases that already have the old function.
+drop function if exists hybrid_search(vector, text, text, integer, integer);
 create or replace function hybrid_search(
   query_embedding vector(1024),
   query_text text,
