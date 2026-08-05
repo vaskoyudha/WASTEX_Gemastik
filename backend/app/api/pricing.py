@@ -27,7 +27,10 @@ DEFAULT_MARGIN = 0.4
 async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
     resp = (
         sb.table("skills")
-        .select("id, title, material, difficulty, steps, est_cost_idr, est_price_idr")
+        .select(
+            "id, title, material, difficulty, steps, est_cost_idr, est_price_idr, "
+            "additional_materials, additional_materials_cost_idr"
+        )
         .eq("id", skill_id)
         .single()
         .execute()
@@ -41,7 +44,12 @@ async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
     labor_cost = int(len(steps) * 0.5 * labor_rate)
 
     material_cost = skill.get("est_cost_idr") or MATERIAL_COSTS.get(skill.get("material"), 500)
-    total_cost = material_cost + labor_cost
+
+    additional_items = skill.get("additional_materials") or []
+    additional_materials_cost = skill.get("additional_materials_cost_idr") or sum(
+        int(item.get("est_cost_idr") or 0) for item in additional_items
+    )
+    total_cost = material_cost + labor_cost + additional_materials_cost
 
     if skill.get("est_price_idr"):
         suggested_price = skill["est_price_idr"]
@@ -54,6 +62,8 @@ async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
         "skill_id": skill["id"],
         "title": skill["title"],
         "material_cost": material_cost,
+        "additional_materials": additional_items,
+        "additional_materials_cost": additional_materials_cost,
         "labor_cost": labor_cost,
         "total_cost": total_cost,
         "profit_margin": profit_margin,
