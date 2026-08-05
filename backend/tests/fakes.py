@@ -100,7 +100,11 @@ class FakeTable:
         return FakeResult(stored)
 
     def select(self, *args):
-        return FakeResult(list(self.rows))
+        cols = args[0] if args else "*"
+        if cols == "*":
+            return FakeResult(list(self.rows))
+        keys = [c.strip() for c in cols.split(",") if c.strip()]
+        return FakeResult([{k: row[k] for k in keys if k in row} for row in self.rows])
 
     def update(self, data):
         self.updated.append(data)

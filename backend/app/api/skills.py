@@ -101,7 +101,7 @@ def create_skill(
 ) -> dict:
     dup = (
         sb.table("skills")
-        .select("id")
+        .select("id, created_by")
         .eq("title", body.title)
         .eq("material", body.material.value)
         .eq("created_by", user["user_id"])
