@@ -36,7 +36,7 @@ export default function ProfilScreen() {
     (async () => {
       try {
         const skills = (await apiClient.getSkills({ mine: true })) as Skill[];
-        setMySkills(skills);
+        setMySkills(Array.isArray(skills) ? skills : []);
       } catch {
         setMySkills([]);
       }
