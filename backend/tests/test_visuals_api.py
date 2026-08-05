@@ -186,8 +186,17 @@ def test_generate_all_threads_previous_panel(fake_sb, monkeypatch):
     async def fake_load_ref(sb, skill):
         return [b"photo-bytes"]
 
+    async def fake_identity(image_bytes, content_type="image/jpeg", client_factory=None):
+        return ObjectIdentity(
+            shape="tall clear bottle",
+            dominant_colors=["transparent"],
+            material="plastik_pet",
+            notable_features=["white cap"],
+        )
+
     monkeypatch.setattr(visuals_api, "generate_image", fake_generate)
     monkeypatch.setattr(visuals_api, "_load_reference_bytes", fake_load_ref)
+    monkeypatch.setattr(visuals_api, "extract_object_identity", fake_identity)
 
     async def run():
         await visuals_api.generate_all_visuals(fake_sb, "s1")
