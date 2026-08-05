@@ -2,10 +2,12 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas import (
+    AdditionalMaterial,
     Material,
     MaterialIdentification,
     RecommendRequest,
     SkillDraft,
+    SkillProposal,
     SolutionPackage,
 )
 
@@ -54,3 +56,35 @@ def test_solution_package_accepts_est_time() -> None:
     p = SolutionPackage(recommendation="Vas", est_time_minutes=45)
     assert p.est_time_minutes == 45
     assert SolutionPackage(recommendation="Vas").est_time_minutes is None
+
+
+def test_additional_material_defaults():
+    m = AdditionalMaterial(
+        name="tali", category="tali", est_cost_idr=2000, purpose="untuk gantungan"
+    )
+    assert m.est_cost_idr == 2000
+
+
+def test_additional_material_unknown_category_rejected():
+    with pytest.raises(ValidationError):
+        AdditionalMaterial(name="x", category="nuklir")
+
+
+def test_skill_proposal_accepts_additional_materials():
+    p = SkillProposal.model_validate(
+        {
+            "title": "Pot dari Kaleng",
+            "description": "Pot gantung dari kaleng bekas.",
+            "material": "kaleng",
+            "difficulty": "pemula",
+            "additional_materials": [
+                {
+                    "name": "tali",
+                    "category": "tali",
+                    "est_cost_idr": 2000,
+                    "purpose": "untuk gantungan",
+                }
+            ],
+        }
+    )
+    assert p.additional_materials[0].name == "tali"

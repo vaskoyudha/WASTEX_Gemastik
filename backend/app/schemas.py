@@ -40,6 +40,13 @@ class ToolItem(BaseModel):
     optional: bool = False
 
 
+class AdditionalMaterial(BaseModel):
+    name: str
+    category: Literal["tali", "cat", "lem", "tanah_tanaman", "pengait", "alat", "lainnya"]
+    est_cost_idr: int = 0
+    purpose: str = ""
+
+
 class Step(BaseModel):
     order: int
     instruction: str
@@ -217,6 +224,7 @@ class SkillProposal(BaseModel):
     difficulty: Difficulty
     steps: list[Step] = []
     tools: list[ToolItem] = []
+    additional_materials: list[AdditionalMaterial] = []
     est_cost_idr: int | None = None
     est_price_idr: int | None = None
 
