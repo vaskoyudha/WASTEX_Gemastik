@@ -10,12 +10,12 @@ export class LocalAuthService implements AuthService {
 
   constructor(apiClientOverride?: any) {
     this.apiClient = apiClientOverride;
-    this.loadUserFromStorage();
+    void this.loadUserFromStorage();
   }
 
-  private loadUserFromStorage(): void {
+  private async loadUserFromStorage(): Promise<void> {
     try {
-      const stored = AsyncStorage.getItem(USER_STORAGE_KEY);
+      const stored = await AsyncStorage.getItem(USER_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         this.user = parsed as User;

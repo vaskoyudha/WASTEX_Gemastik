@@ -30,7 +30,7 @@ async def register(
     """Register new user with email/password and create profile."""
     try:
         # Create user in auth.users
-        user_creds = await sb.auth.sign_up(
+        user_creds = sb.auth.sign_up(
             {
                 "email": request.email,
                 "password": request.password,
@@ -58,7 +58,12 @@ async def register(
             raise HTTPException(status_code=500, detail="Failed to create profile")
 
         # Access token is returned as part of sign_up response
-        access_token = user_creds.access_token or ""
+        session = getattr(user_creds, "session", None)
+        access_token = (
+            user_creds.access_token
+            if getattr(user_creds, "access_token", None)
+            else (session.access_token if session else "")
+        ) or ""
 
         return AuthRegisterResponse(
             access_token=access_token,
@@ -76,7 +81,7 @@ async def login(
 ):
     """Login with email/password."""
     try:
-        user_creds = await sb.auth.sign_in_with_password(
+        user_creds = sb.auth.sign_in_with_password(
             {
                 "email": request.email,
                 "password": request.password,
@@ -95,7 +100,12 @@ async def login(
             raise HTTPException(status_code=404, detail="Profile not found")
 
         profile = profile_result.data
-        access_token = user_creds.access_token or ""
+        session = getattr(user_creds, "session", None)
+        access_token = (
+            user_creds.access_token
+            if getattr(user_creds, "access_token", None)
+            else (session.access_token if session else "")
+        ) or ""
 
         return AuthLoginResponse(
             access_token=access_token,

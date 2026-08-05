@@ -17,7 +17,7 @@ class FakeAuth:
         user = type("User", (), {"id": user_id})()
         return type("Response", (), {"user": user})()
 
-    async def sign_up(self, params: dict) -> object:
+    def sign_up(self, params: dict) -> object:
         """Mock user registration."""
 
         class Response:
@@ -27,11 +27,12 @@ class FakeAuth:
         user_id = str(uuid4())
         response.user = type("User", (), {"id": user_id})()
         response.access_token = f"fake_jwt_token_{user_id}"
+        response.session = type("Session", (), {"access_token": f"fake_jwt_token_{user_id}"})()
         response.error = None
         self.users.append({"id": user_id, **params})
         return response
 
-    async def sign_in_with_password(self, params: dict) -> object:
+    def sign_in_with_password(self, params: dict) -> object:
         """Mock user login."""
 
         class Response:
@@ -42,6 +43,7 @@ class FakeAuth:
         user_id = str(uuid4())
         response.user = type("User", (), {"id": user_id})()
         response.access_token = f"fake_jwt_token_{user_id}"
+        response.session = type("Session", (), {"access_token": f"fake_jwt_token_{user_id}"})()
         response.error = None
         return response
 

@@ -76,6 +76,54 @@ def test_login_success():
     assert data["profile"]["display_name"] == "Test User"
 
 
+def test_login_session_token_supabase_shape():
+    """Real supabase-py AuthResponse exposes the token on session, not top-level."""
+    from app.api.auth import get_auth_supabase
+
+    get_supabase.cache_clear()
+
+    client = TestClient(app)
+    fake = FakeSupabase()
+    _ = fake.table("profiles")
+
+    user_id = str(uuid4())
+    profile_id = str(uuid4())
+
+    fake.tables["profiles"].rows.append(
+        {
+            "id": profile_id,
+            "auth_user_id": user_id,
+            "display_name": "Test User",
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z",
+        }
+    )
+
+    # Simulate real supabase-py: no top-level access_token attr, session only.
+    class FakeUser:
+        id = user_id
+
+    class FakeSession:
+        access_token = "jwt-from-session"
+
+    class FakeAuthResponse:
+        user = FakeUser()
+        session = FakeSession()
+
+    fake.auth.sign_in_with_password = lambda params: FakeAuthResponse()
+    app.dependency_overrides[get_auth_supabase] = lambda: fake
+
+    response = client.post(
+        "/auth/login",
+        json={
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["access_token"] == "jwt-from-session"
+
+
 def test_me_requires_auth(client):
     """Unauthenticated /me should return 401."""
     response = client.get("/auth/me")
