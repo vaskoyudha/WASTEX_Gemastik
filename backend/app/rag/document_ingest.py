@@ -29,7 +29,17 @@ def extract_pdf(data: bytes) -> list[dict]:
 async def extract_url(url: str, client_factory=httpx.AsyncClient) -> list[dict]:
     """Fetch an article URL and split its main content on h1/h2/h3 headings."""
     async with (
-        client_factory(timeout=30, follow_redirects=True, max_redirects=5) as client,
+        client_factory(
+            timeout=30,
+            follow_redirects=True,
+            max_redirects=5,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+                )
+            },
+        ) as client,
         client.stream("GET", url) as resp,
     ):
         resp.raise_for_status()

@@ -111,6 +111,21 @@ def test_extract_url_splits_sections():
     assert sections[1] == {"section": "Kardus", "text": "Lipat kardus menjadi rak."}
 
 
+def test_extract_url_sends_browser_user_agent():
+    captured = {}
+
+    def factory(**kwargs):
+        captured.update(kwargs)
+        return _Client(_Resp(HTML.encode()))
+
+    async def run():
+        return await extract_url("https://example.com/x", client_factory=factory)
+
+    asyncio_run(run())
+    ua = captured["headers"]["User-Agent"]
+    assert ua.startswith("Mozilla/5.0")
+    assert "Chrome/" in ua
+
 def test_extract_url_raises_on_http_error():
     async def run():
         return await extract_url(
