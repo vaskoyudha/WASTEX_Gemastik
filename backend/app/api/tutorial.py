@@ -10,7 +10,7 @@ router = APIRouter()
 async def get_tutorial(skill_id: str, sb: Client = Depends(get_supabase)):
     resp = (
         sb.table("skills")
-        .select("id, title, description, steps, materials, tools, difficulty")
+        .select("id, title, description, steps, additional_materials, tools, difficulty")
         .eq("id", skill_id)
         .single()
         .execute()
@@ -28,7 +28,7 @@ async def get_tutorial(skill_id: str, sb: Client = Depends(get_supabase)):
         "title": skill["title"],
         "description": skill["description"],
         "difficulty": skill["difficulty"],
-        "materials": skill.get("materials", []),
+        "additional_materials": skill.get("additional_materials", []),
         "tools": skill.get("tools", []),
         "steps": skill["steps"],
         "estimated_time": _estimate_time(skill["difficulty"], len(skill["steps"])),
