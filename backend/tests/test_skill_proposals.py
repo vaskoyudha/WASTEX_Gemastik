@@ -50,6 +50,20 @@ def test_verify_prompt_has_layak_verdict():
     assert "layak" in SKILL_VERIFY_PROMPT
 
 
+def test_proposal_prompt_requires_additional_materials_declaration():
+    assert "additional_materials" in SKILL_PROPOSAL_PROMPT
+    assert "WAJIB dideklarasikan" in SKILL_PROPOSAL_PROMPT
+
+
+def test_verify_prompt_allows_declared_additional_materials():
+    assert "additional_materials" in SKILL_VERIFY_PROMPT
+    assert "BUKAN pelanggaran" in SKILL_VERIFY_PROMPT
+
+
+def test_verify_prompt_rejects_undeclared_materials():
+    assert "tidak terdaftar" in SKILL_VERIFY_PROMPT
+
+
 def test_parse_proposals_keeps_matching_material_only():
     payload = {
         "proposals": [

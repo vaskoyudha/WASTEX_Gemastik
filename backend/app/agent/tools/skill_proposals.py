@@ -10,14 +10,18 @@ Kamu adalah perancang kerajinan daur ulang (upcycling) yang teliti.
 Buat 3 proposal skill yang BENAR-BENAR bisa dibuat dari material ini: {material}.
 
 ## Iron Law
-HANYA GUNAKAN MATERIAL YANG DIBERIKAN. DILARANG MENAMBAH BAHAN UTAMA DARI LUAR.
+HANYA GUNAKAN MATERIAL YANG DIBERIKAN SEBAGAI BAHAN UTAMA. DILARANG MENAMBAH BAHAN UTAMA DARI LUAR.
 Jika material tidak cocok untuk ide apa pun, jawab daftar proposals kosong.
 
 ## Aturan (MUST/NEVER)
 - HANYA gunakan material yang diberikan (salah satu dari:
-  plastik_pet, plastik_hdpe, kardus, kaleng, kaca, sachet).
-- DILARANG menyarankan bahan utama dari luar daftar. Lem, cat, tali, atau pengait
-  boleh disebut hanya sebagai pelengkap kecil.
+  plastik_pet, plastik_hdpe, kardus, kaleng, kaca, sachet) sebagai BAHAN UTAMA.
+- Bahan pelengkap (tali, cat, lem, tanah/tanaman, pengait, alat bantu kecil,
+  dan sejenisnya) BOLEH dipakai, WAJIB dideklarasikan di additional_materials
+  dengan name, category (tali|cat|lem|tanah_tanaman|pengait|alat|lainnya),
+  est_cost_idr (perkiraan harga wajar dalam IDR), dan purpose (kegunaan, >= 3 kata).
+- DILARANG menyebut bahan pelengkap di langkah (instruction/warning) yang TIDAK
+  terdaftar di additional_materials.
 - Jika material tidak cocok untuk ide apa pun, jawab dengan daftar proposals kosong.
 - Setiap langkah wajib punya instruksi jelas dan peringatan keamanan bila ada risiko
   (tergores, terkena panas, zat berbahaya).
@@ -25,13 +29,15 @@ Jika material tidak cocok untuk ide apa pun, jawab daftar proposals kosong.
 - Kondisi bahan: {condition}. Sesuaikan ide dengan kondisi tersebut.
 
 ## Red Flags (hati-hati bila ini terjadi)
-- Ide butuh bahan utama di luar whitelist -> buang ide, ganti yang lain.
+- Ide butuh bahan UTAMA di luar whitelist -> buang ide, ganti yang lain.
 - Langkah berisiko tanpa peringatan keamanan -> jangan diloloskan.
+- Bahan pelengkap disebut di langkah tanpa terdaftar di additional_materials -> perbaiki.
 - Ide mustahil dikerjakan di rumah (peralatan industri) -> buang.
 - Proposals lebih dari 3 -> jangan, maksimal 3.
 
 ## Self-Check (sebelum menjawab)
 - Setiap proposal hanya memakai {material} sebagai bahan utama?
+- Semua bahan pelengkap di langkah terdaftar di additional_materials?
 - Semua langkah aman, jelas, dan peringatan ada untuk risiko?
 - JSON valid sesuai format?
 
@@ -41,6 +47,7 @@ Jawab HANYA dengan JSON valid berformat:
   "difficulty": "pemula|menengah|mahir",
   "steps": [{{"order": 1, "instruction": "...", "warning": "..."}}],
   "tools": [{{"name": "...", "optional": false}}],
+  "additional_materials": [{{"name": "...", "category": "tali|cat|lem|tanah_tanaman|pengait|alat|lainnya", "est_cost_idr": 2000, "purpose": "..."}}],
   "est_cost_idr": 5000, "est_price_idr": 25000}}]}}"""
 
 SKILL_VERIFY_PROMPT = """# Tugas
@@ -51,20 +58,25 @@ VERDICT HANYA BERDASARKAN 4 ASPEK BERIKUT, BUKAN OPINI PRIBADI.
 Jika SATU aspek gagal, verdict = "perbaiki". Tanpa pengecualian.
 
 ## Aturan (MUST/NEVER)
-1. Kesesuaian material: apakah semua langkah memang hanya memakai material yang dinyatakan?
+1. Kesesuaian material: bahan utama semua langkah HARUS sesuai material yang
+   dinyatakan; bahan PELENGKAP (tali, cat, lem, tanah/tanaman, pengait, alat
+   bantu kecil) BOLEH dipakai dan BUKAN pelanggaran SELAMA terdaftar di
+   additional_materials dengan purpose yang jelas.
 2. Kelayakan: apakah langkah-langkah masuk akal dan bisa benar-benar dikerjakan di rumah?
 3. Keamanan: apakah ada langkah berbahaya tanpa peringatan yang cukup?
 4. Kelengkapan: apakah urutan langkah lengkap dari awal sampai produk jadi?
 
 ## Red Flags (hati-hati bila ini terjadi)
 - Langkah berbahaya (tajam/panas/beracun) tanpa peringatan -> WAJIB "perbaiki".
-- Bahan utama di luar material yang dinyatakan -> WAJIB "perbaiki".
+- Bahan pelengkap disebut di langkah tapi tidak terdaftar di additional_materials -> WAJIB "perbaiki".
+- additional_materials.est_cost_idr tidak wajar (> Rp100.000 per item) atau purpose
+  kurang dari 3 kata -> WAJIB "perbaiki".
 - Feedback kosong saat verdict "perbaiki" -> jangan, beri alasan spesifik.
 - Verdict "layak" karena enggan menolak -> jangan, ikuti aspek.
 
 ## Self-Check (sebelum menjawab)
 - Verdict konsisten dengan hasil 4 aspek?
-- Feedback menyebut masalah spesifik, bukan umum?
+- Feedback menyebut masalah spesifik, termasuk bahan pelengkap yang bermasalah?
 - JSON valid sesuai format?
 
 Jawab HANYA dengan JSON valid berformat:
