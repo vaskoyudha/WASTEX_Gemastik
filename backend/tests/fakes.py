@@ -113,6 +113,7 @@ class FakeTable:
         return FakeResult(list(self.rows))
 
     def delete(self):
+        self.rows.clear()
         return FakeResult([])
 
 
