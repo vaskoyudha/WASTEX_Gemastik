@@ -171,7 +171,7 @@ export default function ProfilScreen() {
               <User size={32} color="#16a34a" />
             </View>
             <View className="flex-1">
-              <Text className="text-lg font-bold text-slate-900">{user.profile.displayName}</Text>
+              <Text className="text-lg font-bold text-slate-900">{user.profile?.displayName}</Text>
               <Text className="text-xs text-slate-500">{user.email}</Text>
               {!editing && (
                 <View className="mt-2 bg-emerald-50 px-2.5 py-0.5 rounded-md self-start">
@@ -240,14 +240,14 @@ export default function ProfilScreen() {
                     }
                   }} 
                   variant="outline"
-                  flex={1}
+                  className="flex-1"
                 />
                 <Button 
                   title="Simpan" 
                   onPress={handleSaveProfile} 
                   loading={loading}
                   fullWidth
-                  flex={1}
+                  className="flex-1"
                 />
               </View>
             </Card>

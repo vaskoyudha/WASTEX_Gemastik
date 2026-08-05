@@ -13,7 +13,7 @@ interface InputProps extends TextInputProps {
 }
 
 export function Input({ label, error, variant = "default", size = "md", ...props }: InputProps) {
-  const borderColor = error === true || error ? "#dc2626" : variant === "success" ? "#16a34a" : "#e2e8f0";
+  const borderColor = error ? "#dc2626" : variant === "success" ? "#16a34a" : "#e2e8f0";
   
   return (
     <View className="mb-5">

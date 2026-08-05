@@ -28,7 +28,7 @@ describe("AuthService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(AsyncStorage, "getItem").mockResolvedValue(null);
-    jest.spyOn(AsyncStorage, "setItem").mockResolvedValue(true);
+    jest.spyOn(AsyncStorage, "setItem").mockResolvedValue(undefined);
   });
 
   it("signs up and stores user", async () => {
