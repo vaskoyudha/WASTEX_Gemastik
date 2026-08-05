@@ -113,14 +113,31 @@ def test_ingest_document_source_url(monkeypatch):
         return 5
 
     monkeypatch.setattr("corpus_common.ingest_document", fake_ingest_doc)
+    # Fixture matches the REAL sources.yaml entry shape (no source_type key).
     source = {"id": "identif-tas-dompet-sachet", "title": "Tas Sachet",
-              "url": "https://www.identif.id/x", "source_type": "url",
-              "materials": ["sachet"]}
+              "url": "https://www.identif.id/x", "materials": ["sachet"]}
     result = asyncio_run(cc.ingest_document_source(fake, source))
     assert result["chunks"] == 5
     rows = fake.table("documents").inserted
     assert rows[0]["status"] == "approved"
-    assert rows[0]["source_type"] == "url"
+    assert rows[0]["source_type"] == "url"  # derived from URL (no .pdf suffix)
+
+
+def test_ingest_document_source_pdf_derived(monkeypatch):
+    fake = FakeSupabase()
+
+    async def fake_ingest_doc(sb, doc_id):
+        return 7
+
+    monkeypatch.setattr("corpus_common.ingest_document", fake_ingest_doc)
+    source = {"id": "dlhk-banten-limbah-anorganik", "title": "DLHK Banten",
+              "url": "https://dlhk.bantenprov.go.id/x/Pengelolaan_Limbah_Anorganik.pdf",
+              "materials": ["plastik_pet", "kardus"]}
+    result = asyncio_run(cc.ingest_document_source(fake, source))
+    assert result["chunks"] == 7
+    rows = fake.table("documents").inserted
+    assert rows[0]["source_type"] == "pdf"  # derived from .pdf suffix
+    assert fake.storage.from_("documents").uploads  # stored in bucket
 
 
 def asyncio_run(coro):
@@ -167,9 +184,11 @@ def coverage_pass(rerank_scores: list[float], threshold: float = PASS_THRESHOLD)
 
 
 def format_seed_review(items: list[dict]) -> str:
+    from datetime import date
+
     safe = [i for i in items if i["safe"]]
     unsafe = [i for i in items if not i["safe"]]
-    lines = ["# Seed Review", ""]
+    lines = [f"# Seed Review — {date.today().isoformat()}", ""]
     lines.append(f"## Lolos ({len(safe)}/{len(items)})")
     for i in safe:
         srcs = ", ".join(i["sources"]) or "-"
@@ -193,9 +212,15 @@ def format_coverage_report(results: list[dict]) -> str:
 
 
 async def approve_skill(sb, skill_id: str, reviewed_by: str = "seed-pipeline") -> dict:
-    res = sb.table("skills").select("*").eq("id", skill_id).single().execute()
-    row = res.data
-    if not row or row["status"] != "draft":
+    # .single() raises 406 on 0 rows against real PostgREST — use limit(1) +
+    # next(..., None) (the repo's own pattern in skills.py flag_skill).
+    res = sb.table("skills").select("id").eq("id", skill_id).limit(1).execute()
+    row = next((r for r in (res.data or []) if str(r.get("id")) == skill_id), None)
+    if not row:
+        return {"id": skill_id, "skipped": True}
+    status_row = sb.table("skills").select("status").eq("id", skill_id).limit(1).execute()
+    status = next((r.get("status") for r in (status_row.data or [])), None)
+    if status != "draft":
         return {"id": skill_id, "skipped": True}
     sb.table("skills").update({"status": "approved", "reviewed_by": reviewed_by}).eq("id", skill_id).execute()
     try:
@@ -209,7 +234,11 @@ async def ingest_document_source(sb, source: dict) -> dict:
     existing = sb.table("documents").select("id").eq("url", source["url"]).execute()
     if existing.data:
         return {"id": source["id"], "skipped": True}
-    if source["source_type"] == "pdf":
+    # sources.yaml entries have no source_type key — derive it from the URL.
+    source_type = source.get("source_type") or (
+        "pdf" if source["url"].lower().endswith(".pdf") else "url"
+    )
+    if source_type == "pdf":
         async with httpx.AsyncClient(timeout=60) as client:
             r = await client.get(source["url"])
             r.raise_for_status()
@@ -230,7 +259,7 @@ async def ingest_document_source(sb, source: dict) -> dict:
         return {"id": source["id"], "error": str(exc)}
 ```
 
-- [ ] **Step 4: Run test to verify it passes** — `cd backend && uv run pytest tests/test_corpus_scripts.py -v` from `backend/` — expected 8 PASS. (If ruff flags the file, run `uv run ruff check --fix + format on ONLY the two files — whitespace only, logic verbatim.)
+- [ ] **Step 4: Run test to verify it passes** — `cd backend && uv run pytest tests/test_corpus_scripts.py -v` from `backend/` — expected 9 PASS. (If ruff flags the file, run `uv run ruff check --fix + format on ONLY the two files — whitespace only, logic verbatim.)
 - [ ] **Step 5: Commit** — `git add backend/scripts/corpus_common.py backend/tests/test_corpus_scripts.py` + message `feat(corpus): shared helpers for seeding pipeline`.
 
 ---
@@ -320,7 +349,7 @@ if __name__ == "__main__":
 ```
 
 - [ ] **Step 2: Verify syntax + ruff** — from `backend/`: `uv run python -c "import ast; ast.parse(open('scripts/seed_corpus.py').read())"`, then `uv run ruff check scripts/seed_corpus.py` and `uv run ruff format --check scripts/seed_corpus.py` (fix with `uv run ruff format scripts/seed_corpus.py` if needed). Expected: syntax OK, ruff clean.
-- [ ] **Step 3: Dry-run the skip path (no LLM calls)** — `uv run python scripts/seed_corpus.py` from `backend/`. Expected: either `SKIP: N seed draft(s) already exist` (if drafts exist) or the full seed runs (18 LLM calls, ~3–9 min) and prints the review report in the `format_seed_review` format.
+- [ ] **Step 3: Run the skip-path check first (no LLM calls)** — `uv run python scripts/seed_corpus.py` from `backend/`. Expected: `SKIP: N seed draft(s) already exist` (if drafts exist). If no drafts exist, this step runs the FULL seed (18 draft + 18 safety-check LLM calls, ~3–9 min) and prints the review report — that is the intended live run; confirm the report format matches `format_seed_review`.
 - [ ] **Step 4: Commit** — `git add backend/scripts/seed_corpus.py` + message `feat(corpus): seed corpus script with safety check + report`.
 
 ---
@@ -352,7 +381,22 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import corpus_common as cc
+from app.agent.tools.discovery import _safety_checker
 from app.deps import get_supabase
+from app.schemas import SkillDraft
+
+
+async def _is_safe(sb, skill_id: str) -> bool:
+    res = sb.table("skills").select("*").eq("id", skill_id).limit(1).execute()
+    row = next((r for r in (res.data or []) if str(r.get("id")) == skill_id), None)
+    if not row:
+        return False
+    draft = SkillDraft(**{k: row[k] for k in (
+        "title", "material", "difficulty", "tools", "steps", "risks",
+        "est_cost_idr", "est_price_idr", "sources",
+    )})
+    result = await _safety_checker().run(draft.model_dump_json())
+    return result.output.safe
 
 
 async def main(ids: list[str], reject: list[str], all_lolos: bool) -> int:
@@ -362,6 +406,9 @@ async def main(ids: list[str], reject: list[str], all_lolos: bool) -> int:
         rows = sb.table("skills").select("id").eq("origin", "seed").eq("status", "draft").execute().data
         ids = [str(r["id"]) for r in rows]
     for skill_id in ids:
+        if all_lolos and not await _is_safe(sb, skill_id):
+            print(f"SKIP {skill_id}: tidak lolos safety check")
+            continue
         result = await cc.approve_skill(sb, skill_id)
         if result.get("skipped"):
             print(f"SKIP {skill_id}: bukan draft")
@@ -451,7 +498,7 @@ if __name__ == "__main__":
 ```
 
 - [ ] **Step 2: Verify syntax + ruff** — same commands as Task 2 Step 2, applied to `scripts/ingest_documents.py`.
-- [ ] **Step 3: Dry-run against live env** — `uv run python scripts/ingest_documents.py` from `backend/`. Expected: either `SKIP <id>: URL sudah ada` per doc, or full ingest (downloads PDF + 2 URLs → ingest, DeepInfra embed). Confirm output.
+- [ ] **Step 3: Run against live env (real ingest — mutates the corpus)** — `uv run python scripts/ingest_documents.py` from `backend/`. Expected: either `SKIP <id>: URL sudah ada` per doc, or full ingest (downloads PDF + 2 URLs → ingest, DeepInfra embed). Confirm output. Precondition: the 3 source entries must exist in `sources.yaml` (they do — curated 2026-08-06); when the whitelist grows later, re-run with new entries added (spec §2 curation).
 - [ ] **Step 4: Commit** — `git add backend/scripts/ingest_documents.py` + message `feat(corpus): ingest whitelist documents script`.
 
 ---
@@ -527,8 +574,8 @@ if __name__ == "__main__":
 - Create: `backend/eval/e2e_skill_flow.py`
 
 **Interfaces:**
-- Consumes: live backend at `--base-url` (default `http://localhost:8000`); `SUPABASE_JWT_SECRET` + `SUPABASE_SERVICE_KEY` + `SUPABASE_URL` from `backend/.env`; supabase-py (backend dep) for the retrievable check + cleanup; `TINY_JPEG` from `smoke_e2e` (same dir).
-- Produces: `uv run python eval/e2e_skill_flow.py [--base-url URL]` — runs scan → recommend → proposals → verify → create → approve → verify retrievable → cleanup. Exit 0 all green, 1 any red.
+- Consumes: live backend at `--base-url` (default `http://localhost:8000`); `SUPABASE_JWT_SECRET` + `SUPABASE_SERVICE_KEY` + `SUPABASE_URL` from `backend/.env` (all three REQUIRED — `SUPABASE_JWT_SECRET` is optional in config but mandatory for this script); supabase-py (backend dep) for user creation, the retrievable check, and cleanup; `TINY_JPEG` from `smoke_e2e` (same dir).
+- Produces: `uv run python eval/e2e_skill_flow.py [--base-url URL]` — runs scan → recommend → proposals → verify → create → approve (direct DB + awaited ingest, NOT the API endpoint) → verify retrievable → cleanup. Exit 0 all green, 1 any red.
 
 - [ ] **Step 1: Write the script** (create `backend/eval/e2e_skill_flow.py`):
 
@@ -536,7 +583,8 @@ if __name__ == "__main__":
 """End-to-end test of the full AI skill flow against a live backend.
 
 Covers: scan -> recommend (RAG) -> proposals -> verify -> create -> approve
--> retrievable. Requires a live backend + real Supabase keys in backend/.env.
+-> retrievable. Requires a live backend + real Supabase keys in backend/.env
+(SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_JWT_SECRET).
 
 Usage:
     uv run python eval/e2e_skill_flow.py [--base-url http://localhost:8000]
@@ -544,7 +592,9 @@ Usage:
 
 import argparse
 import sys
+import time
 from pathlib import Path
+from uuid import uuid4
 
 import httpx
 import jwt
@@ -552,6 +602,7 @@ from supabase import create_client
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV = ROOT / ".env"
+sys.path.insert(0, str(ROOT))  # make `app.*` importable (script runs from eval/)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from smoke_e2e import TINY_JPEG  # noqa: E402
 
@@ -563,14 +614,6 @@ def _env(key: str) -> str:
     raise SystemExit(f"{key} missing from backend/.env")
 
 
-def _auth_token() -> str:
-    return jwt.encode({"sub": "e2e-user"}, _env("SUPABASE_JWT_SECRET"), algorithm="HS256")
-
-
-SERVICE_AUTH = {"Authorization": f"Bearer {_env('SUPABASE_SERVICE_KEY')}"}
-AUTH = {"Authorization": f"Bearer {_auth_token()}"}
-
-
 def _check(label: str, ok: bool, detail: str = "") -> bool:
     print(f"  [{'PASS' if ok else 'FAIL'}] {label}" + (f" ({detail})" if detail else ""))
     return ok
@@ -578,52 +621,85 @@ def _check(label: str, ok: bool, detail: str = "") -> bool:
 
 def main(base: str) -> int:
     ok = True
-    with httpx.Client(timeout=120) as client:
-        # 1. scan
-        r = client.post(f"{base}/scan", files={"file": ("t.jpg", TINY_JPEG, "image/jpeg")})
-        ok &= _check("scan 200", r.status_code == 200, f"status={r.status_code}")
-        material = (r.json().get("identification") or {}).get("material") or "plastik_pet"
+    sb = create_client(_env("SUPABASE_URL"), _env("SUPABASE_SERVICE_KEY"))
 
-        # 2. recommend (RAG path)
-        r = client.post(f"{base}/recommend", json={"material": material, "user_intent": "buat kerajinan"})
-        ok &= _check("recommend 200", r.status_code == 200, f"status={r.json().get('status')}")
+    # Create a real E2E user (skills.created_by references auth.users(id)).
+    user_id = str(uuid4())
+    email = f"e2e-{user_id[:8]}@wastex.test"
+    sb.auth.admin.create_user({"id": user_id, "email": email, "password": "e2e-password-123"})
+    token = jwt.encode({"sub": user_id}, _env("SUPABASE_JWT_SECRET"), algorithm="HS256")
+    AUTH = {"Authorization": f"Bearer {token}"}
+    SERVICE_AUTH = {"Authorization": f"Bearer {_env('SUPABASE_SERVICE_KEY')}"}
 
-        # 3. proposals (auth required)
-        r = client.post(f"{base}/skills/proposals", json={"material": material, "condition": "bersih"}, headers=AUTH)
-        ok &= _check("proposals 200", r.status_code == 200, f"status={r.status_code}")
-        proposals = r.json() if r.status_code == 200 else []
-        ok &= _check("3 proposals", len(proposals) >= 1, f"count={len(proposals)}")
+    try:
+        with httpx.Client(timeout=120) as client:
+            # 1. scan
+            r = client.post(f"{base}/scan", files={"file": ("t.jpg", TINY_JPEG, "image/jpeg")})
+            ok &= _check("scan 200", r.status_code == 200, f"status={r.status_code}")
+            material = (r.json().get("identification") or {}).get("material") or "plastik_pet"
 
-        # 4. verify
-        draft = proposals[0] if proposals else {"title": "Pot dari Botol", "material": material,
-            "difficulty": "pemula", "steps": [{"order": 1, "instruction": "Cuci botol", "warning": "Sarung tangan"}],
-            "tools": [{"name": "gunting"}], "est_cost_idr": 5000, "est_price_idr": 25000}
-        r = client.post(f"{base}/skills/verify", json={"draft": draft, "chat_history": []}, headers=AUTH)
-        ok &= _check("verify 200", r.status_code == 200, f"verdict={r.json().get('verdict') if r.status_code == 200 else '?'}")
+            # 2. recommend (RAG path) — assert grounded per spec
+            r = client.post(f"{base}/recommend", json={"material": material, "user_intent": "buat kerajinan"})
+            ok &= _check("recommend grounded", r.status_code == 200 and r.json().get("status") == "grounded",
+                         f"status={r.json().get('status') if r.status_code == 200 else r.status_code}")
 
-        # 5. create (title prefixed [E2E] for cleanup)
-        draft["title"] = f"[E2E] {draft['title']}"
-        r = client.post(f"{base}/skills", json=draft, headers=AUTH)
-        ok &= _check("create 201", r.status_code == 201, f"status={r.status_code}")
-        skill_id = r.json().get("id") if r.status_code == 201 else None
+            # 3. proposals (auth required)
+            r = client.post(f"{base}/skills/proposals", json={"material": material, "condition": "bersih"}, headers=AUTH)
+            ok &= _check("proposals 200", r.status_code == 200, f"status={r.status_code}")
+            proposals = r.json() if r.status_code == 200 else []
+            ok &= _check("proposals returned", len(proposals) >= 1, f"count={len(proposals)}")
 
-        # 6. approve via service role (bypasses expert gate for E2E only)
-        if skill_id:
-            r = client.patch(f"{base}/skills/{skill_id}/status",
-                             json={"status": "approved", "reviewed_by": "e2e"}, headers=SERVICE_AUTH)
-            ok &= _check("approve 200", r.status_code == 200, f"status={r.status_code}")
+            # 4. verify
+            draft = proposals[0] if proposals else {
+                "title": "Pot dari Botol", "description": "Pot tanaman sederhana dari botol plastik bekas.",
+                "material": material, "difficulty": "pemula",
+                "steps": [{"order": 1, "instruction": "Cuci botol", "warning": "Sarung tangan"}],
+                "tools": [{"name": "gunting"}], "est_cost_idr": 5000, "est_price_idr": 25000,
+            }
+            r = client.post(f"{base}/skills/verify", json={"draft": draft, "chat_history": []}, headers=AUTH)
+            ok &= _check("verify 200", r.status_code == 200,
+                         f"verdict={r.json().get('verdict') if r.status_code == 200 else '?'}")
 
-            # 7. retrievable: chunks exist in the corpus (deterministic proof)
-            sb = create_client(_env("SUPABASE_URL"), _env("SUPABASE_SERVICE_KEY"))
-            chunks = sb.table("skill_chunks").select("id").eq("skill_id", skill_id).execute().data
-            ok &= _check("skill retrievable (chunks > 0)", len(chunks) > 0, f"chunks={len(chunks)}")
+            # 5. create (title prefixed [E2E] for cleanup)
+            draft["title"] = f"[E2E] {draft['title']}"
+            r = client.post(f"{base}/skills", json=draft, headers=AUTH)
+            ok &= _check("create 201", r.status_code == 201, f"status={r.status_code}")
+            skill_id = r.json().get("id") if r.status_code == 201 else None
 
-            # cleanup
-            sb.table("skills").delete().eq("id", skill_id).execute()
-            print("  [INFO] cleaned up [E2E] skill")
+            # 6. approve via DIRECT DB update + awaited ingest_skill — NOT the
+            #    PATCH API (which would fire paid generate_all_visuals and race
+            #    the chunks check via background tasks).
+            if skill_id:
+                sb.table("skills").update({"status": "approved", "reviewed_by": "e2e"}).eq("id", skill_id).execute()
+                from app.rag.ingest import ingest_skill
+                chunks = await_ingest(sb, skill_id)
+                ok &= _check("ingest ran", chunks > 0, f"chunks={chunks}")
+
+                # 7. retrievable: chunks exist (deterministic) + /recommend re-run
+                rows = sb.table("skill_chunks").select("id").eq("skill_id", skill_id).execute().data
+                ok &= _check("skill retrievable (chunks > 0)", len(rows) > 0, f"chunks={len(rows)}")
+                r = client.post(f"{base}/recommend", json={"material": material, "user_intent": draft["title"]})
+                ok &= _check("recommend after create", r.status_code == 200,
+                             f"status={r.json().get('status') if r.status_code == 200 else r.status_code}")
+
+                # cleanup: skill (cascade chunks) + E2E user
+                sb.table("skills").delete().eq("id", skill_id).execute()
+                print("  [INFO] cleaned up [E2E] skill")
+    finally:
+        try:
+            sb.auth.admin.delete_user(user_id)
+            print("  [INFO] cleaned up E2E user")
+        except Exception:
+            pass
 
     print("\n" + ("ALL GREEN" if ok else "FAILURES PRESENT"))
     return 0 if ok else 1
+
+
+def await_ingest(sb, skill_id: str) -> int:
+    import asyncio
+    from app.rag.ingest import ingest_skill
+    return asyncio.new_event_loop().run_until_complete(ingest_skill(sb, skill_id))
 
 
 if __name__ == "__main__":
@@ -633,8 +709,8 @@ if __name__ == "__main__":
     sys.exit(main(args.base_url))
 ```
 
-- [ ] **Step 2: Verify syntax + ruff** — same commands as Task 2 Step 2 applied to `eval/e2e_skill_flow.py` (note: `eval/` is not a package; the script inserts its own dir to import `smoke_e2e`).
-- [ ] **Step 3: Run against live backend** — start backend (`uv run uvicorn app.main:app --port 8000`), then `uv run python eval/e2e_skill_flow.py` from `backend/`. Expected: all steps PASS, `ALL GREEN`, exit 0, and the `[E2E]` skill cleaned up.
+- [ ] **Step 2: Verify syntax + ruff** — same commands as Task 2 Step 2 applied to `eval/e2e_skill_flow.py` (note: `eval/` is not a package; the script inserts its own dir to import `smoke_e2e`; `app.rag.ingest` is importable because the script runs from `backend/`).
+- [ ] **Step 3: Run against live backend** — start backend (`uv run uvicorn app.main:app --port 8000`), then `uv run python eval/e2e_skill_flow.py` from `backend/`. Expected: all steps PASS, `ALL GREEN`, exit 0, and the `[E2E]` skill + E2E user cleaned up.
 - [ ] **Step 4: Commit** — `git add backend/eval/e2e_skill_flow.py` + message `feat(eval): end-to-end skill flow test`.
 
 ---
@@ -648,7 +724,20 @@ if __name__ == "__main__":
 - Consumes: running Expo web (`npm run web`), running backend (`uvicorn`), real Supabase. Manual/optional — NOT a CI gate.
 - Produces: a Playwright spec that walks the user journey: scan → hasil material → "Buat Skill Baru dari Material Ini → 3 proposals → pick → edit → verify → submit → pending status visible.
 
-- [ ] **Step 1: Write the script** (create `e2e/skill-flow.spec.ts`):
+- [ ] **Step 1: Create the fixture + write the script**
+
+First create the sample image fixture (a valid tiny JPEG the scan flow can ingest):
+
+```bash
+mkdir -p e2e/fixtures
+python3 -c "
+import base64
+b64 = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=='
+open('e2e/fixtures/sample.jpg', 'wb').write(base64.b64decode(b64))
+"
+```
+
+Then create `e2e/skill-flow.spec.ts`:
 
 ```ts
 import { test, expect } from "@playwright/test";
@@ -656,11 +745,11 @@ import { test, expect } from "@playwright/test";
 // Requires: npm run web (Expo), backend on :8000, EXPO_PUBLIC_USE_MOCK=false.
 test("user creates a skill from scan", async ({ page }) => {
   await page.goto("http://localhost:8081");
-  // Scan flow: upload a photo (adjust selector to the app's upload input)
+  // Scan flow: the app uses expo-image-picker (app/scan/upload.tsx), which on
+  // web synthesizes an <input type="file"> — setInputFiles targets it.
   await page.setInputFiles('input[type="file"]', "e2e/fixtures/sample.jpg");
   await expect(page.getByText("Buat Skill Baru dari Material Ini")).toBeVisible();
   await page.getByText("Buat Skill Baru dari Material Ini").click();
-  // 3 proposals render
   await expect(page.getByText("Buat Skill Baru")).toBeVisible();
   // pick first proposal card (adjust selector to the app's proposal card)
   await page.locator("text=/^[A-Za-z]").first().click();
@@ -670,7 +759,7 @@ test("user creates a skill from scan", async ({ page }) => {
 ```
 
 Note: selectors are best-effort — the app's UI text is the source of truth (see `app/scan/hasil.tsx:215` and `app/scan/skill-creator.tsx`); adjust selectors to the actual rendered tree when running.
-- [ ] **Step 2: Verify the script parses** — `npx tsc --noEmit e2e/skill-flow.spec.ts` (or `npx playwright test --list` if Playwright is installed). If Playwright is not installed, add it as a devDependency (`npm i -D @playwright/test`) — optional, only for this manual task.
+- [ ] **Step 2: Verify the script parses** — `npx playwright test --list` (requires `@playwright/test` installed: `npm i -D @playwright/test` — optional, only for this manual task). Do NOT use `npx tsc --noEmit <file>` — it ignores the project tsconfig and fails on missing Playwright types.
 - [ ] **Step 3: Run manually** — with Expo web + backend + real Supabase running: `npx playwright test e2e/skill-flow.spec.ts`. Expected: the journey completes and the skill appears as pending.
 - [ ] **Step 4: Commit** — `git add e2e/skill-flow.spec.ts` + message `test(e2e): frontend skill flow playwright script`.
 
