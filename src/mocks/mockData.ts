@@ -264,6 +264,9 @@ export const MOCK_TUTORIALS: Record<string, ProductTutorial> = {
       "Gunting tajam",
       "Bunga kering atau bunga plastik",
     ],
+    additionalMaterials: [
+      { name: "Tali rami", category: "tali" as const, est_cost_idr: 3000, purpose: "Menggantung vas" },
+    ],
     beforeImageUri: IMG.wastePet,
     afterImageUri: IMG.bottleVase,
     mockupImageUri: IMG.bottleVase,

@@ -150,23 +150,31 @@ class ApiRecommendation implements RecommendationService {
   }
 }
 
+export function tutorialFromBackend(t: BackendTutorial): ProductTutorial {
+  return {
+    productId: t.skill_id,
+    steps: t.steps.map((step) => ({
+      order: step.order,
+      title: `Langkah ${step.order}`,
+      description: step.instruction,
+      imageUri: '',
+      safetyWarning: step.warning ?? undefined,
+    })),
+    beforeImageUri: '',
+    afterImageUri: '',
+    mockupImageUri: '',
+    toolsAndMaterials: [
+      ...(t.tools ?? []).map((tool) => tool.name),
+      ...(t.additional_materials ?? []).map((m) => m.name),
+    ],
+    additionalMaterials: t.additional_materials ?? [],
+  };
+}
+
 class ApiTutorial implements TutorialService {
   async getTutorial(productId: string): Promise<ProductTutorial> {
     const t = (await apiClient.getTutorial(productId)) as BackendTutorial;
-    return {
-      productId: t.skill_id,
-      steps: t.steps.map((step) => ({
-        order: step.order,
-        title: `Langkah ${step.order}`,
-        description: step.instruction,
-        imageUri: "",
-        safetyWarning: step.warning ?? undefined,
-      })),
-      beforeImageUri: "",
-      afterImageUri: "",
-      mockupImageUri: "",
-      toolsAndMaterials: [...(t.materials ?? []), ...(t.tools ?? [])],
-    };
+    return tutorialFromBackend(t);
   }
 }
 

@@ -82,6 +82,13 @@ export interface ToolItem {
   optional: boolean;
 }
 
+export interface AdditionalMaterial {
+  name: string;
+  category: 'tali' | 'cat' | 'lem' | 'tanah_tanaman' | 'pengait' | 'alat' | 'lainnya';
+  est_cost_idr: number;
+  purpose: string;
+}
+
 export interface Step {
   order: number;
   instruction: string;
@@ -147,6 +154,7 @@ export interface ProductTutorial {
   afterImageUri: string;
   mockupImageUri: string;
   toolsAndMaterials: string[];
+  additionalMaterials?: AdditionalMaterial[];
 }
 
 export interface TutorialService {
@@ -159,8 +167,8 @@ export interface BackendTutorial {
   title: string;
   description: string;
   difficulty: BackendDifficulty;
-  materials: string[];
-  tools: string[];
+  tools: ToolItem[];
+  additional_materials: AdditionalMaterial[];
   steps: Step[];
   estimated_time: string;
 }
@@ -219,6 +227,7 @@ export interface SkillProposal {
   difficulty: BackendDifficulty;
   steps: Step[];
   tools: ToolItem[];
+  additional_materials: AdditionalMaterial[];
   est_cost_idr?: number | null;
   est_price_idr?: number | null;
 }

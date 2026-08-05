@@ -32,6 +32,7 @@ describe('apiClient skill methods', () => {
     difficulty: 'pemula',
     steps: [{ order: 1, instruction: 'Cuci botol', warning: 'Sarung tangan' }],
     tools: [{ name: 'gunting', optional: false }],
+    additional_materials: [],
     est_cost_idr: 5000,
     est_price_idr: 25000,
   };
