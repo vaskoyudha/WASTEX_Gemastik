@@ -1,4 +1,4 @@
-from app.agent.tools.vision import VISION_PROMPT, build_vision_messages
+from app.agent.tools.vision import IDENTITY_PROMPT, VISION_PROMPT, build_vision_messages
 
 ALL_MATERIALS = ["plastik_pet", "plastik_hdpe", "kardus", "kaleng", "kaca", "sachet"]
 
@@ -30,3 +30,18 @@ def test_messages_use_detail_high():
     image_part = messages[0]["content"][1]
     assert image_part["image_url"]["detail"] == "high"
     assert image_part["image_url"]["url"].startswith("data:image/jpeg")
+
+
+def test_identity_prompt_describes_json_fields():
+    for field in ("shape", "dominant_colors", "material", "notable_features"):
+        assert field in IDENTITY_PROMPT
+
+
+def test_identity_prompt_forbids_guessing():
+    assert "Jangan menebak" in IDENTITY_PROMPT
+
+
+def test_identity_messages_reuse_high_detail():
+    messages = build_vision_messages("data:image/jpeg;base64,AAAA", IDENTITY_PROMPT)
+    assert messages[0]["content"][0]["text"] == IDENTITY_PROMPT
+    assert messages[0]["content"][1]["image_url"]["detail"] == "high"

@@ -35,6 +35,13 @@ class MaterialIdentification(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class ObjectIdentity(BaseModel):
+    shape: str
+    dominant_colors: list[str]
+    material: str
+    notable_features: list[str] = []
+
+
 class ToolItem(BaseModel):
     name: str
     optional: bool = False

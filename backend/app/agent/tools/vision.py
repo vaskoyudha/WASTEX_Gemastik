@@ -4,7 +4,7 @@ import json
 import httpx
 
 from app.config import get_settings
-from app.schemas import MaterialIdentification
+from app.schemas import MaterialIdentification, ObjectIdentity
 
 VISION_PROMPT = """# Tugas
 Identifikasi material sampah anorganik DOMINAN pada foto.
@@ -65,6 +65,34 @@ class VisionUnavailable(Exception):
     pass
 
 
+IDENTITY_PROMPT = """# Tugas
+Analisis foto sampah daur ulang dan tulis identitas visual KANONIK objeknya untuk menjaga konsistensi ilustrasi tutorial.
+
+## Iron Law
+DESKRIPSI HANYA BERDASARKAN BUKTI VISUAL YANG TERLIHAT DI FOTO. Jangan menebak, jangan menambah detail imajinasi.
+
+## Aturan (MUST/NEVER)
+1. shape: bentuk dasar objek dalam bahasa Inggris, 3-8 kata (mis. "tall clear bottle with narrow neck").
+2. dominant_colors: 1-3 warna yang benar-benar terlihat (Inggris, mis. "transparent", "blue", "white").
+3. material: salah satu dari plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet.
+4. notable_features: 0-2 ciri khas yang terlihat (mis. "white cap", "bent label", "dented side").
+5. Output HANYA JSON valid. Tanpa teks lain di luar JSON.
+
+## Red Flags (hati-hati bila ini terjadi)
+- Warna dari pencahayaan/kuning lampu dianggap warna asli -> jangan, sebutkan warna netral.
+- Menyebut ciri yang tidak terlihat di foto -> jangan.
+- Shape terlalu panjang/bertele-tele -> ringkas 3-8 kata.
+
+## Self-Check (sebelum menjawab)
+- Setiap field didukung bukti visual di foto?
+- dominant_colors hanya warna yang benar-benar terlihat?
+- JSON valid, tanpa trailing text/koma?
+
+## Format Output (WAJIB)
+Jawab HANYA dengan JSON valid:
+{"shape": "...", "dominant_colors": ["..."], "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet", "notable_features": ["..."]}"""
+
+
 def parse_proxy_json(text: str) -> dict:
     cutoff = text.find("data: [DONE]")
     if cutoff != -1:
@@ -72,12 +100,12 @@ def parse_proxy_json(text: str) -> dict:
     return json.loads(text)
 
 
-def build_vision_messages(data_url: str) -> list[dict]:
+def build_vision_messages(data_url: str, prompt: str = VISION_PROMPT) -> list[dict]:
     return [
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": VISION_PROMPT},
+                {"type": "text", "text": prompt},
                 {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}},
             ],
         }
@@ -102,6 +130,24 @@ async def _identify(
     return MaterialIdentification.model_validate(payload)
 
 
+async def _extract_identity(
+    client: httpx.AsyncClient, model: str, data_url: str, api_key: str
+) -> ObjectIdentity:
+    s = get_settings()
+    r = await client.post(
+        f"{s.openrouter_base_url}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={
+            "model": model,
+            "response_format": {"type": "json_object"},
+            "messages": build_vision_messages(data_url, IDENTITY_PROMPT),
+        },
+    )
+    r.raise_for_status()
+    payload = json.loads(parse_proxy_json(r.text)["choices"][0]["message"]["content"])
+    return ObjectIdentity.model_validate(payload)
+
+
 async def scan_material(
     image_bytes: bytes, content_type: str = "image/jpeg"
 ) -> MaterialIdentification:
@@ -114,6 +160,25 @@ async def scan_material(
             for _ in range(2):
                 try:
                     return await _identify(client, model, data_url, s.openrouter_api_key)
+                except Exception as e:
+                    last_err = e
+    raise VisionUnavailable("all vision providers failed") from last_err
+
+
+async def extract_object_identity(
+    image_bytes: bytes,
+    content_type: str = "image/jpeg",
+    client_factory=httpx.AsyncClient,
+) -> ObjectIdentity:
+    s = get_settings()
+    data_url = f"data:{content_type};base64,{base64.b64encode(image_bytes).decode()}"
+    last_err: Exception | None = None
+    async with client_factory(timeout=60) as client:
+        # Same retry shape as scan_material: 2 attempts per provider, model -> fallback.
+        for model in (s.vision_model, s.vision_fallback_model):
+            for _ in range(2):
+                try:
+                    return await _extract_identity(client, model, data_url, s.openrouter_api_key)
                 except Exception as e:
                     last_err = e
     raise VisionUnavailable("all vision providers failed") from last_err

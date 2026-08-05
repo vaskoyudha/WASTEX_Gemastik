@@ -10,7 +10,7 @@ from app.agent.orchestrator import GROUNDING_PROMPT
 from app.agent.selling import SELLING_PROMPT
 from app.agent.tools.discovery import DRAFT_PROMPT, SAFETY_RUBRIC
 from app.agent.tools.skill_proposals import SKILL_PROPOSAL_PROMPT, SKILL_VERIFY_PROMPT
-from app.agent.tools.vision import VISION_PROMPT
+from app.agent.tools.vision import IDENTITY_PROMPT, VISION_PROMPT
 from app.rag.bootstrap import SEED_PROMPT
 
 ALL_PROMPTS = {
@@ -22,6 +22,7 @@ ALL_PROMPTS = {
     "SKILL_VERIFY_PROMPT": SKILL_VERIFY_PROMPT,
     "SEED_PROMPT": SEED_PROMPT,
     "VISION_PROMPT": VISION_PROMPT,
+    "IDENTITY_PROMPT": IDENTITY_PROMPT,
 }
 
 
