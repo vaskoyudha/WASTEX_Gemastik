@@ -161,6 +161,26 @@ export default function ProductDetailScreen() {
           </ScrollView>
         </View>
 
+        {tutData?.additionalMaterials && tutData.additionalMaterials.length > 0 && (
+          <View className="mb-6">
+            <Text className="text-sm font-bold text-slate-900 mb-3">Bahan Tambahan</Text>
+            {tutData.additionalMaterials.map((m, idx) => (
+              <View
+                key={idx}
+                className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-2"
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-xs font-bold text-slate-900">{m.name}</Text>
+                  <Text className="text-xs font-semibold text-amber-700">
+                    Rp {m.est_cost_idr.toLocaleString('id-ID')}
+                  </Text>
+                </View>
+                <Text className="text-[11px] text-slate-500 mt-1">{m.purpose}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <Button
           title="Lihat Tutorial Langkah-langkah"
           onPress={() => router.push(`/product/${id}/tutorial`)}
