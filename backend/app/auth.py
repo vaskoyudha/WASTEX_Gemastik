@@ -1,8 +1,12 @@
+import logging
+
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
@@ -35,7 +39,11 @@ def get_current_user(
             return {"user_id": user_id, "email": getattr(user.user, "email", None)}
         except HTTPException:
             raise
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "Supabase token verification failed; returning 401: %s",
+                exc,
+            )
             raise HTTPException(status_code=401, detail="Invalid token")
     user_id = payload.get("sub")
     if not user_id:

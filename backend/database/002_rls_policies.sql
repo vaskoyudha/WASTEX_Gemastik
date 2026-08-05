@@ -20,14 +20,21 @@ CREATE POLICY "users_insert_auth" ON users
   FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Experts and admins can manage other users
-CREATE POLICY "authenticated_manage_users" ON users
-  FOR ALL TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() AND users.role IN ('expert', 'admin')
-    )
-  );
+-- SUPERSEDED: dropped by migration 20260806000001_fix_users_rls_recursion.sql
+-- because this policy self-references `users` and breaks authenticated
+-- PostgREST queries with 42P17 (infinite recursion detected in policy).
+-- The CREATE is commented out so replaying this legacy file never
+-- re-introduces the recursive policy; the DROP below cleans up any
+-- leftover definition.
+DROP POLICY IF EXISTS "authenticated_manage_users" ON users;
+-- CREATE POLICY "authenticated_manage_users" ON users
+--   FOR ALL TO authenticated
+--   USING (
+--     EXISTS (
+--       SELECT 1 FROM users 
+--       WHERE users.id = auth.uid() AND users.role IN ('expert', 'admin')
+--     )
+--   );
 
 -- Users can only see their own scans
 CREATE POLICY "scans_select_own" ON scans
