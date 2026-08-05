@@ -2,10 +2,12 @@ from pathlib import Path
 
 SQL = Path(__file__).parents[1] / "supabase" / "migrations" / "20260806000002_document_sources.sql"
 
+
 def test_migration_creates_documents_tables():
     text = SQL.read_text()
     assert "create table documents" in text
     assert "create table document_chunks" in text
+
 
 def test_migration_gates_indexes_and_metadata():
     text = SQL.read_text()
@@ -18,11 +20,13 @@ def test_migration_gates_indexes_and_metadata():
     assert "documents_updated_at" in text
     assert "to_tsvector('indonesian', content)" in text
 
+
 def test_migration_rls_and_bucket():
     text = SQL.read_text()
     assert "row level security" in text
     assert "status = 'approved'" in text
     assert "storage.buckets" in text and "'documents'" in text
+
 
 def test_migration_rewrites_hybrid_search_with_source_type():
     text = SQL.read_text()
