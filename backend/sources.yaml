@@ -1,10 +1,65 @@
 # Curated source whitelist for seed bootstrap and skill discovery (spec §6).
 # Each entry needs: id, title, url or citation, materials, notes.
-# Example:
-# sources:
-#   - id: bank-sampah-guide-2024
-#     title: Panduan Pengelolaan Bank Sampah
-#     url: https://example.go.id/panduan-bank-sampah.pdf
-#     materials: [plastik_pet, plastik_hdpe]
-#     notes: Panduan resmi, bagian 3 membahas upcycling botol PET.
-sources: []
+# All URLs verified reachable 2026-08-06. The drafter uses ONLY these sources
+# (Iron Law) and cites them in SkillDraft.sources.
+sources:
+  - id: wikipedia-daur-ulang
+    title: Daur ulang (Wikipedia Indonesia)
+    url: https://id.wikipedia.org/wiki/Daur_ulang
+    materials: [plastik_pet, plastik_hdpe, kardus, kaleng, kaca, sachet]
+    notes: "Dasar daur ulang: definisi, manfaat, hierarki 3R, kode resin plastik (PET=1, HDPE=2) untuk pemilahan, dan jenis material yang dapat didaur ulang (kaca, plastik, kertas, logam)."
+  - id: wikipedia-pengelolaan-sampah
+    title: Pengelolaan sampah (Wikipedia Indonesia)
+    url: https://id.wikipedia.org/wiki/Pengelolaan_sampah
+    materials: [plastik_pet, plastik_hdpe, kardus, kaleng, kaca, sachet]
+    notes: "Hierarki pengelolaan sampah (reduce-reuse-recycle), jenis sampah anorganik (aluminium, kaca, plastik PET/HDPE, logam), dan prinsip pemilahan sampah."
+  - id: wikipedia-pet
+    title: Polietilena tereftalat / PET (Wikipedia Indonesia)
+    url: https://id.wikipedia.org/wiki/Polietilena_tereftalat
+    materials: [plastik_pet]
+    notes: "Sifat fisik PET (bening, ringan, kuat), kode resin 1, dan daur ulang botol PET. Dasar untuk ide pot tanaman, tempat pensil, dan kerajinan botol."
+  - id: wikipedia-hdpe
+    title: Polietilena / HDPE (Wikipedia Indonesia)
+    url: https://id.wikipedia.org/wiki/Polietilena
+    materials: [plastik_hdpe]
+    notes: "Sifat polietilena (kepadatan, klasifikasi HDPE/LDPE), kode resin 2, dan keterkaitan daur ulang plastik. Dasar untuk kerajinan dari galon/jerigen dan kantong kresek."
+  - id: wikipedia-kaca
+    title: Kaca (Wikipedia Indonesia)
+    url: https://id.wikipedia.org/wiki/Kaca
+    materials: [kaca]
+    notes: "Komposisi, jenis, dan sifat kaca (rapuh, tajam saat pecah). Catatan keselamatan: tepi tajam, wajib sarung tangan dan mitigasi untuk kerajinan kaca."
+  - id: wikipedia-kertas-karton
+    title: Kertas karton (Wikipedia Indonesia)
+    url: https://id.wikipedia.org/wiki/Kertas_karton
+    materials: [kardus]
+    notes: "Sifat karton (gramatur, kekakuan, kemampuan lipat) untuk kerajinan kardus seperti rak, kotak, dan furnitur ringan."
+  - id: wikipedia-kaleng-aluminium
+    title: Kaleng aluminium (Wikipedia Indonesia)
+    url: https://id.wikipedia.org/wiki/Kaleng_aluminium
+    materials: [kaleng]
+    notes: "Sifat kaleng aluminium (ringan, tahan korosi, konstruksi dua bagian). Catatan keselamatan: tepi potongan kaleng tajam, wajib mitigasi."
+  - id: dlhk-banten-limbah-anorganik
+    title: Pengelolaan Limbah Anorganik (DLHK Provinsi Banten, PDF resmi)
+    url: https://dlhk.bantenprov.go.id/storage/dlhk/upload/article/Pengelolaan_Limbah_Anorganik.pdf
+    materials: [plastik_pet, plastik_hdpe, kardus, kaleng, kaca]
+    notes: "Panduan resmi pemerintah: pengelolaan limbah anorganik (plastik, kaca, logam/kaleng, kertas/dus), pemilahan, dan pemanfaatan kembali. Sumber kredibel untuk langkah aman."
+  - id: waste4change-limbah-keras-anorganik
+    title: 21 Contoh Limbah Keras Anorganik dan Cara Mendaur Ulangnya (Waste4Change)
+    url: https://waste4change.com/blog/limbah-keras-anorganik-pengertian-contoh-cara-mendaur-ulang/
+    materials: [plastik_pet, plastik_hdpe, kardus, kaleng, kaca]
+    notes: "21 contoh limbah keras anorganik (botol, kaleng, kaca, kardus) beserta cara mendaur ulang dan mengolahnya menjadi produk baru."
+  - id: identif-tas-dompet-sachet
+    title: Cara Membuat Tas dan Dompet Daur Ulang Plastik (Identif)
+    url: https://www.identif.id/cara-membuat-tas-dan-dompet-daur-ulang-plastik
+    materials: [sachet]
+    notes: "Tutorial membuat tas dan dompet dari kemasan sachet (kopi, deterjen) dan plastik bekas: teknik menyusun, menjahit, dan finishing. Sumber utama ide kerajinan sachet."
+  - id: bisnisukm-tas-dompet-daur-ulang
+    title: Aneka Tas dan Dompet dari Kreasi Daur Ulang Limbah (BisnisUKM)
+    url: https://bisnisukm.com/aneka-tas-dan-dompet-dari-kreasi-daur-ulang-limbah.html
+    materials: [sachet]
+    notes: "Ide tas dan dompet dari bungkus sachet dan plastik kresek, termasuk nilai jual produk daur ulang. Melengkapi sumber sachet dengan variasi produk."
+  - id: dlh-buleleng-kerajinan-plastik
+    title: Plastik Bekas Jadi Kerajinan Bunga (DLH Kabupaten Buleleng)
+    url: https://dlh.bulelengkab.go.id/informasi/detail/artikel/58_plastik-bekas-jadi-kerajinan-bunga-yang-cantik
+    materials: [plastik_hdpe]
+    notes: "Artikel resmi pemerintah: mengubah kantong plastik (kresek) menjadi bunga hias, dengan bahan dan langkah-langkah. Sumber untuk kerajinan HDPE/kresek."
