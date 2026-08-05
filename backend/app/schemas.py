@@ -254,3 +254,20 @@ class SkillVerifyResponse(BaseModel):
 
 class SkillCreateRequest(SkillProposal):
     reference_scan_id: UUID | None = None
+
+
+class DocumentSourceType(str, Enum):
+    pdf = "pdf"
+    url = "url"
+
+
+class DocumentCreateRequest(BaseModel):
+    title: str
+    source_type: DocumentSourceType
+    url: str | None = None
+    materials: list[Material]
+
+
+class DocumentStatusUpdate(BaseModel):
+    status: Literal["approved", "rejected"]
+    reviewed_by: str
