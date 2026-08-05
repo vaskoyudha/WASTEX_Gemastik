@@ -10,7 +10,9 @@ from app.agent.tools.image_gen import (
     build_storyboard_prompt,
     generate_image,
 )
+from app.agent.tools.vision import VisionUnavailable, extract_object_identity
 from app.deps import get_supabase
+from app.schemas import ObjectIdentity
 from supabase import Client
 
 router = APIRouter()
@@ -61,12 +63,14 @@ async def _generate_visual(
     kind: Kind,
     step: int | None,
     reference_images: list[bytes] | None = None,
+    identity: ObjectIdentity | None = None,
+    step_count: int | None = None,
 ) -> dict:
     if kind == "storyboard":
         target = _step_by_order(skill, step)
         if target is None:
             raise KeyError(f"step {step} not found")
-        prompt = build_storyboard_prompt(skill, target)
+        prompt = build_storyboard_prompt(skill, target, identity=identity, step_count=step_count)
     elif kind == "before_after":
         prompt = build_before_after_prompt(skill)
     else:
@@ -116,6 +120,12 @@ async def generate_all_visuals(sb: Client, skill_id: str) -> None:
     have = {(row.get("kind"), row.get("step_order")) for row in (cached.data or [])}
 
     photo = await _load_reference_bytes(sb, skill)
+    identity = None
+    if photo:
+        try:
+            identity = await extract_object_identity(photo[0])
+        except VisionUnavailable:
+            identity = None
     last_panel: bytes | None = None
 
     orders = sorted(
@@ -132,7 +142,9 @@ async def generate_all_visuals(sb: Client, skill_id: str) -> None:
             continue
         try:
             refs = [last_panel] + photo if last_panel is not None else list(photo)
-            out = await _generate_visual(sb, skill, "storyboard", order, refs)
+            out = await _generate_visual(
+                sb, skill, "storyboard", order, refs, identity=identity, step_count=len(orders)
+            )
             last_panel = await _load_panel_bytes(sb, out["image_path"])
         except ImageGenUnavailable:
             last_panel = None

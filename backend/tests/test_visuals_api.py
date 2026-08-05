@@ -4,8 +4,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.visuals as visuals_api
+from app.agent.tools.vision import VisionUnavailable
 from app.deps import get_supabase
 from app.main import app
+from app.schemas import ObjectIdentity
 from tests.fakes import FakeSupabase
 
 SKILL = {
@@ -197,3 +199,72 @@ def test_generate_all_threads_previous_panel(fake_sb, monkeypatch):
     assert "illustrator of a single DIY upcycling tutorial panel" in calls[0][0]
     # step 2: previous panel output is the primary reference, photo second
     assert calls[1][1] == [b"fake-png-bytes", b"photo-bytes"]
+
+
+def test_generate_all_threads_object_identity_and_timeline(fake_sb, monkeypatch):
+    fake_sb.table("skills").insert(
+        {
+            **SKILL,
+            "reference_image_path": "photo-1.jpg",
+            "steps": [
+                {"order": 1, "instruction": "Cuci botol", "warning": None},
+                {"order": 2, "instruction": "Potong botol", "warning": None},
+            ],
+        }
+    )
+    fake_sb.storage.from_("scans").upload("photo-1.jpg", b"scan-bytes")
+    prompts = []
+
+    async def fake_generate(prompt, reference_images=None):
+        prompts.append(prompt)
+        return b"fake-png-bytes"
+
+    async def fake_identity(image_bytes, content_type="image/jpeg", client_factory=None):
+        return ObjectIdentity(
+            shape="tall clear bottle",
+            dominant_colors=["transparent"],
+            material="plastik_pet",
+            notable_features=["white cap"],
+        )
+
+    monkeypatch.setattr(visuals_api, "generate_image", fake_generate)
+    monkeypatch.setattr(visuals_api, "extract_object_identity", fake_identity)
+
+    async def run():
+        await visuals_api.generate_all_visuals(fake_sb, "s1")
+
+    asyncio.run(run())
+    assert "Object identity is FIXED for every panel" in prompts[0]
+    assert "tall clear bottle" in prompts[0]
+    assert "step 1 of 2" in prompts[0]
+    assert "step 2 of 2" in prompts[1]
+
+
+def test_generate_all_continues_when_identity_extraction_fails(fake_sb, monkeypatch):
+    fake_sb.table("skills").insert(
+        {
+            **SKILL,
+            "reference_image_path": "photo-1.jpg",
+            "steps": [{"order": 1, "instruction": "Cuci botol", "warning": None}],
+        }
+    )
+    fake_sb.storage.from_("scans").upload("photo-1.jpg", b"scan-bytes")
+    prompts = []
+
+    async def fake_generate(prompt, reference_images=None):
+        prompts.append(prompt)
+        return b"fake-png-bytes"
+
+    async def boom_identity(image_bytes, content_type="image/jpeg", client_factory=None):
+        raise VisionUnavailable("provider down")
+
+    monkeypatch.setattr(visuals_api, "generate_image", fake_generate)
+    monkeypatch.setattr(visuals_api, "extract_object_identity", boom_identity)
+
+    async def run():
+        await visuals_api.generate_all_visuals(fake_sb, "s1")
+
+    asyncio.run(run())
+    assert len(prompts) == 3  # 1 storyboard + before_after + mockup
+    assert "Object identity is FIXED" not in prompts[0]
+    assert "step 1" in prompts[0]
