@@ -10,6 +10,7 @@ Usage:
 
 import argparse
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -49,12 +50,18 @@ def main(base: str) -> int:
     AUTH = {"Authorization": f"Bearer {token}"}
     SERVICE_AUTH = {"Authorization": f"Bearer {_env('SUPABASE_SERVICE_KEY')}"}  # noqa: F841 (kept for parity with brief)
 
+    # Track what this run creates so the finally block can clean it all up:
+    # a scans row + its storage object, agent_runs rows, the skill, the user.
+    scan_id = None
+    started_at = datetime.now(UTC).isoformat()
+
     try:
         with httpx.Client(timeout=120) as client:
             # 1. scan
             r = client.post(f"{base}/scan", files={"file": ("t.jpg", TINY_JPEG, "image/jpeg")})
             ok &= _check("scan 200", r.status_code == 200, f"status={r.status_code}")
             material = (r.json().get("identification") or {}).get("material") or "plastik_pet"
+            scan_id = (r.json() or {}).get("scan_id")
 
             # 2. recommend (RAG path) — assert grounded per spec
             r = client.post(
@@ -135,6 +142,26 @@ def main(base: str) -> int:
                 sb.table("skills").delete().eq("id", skill_id).execute()
                 print("  [INFO] cleaned up [E2E] skill")
     finally:
+        # Clean up everything this run created. agent_runs has no user_id
+        # column and the recommend calls above pass no scan_id, so match the
+        # run's rows on the time window + NULL scan_id.
+        try:
+            sb.table("agent_runs").delete().gte("created_at", started_at).is_(
+                "scan_id", None
+            ).execute()
+            print("  [INFO] cleaned up agent_runs rows")
+        except Exception as exc:
+            print(f"  [WARN] agent_runs cleanup failed: {exc}")
+        if scan_id:
+            try:
+                img = sb.table("scans").select("image_url").eq("id", scan_id).limit(1).execute()
+                image_url = next((r.get("image_url") for r in (img.data or [])), None)
+                if image_url:
+                    sb.storage.from_("scans").remove([image_url])
+                sb.table("scans").delete().eq("id", scan_id).execute()
+                print("  [INFO] cleaned up scan row + image")
+            except Exception as exc:
+                print(f"  [WARN] scan cleanup failed: {exc}")
         try:
             sb.auth.admin.delete_user(user_id)
             print("  [INFO] cleaned up E2E user")
