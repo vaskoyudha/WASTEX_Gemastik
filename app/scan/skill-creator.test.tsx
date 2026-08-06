@@ -150,7 +150,7 @@ describe('SkillCreatorScreen verify + submit', () => {
     expect(await findByText('Skill Terkirim')).toBeTruthy();
   });
 
-  it('perbaiki verdict shows feedback and no submit button', async () => {
+  it('perbaiki verdict shows feedback but still allows submit', async () => {
     mockVerify.mockResolvedValue({
       verdict: 'perbaiki',
       feedback: ['Bahan X tidak terdaftar di additional_materials.'],
@@ -159,7 +159,9 @@ describe('SkillCreatorScreen verify + submit', () => {
     const { findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
     expect(await findByText(/Bahan X tidak terdaftar/i)).toBeTruthy();
-    expect(queryByText('Kirim Skill untuk Verifikasi')).toBeNull();
+    expect(queryByText('Kirim Skill untuk Verifikasi')).toBeTruthy();
+    fireEvent.press(queryByText('Kirim Skill untuk Verifikasi')!);
+    expect(mockCreate).toHaveBeenCalled();
   });
 
   it('perbaiki verdict offers Coba Ide Lain which returns to ideas', async () => {

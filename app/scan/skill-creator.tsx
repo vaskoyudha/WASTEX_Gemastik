@@ -205,14 +205,15 @@ export default function SkillCreatorScreen() {
             ))}
           </View>
         )}
-        {verdict?.verdict === 'layak' ? (
-          <View className="mb-4">
-            <Text className="text-sm font-bold text-slate-900 mb-3">Skill layak dikirim</Text>
-            <Button title="Kirim Skill untuk Verifikasi" onPress={handleSubmit} disabled={submitting} />
-          </View>
-        ) : (
+        <View className="mb-4">
+          <Text className="text-sm font-bold text-slate-900 mb-3">
+            {verdict?.verdict === 'layak'
+              ? 'Skill layak dikirim'
+              : 'Kirim draft untuk review expert'}
+          </Text>
+          <Button title="Kirim Skill untuk Verifikasi" onPress={handleSubmit} disabled={submitting} />
           <Button title="Coba Ide Lain" onPress={handlePickAnother} variant="secondary" />
-        )}
+        </View>
       </View>
     );
   };
