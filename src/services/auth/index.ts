@@ -43,24 +43,11 @@ export class LocalAuthService implements AuthService {
     displayName: string,
     data?: UpdateProfileRequest
   ): Promise<AuthResult> {
-    const response = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: displayName,
-          ...(data?.firstName && { first_name: data.firstName }),
-          ...(data?.lastName && { last_name: data.lastName }),
-        },
-      },
-    });
-
-    if (!response.data.user) {
-      throw new Error(response.error?.message || "Sign up failed");
-    }
-
-    // Fetch profile immediately after sign up (it might have been auto-created by trigger, or we fetch later)
-    // For now, create profile by calling the backend API directly via apiClient
+    // The backend /auth/register owns Supabase user creation. Calling
+    // supabase.auth.signUp here as well caused a double sign-up: the second
+    // call failed with "User already registered". Delegating to the backend
+    // keeps registration idempotent (safe to retry) and lets the backend
+    // recover accounts whose profile was never created.
     const client = this.apiClient || await import("../api").then((m) => m.apiClient);
     const profileResponse = await client.register({
       email,
@@ -74,7 +61,7 @@ export class LocalAuthService implements AuthService {
 
     const userProfile: UserProfile = {
       id: profileResponse.profile.id,
-      authUserId: response.data.user.id,
+      authUserId: profileResponse.user_id,
       displayName: profileResponse.profile.display_name,
       firstName: profileResponse.profile.first_name,
       lastName: profileResponse.profile.last_name,
@@ -86,9 +73,9 @@ export class LocalAuthService implements AuthService {
     };
 
     const user: User = {
-      id: response.data.user.id,
+      id: profileResponse.user_id,
       email,
-      accessToken: response.data.session?.access_token ?? profileResponse.access_token ?? null,
+      accessToken: profileResponse.access_token ?? null,
       profile: userProfile,
     };
     this.user = user;

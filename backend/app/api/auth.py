@@ -23,6 +23,36 @@ async def get_auth_supabase() -> Client:
 router = APIRouter(tags=["auth"])
 
 
+def _extract_access_token(creds) -> str:
+    """Pull a JWT from a sign_up/sign_in response, tolerating both shapes."""
+    session = getattr(creds, "session", None)
+    return (
+        getattr(creds, "access_token", None)
+        or (getattr(session, "access_token", None) if session else None)
+        or ""
+    )
+
+
+def _resolve_auth_user(sb: Client, email: str, password: str) -> tuple[str, str]:
+    """Return (auth_user_id, access_token) for the given credentials.
+
+    The client-side ``supabase.auth.signUp`` usually creates the auth user
+    BEFORE this endpoint runs, so a second ``sign_up`` fails with
+    "User already registered". Treat that case as success and sign in instead,
+    which keeps registration idempotent and safe to retry.
+    """
+    try:
+        creds = sb.auth.sign_up({"email": email, "password": password})
+    except Exception as e:
+        if "already" not in str(e).lower():
+            raise
+        creds = sb.auth.sign_in_with_password({"email": email, "password": password})
+
+    if not creds.user or not creds.user.id:
+        raise HTTPException(status_code=400, detail="Failed to create user")
+    return creds.user.id, _extract_access_token(creds)
+
+
 @router.post("/register", response_model=AuthRegisterResponse, status_code=201)
 async def register(
     request: RegisterRequest,
@@ -30,47 +60,35 @@ async def register(
 ):
     """Register new user with email/password and create profile."""
     try:
-        # Create user in auth.users
-        user_creds = sb.auth.sign_up(
-            {
-                "email": request.email,
-                "password": request.password,
+        user_id, access_token = _resolve_auth_user(sb, request.email, request.password)
+
+        # Reuse an existing profile when present (idempotent re-registration),
+        # otherwise create one.
+        existing = sb.table("profiles").select("*").eq("auth_user_id", user_id).execute()
+        profile = existing.data[0] if existing.data else None
+        if not profile:
+            profile_data = {
+                "id": str(uuid4()),
+                "auth_user_id": user_id,
+                "display_name": request.display_name,
+                "first_name": request.first_name,
+                "last_name": request.last_name,
+                "bio": request.bio,
+                "phone": request.phone,
+                "avatar_url": None,
             }
-        )
-        if not user_creds.user or not user_creds.user.id:
-            raise HTTPException(status_code=400, detail="Failed to create user")
-
-        user_id = user_creds.user.id
-
-        # Create profile
-        profile_data = {
-            "id": str(uuid4()),
-            "auth_user_id": user_id,
-            "display_name": request.display_name,
-            "first_name": request.first_name,
-            "last_name": request.last_name,
-            "bio": request.bio,
-            "phone": request.phone,
-            "avatar_url": None,
-        }
-        inserted = sb.table("profiles").insert(profile_data).execute()
-        profile = inserted.data[0] if inserted.data else None
+            inserted = sb.table("profiles").insert(profile_data).execute()
+            profile = inserted.data[0] if inserted.data else None
         if not profile:
             raise HTTPException(status_code=500, detail="Failed to create profile")
-
-        # Access token is returned as part of sign_up response
-        session = getattr(user_creds, "session", None)
-        access_token = (
-            user_creds.access_token
-            if getattr(user_creds, "access_token", None)
-            else (session.access_token if session else "")
-        ) or ""
 
         return AuthRegisterResponse(
             access_token=access_token,
             user_id=user_id,
             profile=UserProfileResponse(**profile),
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
