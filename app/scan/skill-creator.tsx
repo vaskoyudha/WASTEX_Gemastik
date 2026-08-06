@@ -15,7 +15,7 @@ import type {
 import { useScanStore } from '../../src/store/useScanStore';
 import { AlertTriangle, Bot, CheckCircle2, Sparkles, XCircle } from 'lucide-react-native';
 
-type Stage = 'ideas' | 'edit' | 'verify' | 'done';
+type Stage = 'ideas' | 'verifying' | 'result' | 'done';
 
 const DIFFICULTIES: BackendDifficulty[] = ['pemula', 'menengah', 'mahir'];
 
@@ -26,10 +26,7 @@ export default function SkillCreatorScreen() {
   const [selected, setSelected] = useState<SkillProposal | null>(null);
   const [draft, setDraft] = useState<SkillProposal | null>(null);
   const [expanding, setExpanding] = useState(false);
-  const [verifyVisible, setVerifyVisible] = useState(false);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [verdict, setVerdict] = useState<SkillVerifyResponse | null>(null);
-  const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const generateArgs = useMemo<[string, string] | undefined>(
@@ -71,63 +68,26 @@ export default function SkillCreatorScreen() {
   const handleSelect = async (idea: SkillIdea) => {
     if (!scanResult || expanding) return;
     setExpanding(true);
+    setStage('verifying');
     try {
       const full = await expandSkill(scanResult.materialType, scanResult.condition, idea);
       setSelected(full);
       setDraft({ ...full, steps: full.steps.map((s) => ({ ...s })) });
-      setStage('edit');
-    } catch {
-      Alert.alert('Detail Gagal Dimuat', 'AI tidak bisa menyusun detail skill. Coba pilih ide lain.');
-    } finally {
-      setExpanding(false);
-    }
-  };
-
-  const updateStep = (index: number, field: 'instruction' | 'warning', value: string) => {
-    if (!draft) return;
-    setDraft({
-      ...draft,
-      steps: draft.steps.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
-    });
-  };
-
-  const openVerify = () => {
-    setChatHistory([]);
-    setVerdict(null);
-    setVerifyVisible(true);
-    runCheck([]);
-  };
-
-  const runCheck = async (history: ChatMessage[] = []) => {
-    if (!draft || checking) return;
-    setChecking(true);
-    const userMsg: ChatMessage = {
-      role: 'user',
-      content: `Draft skill: ${draft.title}\n${draft.description}`,
-    };
-    try {
-      // Hanya kirim ronde saat ini — riwayat lama membuat LLM meng-echo
-      // feedback yang sudah diperbaiki (stale feedback bias).
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: `Draft skill: ${full.title}\n${full.description}`,
+      };
       const result = await apiClient.verifySkill({
-        draft,
-        chat_history: [...history, userMsg],
+        draft: full,
+        chat_history: [userMsg],
       });
       setVerdict(result);
-      setChatHistory((h) => [
-        ...h,
-        userMsg,
-        {
-          role: 'assistant',
-          content:
-            result.verdict === 'layak'
-              ? 'Skill layak dikirim'
-              : `Perlu perbaikan:\n${result.feedback.join('\n')}`,
-        },
-      ]);
+      setStage('result');
     } catch {
-      Alert.alert('Verifikasi Gagal', 'AI tidak bisa memverifikasi saat ini. Coba lagi.');
+      Alert.alert('Detail Gagal Dimuat', 'AI tidak bisa menyusun detail skill. Coba pilih ide lain.');
+      setStage('ideas');
     } finally {
-      setChecking(false);
+      setExpanding(false);
     }
   };
 
@@ -136,7 +96,6 @@ export default function SkillCreatorScreen() {
     setSubmitting(true);
     try {
       await apiClient.createSkill({ ...draft, reference_scan_id: scanResult?.scan_id });
-      setVerifyVisible(false);
       setStage('done');
     } catch {
       Alert.alert('Gagal Kirim', 'Skill belum bisa dikirim. Coba lagi.');
@@ -244,18 +203,25 @@ export default function SkillCreatorScreen() {
             <Text className="text-xs font-bold text-slate-500 mb-1">Langkah {step.order}</Text>
             <TextInput
               value={step.instruction}
-              onChangeText={(v) => updateStep(i, 'instruction', v)}
+              onChangeText={(v) =>
+                setDraft((d) =>
+                  d ? { ...d, steps: d.steps.map((s, si) => (si === i ? { ...s, instruction: v } : s)) } : d,
+                )
+              }
               className="border border-slate-200 rounded-lg px-3 py-2 mb-2 text-sm"
             />
             <TextInput
               value={step.warning ?? ''}
-              onChangeText={(v) => updateStep(i, 'warning', v)}
+              onChangeText={(v) =>
+                setDraft((d) =>
+                  d ? { ...d, steps: d.steps.map((s, si) => (si === i ? { ...s, warning: v } : s)) } : d,
+                )
+              }
               placeholder="Peringatan keamanan (opsional)"
               className="border border-slate-200 rounded-lg px-3 py-2 text-sm"
             />
           </Card>
         ))}
-        <Button title="Verifikasi dengan AI" onPress={openVerify} />
       </View>
     );
   };
@@ -280,10 +246,39 @@ export default function SkillCreatorScreen() {
             {renderIdeas()}
           </View>
         )}
-        {stage === 'edit' && (
-          <View>
-            <Text className="text-sm font-bold text-slate-900 mb-3">Edit Draft Skill</Text>
-            {renderEdit()}
+        {stage === 'verifying' && (
+          <View className="pt-8">
+            <Text className="text-center text-sm text-slate-500">AI sedang meninjau draft...</Text>
+          </View>
+        )}
+        {stage === 'result' && verdict && (
+          <View className="mb-5">
+            {verdict.verdict === 'layak' ? (
+              <View>
+                <View className="flex-row items-center mb-4">
+                  <CheckCircle2 size={16} color="#16a34a" />
+                  <Text className="text-sm font-bold text-slate-900 ml-2">Skill layak dikirim</Text>
+                </View>
+                <Button
+                  title="Kirim Skill untuk Verifikasi"
+                  onPress={handleSubmit}
+                  disabled={submitting}
+                />
+              </View>
+            ) : (
+              <View>
+                <View className="flex-row items-center mb-2">
+                  <XCircle size={16} color="#dc2626" />
+                  <Text className="text-sm font-bold text-slate-900 ml-2">Perlu perbaikan:</Text>
+                </View>
+                {verdict.feedback.map((f, i) => (
+                  <Text key={i} className="text-xs text-red-700 mb-1 leading-5">
+                    • {f}
+                  </Text>
+                ))}
+                <Button title="Coba Ide Lain" onPress={() => setStage('ideas')} variant="secondary" />
+              </View>
+            )}
           </View>
         )}
         {stage === 'done' && (
@@ -296,10 +291,10 @@ export default function SkillCreatorScreen() {
         )}
       </ScrollView>
       <Modal
-        visible={verifyVisible}
+        visible={false}
         animationType="slide"
         transparent
-        onRequestClose={() => setVerifyVisible(false)}
+        onRequestClose={() => {}}
       >
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-[32px] p-6 max-h-[75%]">
@@ -308,35 +303,11 @@ export default function SkillCreatorScreen() {
                 <Bot size={18} color="#16a34a" />
                 <Text className="text-lg font-bold text-slate-900 ml-2">Verifikasi AI</Text>
               </View>
-              <TouchableOpacity onPress={() => setVerifyVisible(false)} className="p-1">
+              <TouchableOpacity onPress={() => {}} className="p-1">
                 <Text className="text-slate-400 text-xl">✕</Text>
               </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 mb-4" showsVerticalScrollIndicator={false}>
-              {chatHistory.map((msg, i) => (
-                <View
-                  key={i}
-                  className={`mb-2 max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                    msg.role === 'user' ? 'self-end bg-emerald-100' : 'self-start bg-slate-100'
-                  }`}
-                >
-                  <Text className="text-xs leading-5 text-slate-800">{msg.content}</Text>
-                </View>
-              ))}
-              {checking && <Text className="text-xs text-slate-500 mb-2">AI sedang memeriksa...</Text>}
-            </ScrollView>
-
-            <View className="flex-row gap-3">
-              <Button title="Cek Lagi" onPress={() => runCheck()} variant="secondary" fullWidth={false} disabled={checking} />
-              <View className="flex-1">
-                <Button
-                  title="Kirim Skill untuk Verifikasi"
-                  onPress={handleSubmit}
-                  disabled={verdict?.verdict !== 'layak' || submitting}
-                />
-              </View>
-            </View>
             {verdict?.verdict === 'perbaiki' && (
               <View className="flex-row items-start mt-3">
                 <XCircle size={14} color="#dc2626" />
