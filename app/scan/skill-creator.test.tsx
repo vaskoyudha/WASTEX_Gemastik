@@ -44,7 +44,12 @@ jest.mock('../../src/components/ui', () => ({
     <MockPressable onPress={onPress}><MockText>{title}</MockText></MockPressable>
   ),
   LoadingSpinner: ({ message }: { message: string }) => <MockText>{message}</MockText>,
-  EmptyState: ({ title }: { title: string }) => <MockText>{title}</MockText>,
+  EmptyState: ({ title, description }: { title: string; description?: string }) => (
+    <>
+      <MockText>{title}</MockText>
+      {description ? <MockText>{description}</MockText> : null}
+    </>
+  ),
 }));
 
 jest.mock('lucide-react-native', () => ({
@@ -184,5 +189,32 @@ describe('SkillCreatorScreen verify + submit', () => {
     expect(queryByText('Langkah Pembuatan')).toBeTruthy();
     expect(queryAllByPlaceholderText('Peringatan keamanan (opsional)')).toHaveLength(0);
     expect(queryByText('Cuci botol')).toBeTruthy();
+  });
+
+  it('submit sends ai_verdict layak and shows instant-catalog message', async () => {
+    const { findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    await findByText('Skill layak dikirim');
+    fireEvent.press(await findByText('Kirim Skill untuk Verifikasi'));
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ ai_verdict: 'layak' }),
+    );
+    expect(await findByText(/langsung masuk katalog/i)).toBeTruthy();
+  });
+
+  it('submit with perbaiki verdict shows expert-review message', async () => {
+    mockVerify.mockResolvedValue({
+      verdict: 'perbaiki',
+      feedback: ['Bahan X tidak terdaftar.'],
+      suggestions: [],
+    });
+    const { findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    await findByText('Kirim draft untuk review expert');
+    fireEvent.press(await findByText('Kirim Skill untuk Verifikasi'));
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ ai_verdict: 'perbaiki' }),
+    );
+    expect(await findByText(/menunggu verifikasi expert/i)).toBeTruthy();
   });
 });

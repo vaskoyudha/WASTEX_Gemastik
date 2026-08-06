@@ -87,7 +87,11 @@ export default function SkillCreatorScreen() {
     if (!draft || submitting) return;
     setSubmitting(true);
     try {
-      await apiClient.createSkill({ ...draft, reference_scan_id: scanResult?.scan_id });
+      await apiClient.createSkill({
+        ...draft,
+        reference_scan_id: scanResult?.scan_id,
+        ai_verdict: verdict?.verdict ?? null,
+      });
       setStage('done');
     } catch {
       Alert.alert('Gagal Kirim', 'Skill belum bisa dikirim. Coba lagi.');
@@ -247,7 +251,11 @@ export default function SkillCreatorScreen() {
         {stage === 'done' && (
           <EmptyState
             title="Skill Terkirim"
-            description="Skill kamu sekarang menunggu verifikasi expert."
+            description={
+              verdict?.verdict === 'layak'
+                ? 'Skill kamu langsung masuk katalog dan bisa dikerjakan semua orang.'
+                : 'Skill kamu sekarang menunggu verifikasi expert.'
+            }
             actionLabel="Lihat Hasil Scan"
             onAction={() => router.replace('/scan/hasil')}
           />
