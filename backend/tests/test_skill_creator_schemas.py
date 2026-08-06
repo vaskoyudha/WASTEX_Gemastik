@@ -60,3 +60,18 @@ def test_skill_create_request_inherits_proposal():
     req = SkillCreateRequest.model_validate(VALID)
     assert req.title == VALID["title"]
     assert req.material.value == "plastik_pet"
+
+
+def test_skill_create_request_accepts_layak_verdict():
+    req = SkillCreateRequest.model_validate({**VALID, "ai_verdict": "layak"})
+    assert req.ai_verdict == "layak"
+
+
+def test_skill_create_request_ai_verdict_defaults_none():
+    req = SkillCreateRequest.model_validate(VALID)
+    assert req.ai_verdict is None
+
+
+def test_skill_create_request_rejects_invalid_verdict():
+    with pytest.raises(ValidationError):
+        SkillCreateRequest.model_validate({**VALID, "ai_verdict": "maybe"})
