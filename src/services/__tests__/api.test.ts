@@ -96,6 +96,12 @@ describe('apiClient skill methods', () => {
     expect(init.method).toBe('POST');
   });
 
+  it('createSkill sends ai_verdict in body', async () => {
+    await apiClient.createSkill({ ...proposal, ai_verdict: 'layak' });
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(init.body).ai_verdict).toBe('layak');
+  });
+
   it('getSkills builds mine query param', async () => {
     await apiClient.getSkills({ status: 'pending', mine: true });
     const [url] = fetchMock.mock.calls[0];

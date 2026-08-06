@@ -108,7 +108,7 @@ export const apiClient = {
     return request(`/skills/${skillId}/completions`);
   },
 
-  async createSkill(data: SkillProposal & { reference_scan_id?: string }) {
+  async createSkill(data: SkillProposal & { reference_scan_id?: string; ai_verdict?: string | null }) {
     return request('/skills', { method: 'POST', body: data, headers: await authHeaders() });
   },
 
