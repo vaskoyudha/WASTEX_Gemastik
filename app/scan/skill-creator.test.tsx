@@ -173,4 +173,14 @@ describe('SkillCreatorScreen verify + submit', () => {
     fireEvent.press(await findByText('Coba Ide Lain'));
     expect(await findByText('Generate Ulang')).toBeTruthy();
   });
+
+  it('renders read-only draft with no text inputs', async () => {
+    const { findByText, queryAllByPlaceholderText, queryByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    await findByText('Skill layak dikirim');
+    expect(queryByText('Judul')).toBeNull();
+    expect(queryByText('Langkah Pembuatan')).toBeTruthy();
+    expect(queryAllByPlaceholderText('Peringatan keamanan (opsional)')).toHaveLength(0);
+    expect(queryByText('Cuci botol')).toBeTruthy();
+  });
 });

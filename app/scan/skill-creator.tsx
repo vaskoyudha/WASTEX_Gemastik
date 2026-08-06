@@ -1,23 +1,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, EmptyState, Header, LoadingSpinner } from '../../src/components/ui';
 import { useServiceCall } from '../../src/hooks/useServiceCall';
 import { safeBack } from '../../src/lib/navigation';
 import { apiClient } from '../../src/services/api';
-import type {
-  BackendDifficulty,
-  ChatMessage,
-  SkillIdea,
-  SkillProposal,
-  SkillVerifyResponse,
-} from '../../src/services/types';
+import type { ChatMessage, SkillIdea, SkillProposal, SkillVerifyResponse } from '../../src/services/types';
 import { useScanStore } from '../../src/store/useScanStore';
-import { Bot, CheckCircle2, Sparkles, XCircle } from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 
 type Stage = 'ideas' | 'verifying' | 'result' | 'done';
-
-const DIFFICULTIES: BackendDifficulty[] = ['pemula', 'menengah', 'mahir'];
 
 export default function SkillCreatorScreen() {
   const router = useRouter();
@@ -165,63 +157,62 @@ export default function SkillCreatorScreen() {
     );
   };
 
-  const renderEdit = () => {
+  const handlePickAnother = () => {
+    setStage('ideas');
+    setDraft(null);
+    setVerdict(null);
+    generateCall.refetch();
+  };
+
+  const renderResult = () => {
     if (!draft) return null;
     return (
       <View>
-        <Text className="text-sm font-bold text-slate-900 mb-2">Judul</Text>
-        <TextInput
-          value={draft.title}
-          onChangeText={(t) => setDraft({ ...draft, title: t })}
-          className="border border-slate-200 rounded-xl px-4 py-3 mb-4 text-sm"
-        />
-        <Text className="text-sm font-bold text-slate-900 mb-2">Deskripsi</Text>
-        <TextInput
-          value={draft.description}
-          onChangeText={(t) => setDraft({ ...draft, description: t })}
-          multiline
-          className="border border-slate-200 rounded-xl px-4 py-3 mb-4 text-sm min-h-[80px]"
-        />
-        <Text className="text-sm font-bold text-slate-900 mb-2">Tingkat Kesulitan</Text>
+        <Text className="text-sm font-bold text-slate-900 mb-1">{draft.title}</Text>
+        <Text className="text-xs text-slate-500 mb-3 leading-5">{draft.description}</Text>
         <View className="flex-row gap-2 mb-4">
-          {DIFFICULTIES.map((d) => {
-            const active = draft.difficulty === d;
-            return (
-              <TouchableOpacity
-                key={d}
-                onPress={() => setDraft({ ...draft, difficulty: d })}
-                className={`px-4 py-2 rounded-full border ${active ? 'bg-brand border-brand' : 'border-slate-200'}`}
-              >
-                <Text className={`text-xs font-semibold ${active ? 'text-white' : 'text-slate-600'}`}>{d}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          <Text className="text-[10px] font-semibold text-brand-dark bg-emerald-50 px-2 py-0.5 rounded-full">
+            {draft.difficulty}
+          </Text>
+          {draft.est_cost_idr !== null && (
+            <Text className="text-[10px] text-slate-500 px-2 py-0.5">
+              Est. biaya Rp{draft.est_cost_idr ?? 0}
+            </Text>
+          )}
         </View>
         <Text className="text-sm font-bold text-slate-900 mb-2">Langkah Pembuatan</Text>
-        {draft.steps.map((step, i) => (
-          <Card key={i} className="p-3 border border-slate-100 mb-3">
+        {draft.steps.map((step) => (
+          <Card key={step.order} className="p-3 border border-slate-100 mb-3">
             <Text className="text-xs font-bold text-slate-500 mb-1">Langkah {step.order}</Text>
-            <TextInput
-              value={step.instruction}
-              onChangeText={(v) =>
-                setDraft((d) =>
-                  d ? { ...d, steps: d.steps.map((s, si) => (si === i ? { ...s, instruction: v } : s)) } : d,
-                )
-              }
-              className="border border-slate-200 rounded-lg px-3 py-2 mb-2 text-sm"
-            />
-            <TextInput
-              value={step.warning ?? ''}
-              onChangeText={(v) =>
-                setDraft((d) =>
-                  d ? { ...d, steps: d.steps.map((s, si) => (si === i ? { ...s, warning: v } : s)) } : d,
-                )
-              }
-              placeholder="Peringatan keamanan (opsional)"
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm"
-            />
+            <Text className="text-sm text-slate-800 mb-2 leading-5">{step.instruction}</Text>
+            {step.warning ? (
+              <Text className="text-xs text-amber-700 leading-5">⚠️ {step.warning}</Text>
+            ) : null}
           </Card>
         ))}
+        {(draft.additional_materials?.length ?? 0) > 0 && (
+          <View className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
+            <Text className="text-xs text-amber-800 ml-1">
+              Butuh bahan tambahan: {draft.additional_materials!.map((m) => m.name).join(', ')}.
+            </Text>
+          </View>
+        )}
+        {verdict?.verdict === 'perbaiki' && (
+          <View className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
+            <Text className="text-xs font-bold text-red-700 mb-1">Perlu perbaikan:</Text>
+            {verdict.feedback.map((f, i) => (
+              <Text key={i} className="text-xs text-red-700 mb-1 leading-5">• {f}</Text>
+            ))}
+          </View>
+        )}
+        {verdict?.verdict === 'layak' ? (
+          <View className="mb-4">
+            <Text className="text-sm font-bold text-slate-900 mb-3">Skill layak dikirim</Text>
+            <Button title="Kirim Skill untuk Verifikasi" onPress={handleSubmit} disabled={submitting} />
+          </View>
+        ) : (
+          <Button title="Coba Ide Lain" onPress={handlePickAnother} variant="secondary" />
+        )}
       </View>
     );
   };
@@ -241,46 +232,17 @@ export default function SkillCreatorScreen() {
               <Text className="text-sm font-bold text-slate-900 ml-2">Ide Skill dari AI</Text>
             </View>
             <Text className="text-xs text-slate-500 mb-4 leading-5">
-              Pilih salah satu ide untuk material {scanResult.materialLabel}, lalu sesuaikan sebelum dikirim.
+              Pilih salah satu ide untuk material {scanResult.materialLabel}, lalu AI akan menyusun dan meninjau detailnya.
             </Text>
             {renderIdeas()}
           </View>
         )}
         {stage === 'verifying' && (
           <View className="pt-8">
-            <Text className="text-center text-sm text-slate-500">AI sedang meninjau draft...</Text>
+            <LoadingSpinner fullScreen message="AI sedang meninjau draft..." />
           </View>
         )}
-        {stage === 'result' && verdict && (
-          <View className="mb-5">
-            {verdict.verdict === 'layak' ? (
-              <View>
-                <View className="flex-row items-center mb-4">
-                  <CheckCircle2 size={16} color="#16a34a" />
-                  <Text className="text-sm font-bold text-slate-900 ml-2">Skill layak dikirim</Text>
-                </View>
-                <Button
-                  title="Kirim Skill untuk Verifikasi"
-                  onPress={handleSubmit}
-                  disabled={submitting}
-                />
-              </View>
-            ) : (
-              <View>
-                <View className="flex-row items-center mb-2">
-                  <XCircle size={16} color="#dc2626" />
-                  <Text className="text-sm font-bold text-slate-900 ml-2">Perlu perbaikan:</Text>
-                </View>
-                {verdict.feedback.map((f, i) => (
-                  <Text key={i} className="text-xs text-red-700 mb-1 leading-5">
-                    • {f}
-                  </Text>
-                ))}
-                <Button title="Coba Ide Lain" onPress={() => setStage('ideas')} variant="secondary" />
-              </View>
-            )}
-          </View>
-        )}
+        {stage === 'result' && renderResult()}
         {stage === 'done' && (
           <EmptyState
             title="Skill Terkirim"
@@ -290,26 +252,6 @@ export default function SkillCreatorScreen() {
           />
         )}
       </ScrollView>
-      <Modal
-        visible={false}
-        animationType="slide"
-        transparent
-        onRequestClose={() => {}}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-[32px] p-6 max-h-[75%]">
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-row items-center">
-                <Bot size={18} color="#16a34a" />
-                <Text className="text-lg font-bold text-slate-900 ml-2">Verifikasi AI</Text>
-              </View>
-              <TouchableOpacity onPress={() => {}} className="p-1">
-                <Text className="text-slate-400 text-xl">✕</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
