@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Share, View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Header, Button, Card, Badge, LoadingSpinner } from "../../../src/components/ui";
+import { Header, Button, Card, Badge, LoadingSpinner, StarRating } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { favorites } from "../../../src/services/localState";
+import { apiClient } from "../../../src/services/api";
+import type { SkillCompletionsSummary } from "../../../src/services/types";
 import { safeBack } from "../../../src/lib/navigation";
 import {
   Heart,
@@ -41,6 +43,12 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { product, tutData, priceData, loading, error, refetch } = useProductData(id);
+
+  const [completions, setCompletions] = useState<SkillCompletionsSummary | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    apiClient.getSkillCompletions(id).then(setCompletions).catch(() => setCompletions(null));
+  }, [id]);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat detail produk..." />;
@@ -99,6 +107,18 @@ export default function ProductDetailScreen() {
         </Card>
 
         <Text className="text-2xl font-extrabold text-slate-900 mb-2">{product.name}</Text>
+
+        <View className="flex-row items-center mb-2">
+          {completions && completions.count > 0 ? (
+            <>
+              <StarRating value={Math.round(completions.avg_rating)} size={16} readOnly />
+              <Text className="text-sm font-bold text-slate-900 ml-2">{completions.avg_rating}</Text>
+              <Text className="text-xs text-slate-500 ml-1">({completions.count} review)</Text>
+            </>
+          ) : (
+            <Text className="text-xs text-slate-400">Belum ada review</Text>
+          )}
+        </View>
 
         <View className="flex-row items-center gap-3 mb-4">
           <Badge variant={product.difficulty} size="sm" />
@@ -178,6 +198,22 @@ export default function ProductDetailScreen() {
                 <Text className="text-[11px] text-slate-500 mt-1">{m.purpose}</Text>
               </View>
             ))}
+          </View>
+        )}
+
+        {completions && completions.gallery.length > 0 && (
+          <View className="mb-6">
+            <Text className="text-sm font-bold text-slate-900 mb-3">Hasil Komunitas</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {completions.gallery.map((g, idx) => (
+                <View key={idx} className="mr-3 w-28">
+                  <Image source={{ uri: g.photo_url }} className="w-28 h-28 rounded-2xl bg-slate-200" />
+                  <Text className="text-[10px] text-slate-500 mt-1" numberOfLines={1}>
+                    {g.user_display_name || "Anonim"}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
           </View>
         )}
 
