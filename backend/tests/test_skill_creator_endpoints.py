@@ -179,3 +179,50 @@ def test_list_mine_returns_skills(fake_sb):
     r = TestClient(app).get("/skills?mine=true", headers=_auth("u1"))
     assert r.status_code == 200
     assert len(r.json()) == 2  # FakeSupabase does not filter eq(); rows are unfiltered
+
+
+def test_create_skill_layak_auto_approves_and_schedules_background(monkeypatch, fake_sb):
+    calls = []
+
+    async def fake_ingest(sb, skill_id):
+        calls.append(("ingest", skill_id))
+
+    async def fake_visuals(sb, skill_id):
+        calls.append(("visuals", skill_id))
+
+    monkeypatch.setattr("app.api.skills.ingest_skill", fake_ingest)
+    monkeypatch.setattr("app.api.skills.generate_all_visuals", fake_visuals)
+
+    r = TestClient(app).post(
+        "/skills", json={**PROPOSAL, "ai_verdict": "layak"}, headers=_auth("u1")
+    )
+    assert r.status_code == 201
+    row = fake_sb.table("skills").inserted[0]
+    assert row["status"] == "approved"
+    assert row["reviewed_by"] == "ai-auto"
+    skill_id = row["id"]
+    assert ("ingest", skill_id) in calls
+    assert ("visuals", skill_id) in calls
+
+
+def test_create_skill_perbaiki_stays_pending(monkeypatch, fake_sb):
+    async def fail_if_called(*a, **k):
+        raise AssertionError("background task tidak boleh dijadwalkan untuk perbaiki")
+
+    monkeypatch.setattr("app.api.skills.ingest_skill", fail_if_called)
+    monkeypatch.setattr("app.api.skills.generate_all_visuals", fail_if_called)
+
+    r = TestClient(app).post(
+        "/skills", json={**PROPOSAL, "ai_verdict": "perbaiki"}, headers=_auth("u1")
+    )
+    assert r.status_code == 201
+    row = fake_sb.table("skills").inserted[0]
+    assert row["status"] == "pending"
+    assert "reviewed_by" not in row
+
+
+def test_create_skill_invalid_verdict_422(fake_sb):
+    r = TestClient(app).post(
+        "/skills", json={**PROPOSAL, "ai_verdict": "maybe"}, headers=_auth("u1")
+    )
+    assert r.status_code == 422

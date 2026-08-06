@@ -124,6 +124,7 @@ def list_skills(
 @router.post("", status_code=201)
 def create_skill(
     body: SkillCreateRequest,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
     sb: Client = Depends(get_supabase),
 ) -> dict:
@@ -161,18 +162,25 @@ def create_skill(
 
     payload = body.model_dump(mode="json")
     payload.pop("reference_scan_id", None)
+    ai_verdict = payload.pop("ai_verdict", None)
     payload["additional_materials_cost_idr"] = sum(
         m.est_cost_idr for m in body.additional_materials
     )
     payload.update(
         {
-            "status": "pending",
+            "status": "approved" if ai_verdict == "layak" else "pending",
             "origin": "user",
             "created_by": user["user_id"],
             "reference_image_path": reference_image_path,
         }
     )
+    if ai_verdict == "layak":
+        payload["reviewed_by"] = "ai-auto"
     res = sb.table("skills").insert(payload).execute()
+    if payload["status"] == "approved":
+        skill_id = res.data[0]["id"]
+        background_tasks.add_task(ingest_skill, sb, skill_id)
+        background_tasks.add_task(generate_all_visuals, sb, skill_id)
     return res.data[0]
 
 
