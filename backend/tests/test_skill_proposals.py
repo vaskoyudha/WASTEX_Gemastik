@@ -166,8 +166,9 @@ REPAIRED_PAYLOAD = {
                 "instruction": "Cuci botol hingga bersih",
                 "warning": "Pakai sarung tangan",
             },
-            {"order": 2, "instruction": "Lubangi dasar botol untuk drainase", "warning": None},
-            {"order": 3, "instruction": "Isi tanah dan tanam", "warning": None},
+            {"order": 2, "instruction": "Buka bagian atas botol dengan cutter", "warning": None},
+            {"order": 3, "instruction": "Lubangi dasar botol untuk drainase", "warning": None},
+            {"order": 4, "instruction": "Isi tanah dan tanam", "warning": None},
         ],
     }
 }
@@ -227,12 +228,12 @@ async def test_generate_proposals_returns_parsed_list():
 
 
 async def test_generate_proposals_repairs_flagged_proposal():
-    make, client = _factory([VALID_PAYLOAD, PERBAIKI_PAYLOAD, REPAIRED_PAYLOAD])
+    make, client = _factory([VALID_PAYLOAD, PERBAIKI_PAYLOAD, REPAIRED_PAYLOAD, KONTINU_PAYLOAD])
     result = await generate_proposals("plastik_pet", "bersih", client_factory=make)
     assert len(result) == 1
     assert result[0].title == "Pot Gantung dari Botol PET (diperbaiki)"
-    assert len(result[0].steps) == 3
-    assert client.post_calls == 3  # generate + kritik + repair
+    assert len(result[0].steps) == 4
+    assert client.post_calls == 4  # generate + kritik + repair + re-kritik
 
 
 async def test_generate_proposals_keeps_proposal_when_critique_fails():
@@ -304,3 +305,82 @@ async def test_verify_draft_returns_verdict():
     make, _ = _factory([VERDICT_PAYLOAD])
     result = await verify_draft(draft, [], client_factory=make)
     assert result.verdict == "layak"
+
+
+def _proposal_with_steps(steps):
+    return SkillProposal.model_validate({**VALID_PROPOSAL, "steps": steps})
+
+
+def test_find_missing_prerequisites_flags_closed_container():
+    from app.agent.tools.skill_proposals import find_missing_prerequisites
+
+    p = _proposal_with_steps(
+        [
+            {"order": 1, "instruction": "Cuci kaleng hingga bersih", "warning": None},
+            {"order": 2, "instruction": "Lubangi dasar kaleng untuk drainase", "warning": None},
+            {"order": 3, "instruction": "Cat permukaan kaleng", "warning": None},
+            {"order": 4, "instruction": "Isi kaleng dengan tanah hingga 2/3", "warning": None},
+        ]
+    )
+    issues = find_missing_prerequisites(p)
+    assert any("bagian atas wadah" in i.missing_prerequisite for i in issues)
+    assert issues[0].order == 4
+
+
+def test_find_missing_prerequisites_ok_when_top_opened():
+    from app.agent.tools.skill_proposals import find_missing_prerequisites
+
+    p = _proposal_with_steps(
+        [
+            {"order": 1, "instruction": "Cuci kaleng hingga bersih", "warning": None},
+            {
+                "order": 2,
+                "instruction": "Buka bagian atas kaleng dengan pembuka kaleng",
+                "warning": None,
+            },
+            {"order": 3, "instruction": "Lubangi dasar kaleng untuk drainase", "warning": None},
+            {"order": 4, "instruction": "Isi kaleng dengan tanah hingga 2/3", "warning": None},
+        ]
+    )
+    assert find_missing_prerequisites(p) == []
+
+
+def test_find_missing_prerequisites_tali_without_lubang():
+    from app.agent.tools.skill_proposals import find_missing_prerequisites
+
+    p = _proposal_with_steps(
+        [
+            {"order": 1, "instruction": "Potong botol jadi dua", "warning": None},
+            {"order": 2, "instruction": "Ikatkan tali pada bagian atas", "warning": None},
+        ]
+    )
+    issues = find_missing_prerequisites(p)
+    assert any("tali/pengait" in i.missing_prerequisite for i in issues)
+
+
+def test_find_missing_prerequisites_cat_after_kering_ok():
+    from app.agent.tools.skill_proposals import find_missing_prerequisites
+
+    p = _proposal_with_steps(
+        [
+            {"order": 1, "instruction": "Cuci dan keringkan permukaan", "warning": None},
+            {"order": 2, "instruction": "Cat permukaan dengan cat akrilik", "warning": None},
+        ]
+    )
+    assert find_missing_prerequisites(p) == []
+
+
+def test_find_missing_prerequisites_ignores_open_top_for_open_materials():
+    from app.agent.tools.skill_proposals import find_missing_prerequisites
+
+    p = SkillProposal.model_validate(
+        {
+            **VALID_PROPOSAL,
+            "material": "kardus",
+            "steps": [
+                {"order": 1, "instruction": "Isi kotak kardus dengan tanah", "warning": None},
+            ],
+        }
+    )
+    issues = find_missing_prerequisites(p)
+    assert not any("bagian atas wadah" in i.missing_prerequisite for i in issues)

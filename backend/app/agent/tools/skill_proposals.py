@@ -1,4 +1,5 @@
 import json
+import re
 
 import httpx
 
@@ -6,6 +7,7 @@ from app.agent.tools.vision import parse_proxy_json
 from app.schemas import (
     ContinuityCritique,
     ContinuityCritiqueBatch,
+    ContinuityStepIssue,
     SkillProposal,
     SkillVerifyResponse,
 )
@@ -20,6 +22,9 @@ Untuk SETIAP langkah N pada setiap proposal:
    kering; memasang tali butuh lubang; melipat butuh bahan sudah dipotong).
 2. Periksa langkah 1..N-1: apakah prasyarat itu SUDAH disediakan oleh langkah sebelumnya?
 3. Jika TIDAK -> catat di steps[] dengan order=N dan missing_prerequisite yang spesifik.
+4. Bayangkan mengerjakan langkah demi langkah secara FISIK di rumah: adakah hambatan
+   fisik antara langkah N-1 dan N (wadah tertutup yang belum dibuka, bahan belum
+   dipotong, permukaan belum siap, bagian belum bisa dijangkau)?
 
 ## Iron Law
 HANYA menilai kontinuitas prasyarat antar langkah; DILARANG menilai aspek lain.
@@ -32,6 +37,8 @@ HANYA menilai kontinuitas prasyarat antar langkah; DILARANG menilai aspek lain.
 
 ## Red Flags (hati-hati bila ini terjadi)
 - Step berisi tanah/tanaman tetapi tidak ada langkah drainase sebelumnya -> WAJIB "perbaiki".
+- Wadah TERTUTUP (kaleng/botol/toples) yang diisi tanah/cairan/tanaman tanpa langkah
+  membuka/memotong bagian atas -> WAJIB "perbaiki".
 - Step berisi cat/perekat tetapi tidak ada langkah pembersihan/pengeringan sebelumnya -> WAJIB "perbaiki".
 - Step berisi tali/pengait tetapi tidak ada langkah pelubangan sebelumnya -> WAJIB "perbaiki".
 - Step melipat/menyambung bahan yang belum dipotong -> WAJIB "perbaiki".
@@ -109,6 +116,8 @@ Jika material tidak cocok untuk ide apa pun, jawab daftar proposals kosong.
   produk jadi dalam satu langkah; pisahkan menjadi langkah-langkah terpisah.
 - Instruksi TIDAK boleh kondisional/pilihan ganda ("bisa A atau B", "atau biarkan
   apa adanya") — tentukan SATU aksi yang pasti dan hasil yang terlihat.
+- Wadah TERTUTUP (kaleng/botol/toples) yang akan diisi tanah/cairan WAJIB punya
+  langkah membuka/memotong bagian atas wadah SEBELUM langkah mengisi.
 - Tingkat kesulitan hanya salah satu dari: pemula, menengah, mahir.
 - Kondisi bahan: {condition}. Sesuaikan ide dengan kondisi tersebut.
 
@@ -205,6 +214,82 @@ def _parse_single_proposal(payload: dict) -> SkillProposal:
     return SkillProposal.model_validate(payload["proposal"])
 
 
+_CLOSED_CONTAINER_MATERIALS = ("kaleng", "kaca", "plastik_pet", "plastik_hdpe")
+
+_PREREQ_RULES = [
+    (
+        re.compile(r"tanah|tanam|bibit|sukulen|kaktus"),
+        re.compile(r"lubang|drainase"),
+        "lubang drainase di bagian bawah wadah belum dibuat",
+    ),
+    (
+        re.compile(r"tanah|tanam|bibit|sukulen|kaktus|isi|tuang"),
+        re.compile(r"buka|potong|sayat|iris|pembuka"),
+        "bagian atas wadah tertutup belum dibuka/dipotong",
+    ),
+    (
+        re.compile(r"tali|ikat|gantung|menggantung"),
+        re.compile(r"lubang"),
+        "lubang untuk tali/pengait belum dibuat",
+    ),
+    (
+        re.compile(r"cat|lem|melapisi"),
+        re.compile(r"kering|bersih|cuci|ampelas"),
+        "permukaan belum kering/bersih sebelum dicat atau dilem",
+    ),
+]
+
+
+def find_missing_prerequisites(proposal: SkillProposal) -> list[ContinuityStepIssue]:
+    """Pemeriksaan deterministik prasyarat antar langkah (lapisan tambahan di
+    luar kritik LLM). Satu isu per step, urut sesuai order."""
+    issues: list[ContinuityStepIssue] = []
+    steps = sorted(proposal.steps, key=lambda s: s.order)
+    closed = proposal.material.value in _CLOSED_CONTAINER_MATERIALS
+    for i, step in enumerate(steps):
+        hay = (step.instruction or "").lower()
+        prev = " ".join((s.instruction or "") for s in steps[:i]).lower()
+        for pattern, required, missing in _PREREQ_RULES:
+            if not pattern.search(hay):
+                continue
+            if not closed and "bagian atas" in missing:
+                continue
+            if not required.search(prev):
+                issues.append(
+                    ContinuityStepIssue(
+                        order=step.order,
+                        missing_prerequisite=missing,
+                        note=f"step {step.order} membutuhkan prasyarat: {missing}",
+                    )
+                )
+                break
+    return issues
+
+
+def _merge_deterministic(
+    proposals: list[SkillProposal], critiques: list[ContinuityCritique]
+) -> list[ContinuityCritique]:
+    by_index = {c.index: c for c in critiques}
+    merged: dict[int, ContinuityCritique] = {}
+    for i, proposal in enumerate(proposals):
+        issues = find_missing_prerequisites(proposal)
+        crit = by_index.get(i)
+        if issues:
+            base = (
+                crit.model_copy(deep=True)
+                if crit is not None
+                else ContinuityCritique(index=i, verdict="kontinu", steps=[], suggestions=[])
+            )
+            orders = {s.order for s in base.steps}
+            new_issues = [iss for iss in issues if iss.order not in orders]
+            merged[i] = base.model_copy(
+                update={"verdict": "perbaiki", "steps": base.steps + new_issues}
+            )
+        elif crit is not None:
+            merged[i] = crit
+    return [merged[i] for i in sorted(merged)]
+
+
 def _build_proposal_messages(material: str, condition: str) -> list[dict]:
     content = SKILL_PROPOSAL_PROMPT.format(material=material, condition=condition)
     return [{"role": "user", "content": content}]
@@ -276,34 +361,36 @@ async def generate_proposals(
     if not proposals:
         return proposals
 
-    # Fase kritik kontinuitas: LLM memeriksa prasyarat setiap step terhadap step
-    # sebelumnya. Gagal kritik -> kembalikan proposal apa adanya (tidak menghambat).
-    try:
-        critiques = await _call_until_success(
-            _build_critique_messages(proposals), _parse_critiques, client_factory
-        )
-    except SkillGenUnavailable:
-        return proposals
-
-    # Fase auto-repair: proposal yang di-flag "perbaiki" di-regenerate dengan
-    # umpan balik kritik. Gagal repair -> pertahankan proposal asli.
-    repaired: list[SkillProposal] = []
-    by_index = {c.index: c for c in critiques}
-    for i, proposal in enumerate(proposals):
-        critique = by_index.get(i)
-        if critique is not None and critique.verdict == "perbaiki":
+    # Loop kritik -> auto-repair (maks 2 iterasi): kritik kontinuitas LLM digabung
+    # dengan pemeriksaan deterministik; proposal yang di-flag "perbaiki" di-repair
+    # dengan umpan balik, lalu dikritik ulang hingga kontinu atau iterasi habis.
+    current: list[SkillProposal] = list(proposals)
+    for _ in range(2):
+        try:
+            critiques = await _call_until_success(
+                _build_critique_messages(current), _parse_critiques, client_factory
+            )
+        except SkillGenUnavailable:
+            critiques = []
+        critiques = _merge_deterministic(current, critiques)
+        flagged = [c for c in critiques if c.verdict == "perbaiki"]
+        if not flagged:
+            return current
+        next_round = list(current)
+        for critique in flagged:
+            if critique.index >= len(next_round):
+                continue
             try:
                 fixed = await _call_until_success(
-                    _build_repair_messages(proposal, critique),
+                    _build_repair_messages(next_round[critique.index], critique),
                     _parse_single_proposal,
                     client_factory,
                 )
-                repaired.append(fixed)
-                continue
+                next_round[critique.index] = fixed
             except SkillGenUnavailable:
                 pass
-        repaired.append(proposal)
-    return repaired
+        current = next_round
+    return current
 
 
 async def verify_draft(
