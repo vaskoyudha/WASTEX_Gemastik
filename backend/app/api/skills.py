@@ -2,14 +2,21 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
-from app.agent.tools.skill_proposals import SkillGenUnavailable, generate_proposals, verify_draft
+from app.agent.tools.skill_proposals import (
+    SkillGenUnavailable,
+    expand_proposal,
+    generate_ideas,
+    verify_draft,
+)
 from app.api.visuals import generate_all_visuals
 from app.auth import get_current_user
 from app.deps import get_optional_user_id, get_supabase, require_expert_or_service
 from app.rag.ingest import ingest_skill
 from app.schemas import (
     SkillCreateRequest,
+    SkillExpandRequest,
     SkillFlagIn,
+    SkillIdea,
     SkillProposal,
     SkillProposalRequest,
     SkillStatus,
@@ -51,13 +58,24 @@ def flag_skill(
     return {"flag_count": count, "status": status}
 
 
-@router.post("/proposals", response_model=list[SkillProposal])
+@router.post("/proposals", response_model=list[SkillIdea])
 async def skill_proposals(
     body: SkillProposalRequest,
     user: dict = Depends(get_current_user),
-) -> list[SkillProposal]:
+) -> list[SkillIdea]:
     try:
-        return await generate_proposals(body.material.value, body.condition)
+        return await generate_ideas(body.material.value, body.condition)
+    except SkillGenUnavailable:
+        raise HTTPException(status_code=503, detail="AI unavailable")
+
+
+@router.post("/proposals/expand", response_model=SkillProposal)
+async def skill_proposals_expand(
+    body: SkillExpandRequest,
+    user: dict = Depends(get_current_user),
+) -> SkillProposal:
+    try:
+        return await expand_proposal(body.material.value, body.condition, body.idea)
     except SkillGenUnavailable:
         raise HTTPException(status_code=503, detail="AI unavailable")
 

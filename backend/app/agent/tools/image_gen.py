@@ -65,6 +65,17 @@ _TRANSFORM_VERBS = (
     "memberi pola",
     "melubangi",
     "menghaluskan",
+    # varian imperatif (akar kata) yang umum di instruksi step
+    "potong",
+    "lubangi",
+    "cat",
+    "buka",
+    "lepas",
+    "ampelas",
+    "lipat",
+    "tempel",
+    "hias",
+    "semprot",
 )
 
 _TRANSFORM_PATTERN = re.compile(r"\b(" + "|".join(_TRANSFORM_VERBS) + r")\b", re.IGNORECASE)

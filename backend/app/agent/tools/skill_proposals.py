@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 
@@ -8,9 +9,101 @@ from app.schemas import (
     ContinuityCritique,
     ContinuityCritiqueBatch,
     ContinuityStepIssue,
+    SkillIdea,
     SkillProposal,
     SkillVerifyResponse,
 )
+
+SKILL_IDEA_PROMPT = """# Tugas
+Kamu adalah perajin ulung yang mengubah sampah anorganik menjadi produk kreatif
+bernilai jual tinggi. Buat 3 ide skill ringkas yang bisa dibuat dari material ini:
+{material}.
+
+## Iron Law
+HANYA GUNAKAN MATERIAL YANG DIBERIKAN SEBAGAI BAHAN UTAMA. DILARANG MENAMBAH BAHAN UTAMA DARI LUAR.
+Jika material tidak cocok untuk ide apa pun, jawab dengan daftar ideas kosong.
+
+## Aturan (MUST/NEVER)
+- Buat PERSIS 3 ide yang BENAR-BENAR bisa dikerjakan di rumah.
+- Setiap ide hanya berisi: title, description 1-2 kalimat, material, difficulty
+  (pemula|menengah|mahir), perkiraan est_cost_idr dan est_price_idr.
+- DILARANG menyertakan langkah pembuatan, tools, atau bahan tambahan di tahap ini.
+- Ide yang mustahil dikerjakan di rumah (peralatan industri) -> buang.
+- Kondisi bahan: {condition}. Sesuaikan ide dengan kondisi tersebut.
+
+## Red Flags (hati-hati bila ini terjadi)
+- Ide butuh bahan UTAMA di luar whitelist -> buang ide, ganti yang lain.
+- Ide berisi langkah/tools/bahan tambahan -> jangan, hanya info ringkas.
+- Ide mustahil dikerjakan di rumah -> buang.
+- Ide lebih dari 3 -> jangan, maksimal 3.
+
+## Self-Check (sebelum menjawab)
+- Hanya memakai {material} sebagai bahan utama?
+- PERSIS 3 ide, masing-masing ringkas dan tidak memuat langkah detail?
+- JSON valid sesuai format?
+
+Jawab HANYA dengan JSON valid berformat:
+{{"ideas": [{{"title": "...", "description": "...", "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
+  "difficulty": "pemula|menengah|mahir", "est_cost_idr": 5000, "est_price_idr": 25000}}]}}"""
+
+SKILL_EXPAND_PROMPT = """# Tugas
+Kamu adalah perajin ulung yang mengubah sampah anorganik menjadi produk kreatif
+bernilai jual tinggi, sekaligus perancang kerajinan daur ulang (upcycling) yang teliti.
+Buat DRAFT SKILL LENGKAP berdasarkan ide berikut yang dipilih user:
+{idea_json}
+
+## Iron Law
+- HANYA GUNAKAN MATERIAL YANG DIBERIKAN SEBAGAI BAHAN UTAMA: {material}.
+- Judul dan description WAJIB TETAP SAMA PERSIS dengan ide yang dipilih.
+- Jika material tidak cocok dengan ide, jawab daftar proposals kosong.
+
+## Aturan (MUST/NEVER)
+- Bahan pelengkap (tali, cat, lem, tanah/tanaman, pengait, alat bantu kecil,
+  dan sejenisnya) BOLEH dipakai, WAJIB dideklarasikan di additional_materials
+  dengan name, category (tali|cat|lem|tanah_tanaman|pengait|alat|lainnya),
+  est_cost_idr (perkiraan harga wajar dalam IDR), dan purpose (kegunaan, >= 3 kata).
+- DILARANG menyebut bahan pelengkap di langkah (instruction/warning) yang TIDAK
+  terdaftar di additional_materials.
+- Setiap langkah wajib punya instruksi jelas dan peringatan keamanan bila ada risiko
+  (tergores, terkena panas, zat berbahaya).
+- Setiap langkah WAJIB punya visual_description: 2-4 kalimat detail visual dalam Bahasa
+  Indonesia tentang apa yang harus TAMPAK pada panel ilustrasi (objek utama, aksi yang
+  sedang dilakukan, posisi tangan/alat, hasil yang terlihat, sudut pandang, elemen
+  pendukung di sekitar, ekspresi/detail kecil yang memperjelas aksi).
+- URUTAN LANGAH WAJIB KONTINU: langkah N+1 harus bisa dikerjakan PERSIS SETELAH
+  langkah N selesai, tanpa langkah prasyarat tersembunyi. JANGAN melompati prasyarat.
+  Contoh wajib diikuti: lubangi drainase SEBELUM mengisi tanah; cuci & keringkan
+  SEBELUM memotong/mengecat; buat lubang SEBELUM memasang tali; ampelas SEBELUM mengecat.
+- SATU AKTI UTAMA per langkah: jangan menggabungkan beberapa aksi yang menghasilkan
+  produk jadi dalam satu langkah; pisahkan menjadi langkah-langkah terpisah.
+- Instruksi TIDAK boleh kondisional/pilihan ganda ("bisa A atau B", "atau biarkan
+  apa adanya") — tentukan SATU aksi yang pasti dan hasil yang terlihat.
+- Wadah TERTUTUP (kaleng/botol/toples) yang akan diisi tanah/cairan WAJIB punya
+  langkah membuka/memotong bagian atas wadah SEBELUM langkah mengisi.
+- Tingkat kesulitan hanya salah satu dari: pemula, menengah, mahir.
+- Kondisi bahan: {condition}. Sesuaikan draft dengan kondisi tersebut.
+
+## Red Flags (hati-hati bila ini terjadi)
+- Mengubah judul/description dari ide user -> jangan, WAJIB tetap.
+- Langkah berisiko tanpa peringatan keamanan -> jangan diloloskan.
+- Bahan pelengkap disebut di langkah tanpa terdaftar di additional_materials -> perbaiki.
+- Ide mustahil dikerjakan di rumah (peralatan industri) -> buang.
+
+## Self-Check (sebelum menjawab)
+- Judul dan description sama persis dengan ide user?
+- Hanya memakai {material} sebagai bahan utama?
+- Semua bahan pelengkap di langkah terdaftar di additional_materials?
+- Urutan langkah kontinu dengan SATU aksi utama per langkah?
+- JSON valid sesuai format?
+
+Jawab HANYA dengan JSON valid berformat:
+{{"proposal": {{"title": "...", "description": "...",
+  "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
+  "difficulty": "pemula|menengah|mahir",
+  "steps": [{{"order": 1, "instruction": "...", "warning": "...", "visual_description": "..."}}],
+  "tools": [{{"name": "...", "optional": false}}],
+  "additional_materials": [{{"name": "...", "category": "tali|cat|lem|tanah_tanaman|pengait|alat|lainnya", "est_cost_idr": 2000, "purpose": "..."}}],
+  "est_cost_idr": 5000, "est_price_idr": 25000}}}}"""
 
 STEP_CONTINUITY_CRITIQUE_PROMPT = """# Tugas
 Kamu adalah validator kritis kontinuitas langkah kerajinan daur ulang. Periksa daftar proposal skill di bawah.
@@ -214,6 +307,19 @@ def _parse_single_proposal(payload: dict) -> SkillProposal:
     return SkillProposal.model_validate(payload["proposal"])
 
 
+def _parse_ideas(payload: dict, expected_material: str) -> list[SkillIdea]:
+    ideas = payload.get("ideas") or []
+    result = []
+    for item in ideas:
+        try:
+            idea = SkillIdea.model_validate(item)
+        except Exception:  # noqa: S112
+            continue
+        if idea.material.value == expected_material:
+            result.append(idea)
+    return result
+
+
 _CLOSED_CONTAINER_MATERIALS = ("kaleng", "kaca", "plastik_pet", "plastik_hdpe")
 
 _PREREQ_RULES = [
@@ -295,6 +401,18 @@ def _build_proposal_messages(material: str, condition: str) -> list[dict]:
     return [{"role": "user", "content": content}]
 
 
+def _build_idea_messages(material: str, condition: str) -> list[dict]:
+    content = SKILL_IDEA_PROMPT.format(material=material, condition=condition)
+    return [{"role": "user", "content": content}]
+
+
+def _build_expand_messages(material: str, condition: str, idea: SkillIdea) -> list[dict]:
+    content = SKILL_EXPAND_PROMPT.format(
+        material=material, condition=condition, idea_json=idea.model_dump_json(indent=2)
+    )
+    return [{"role": "user", "content": content}]
+
+
 def _build_critique_messages(proposals: list[SkillProposal]) -> list[dict]:
     dump = json.dumps([p.model_dump(mode="json") for p in proposals], indent=2, ensure_ascii=False)
     content = STEP_CONTINUITY_CRITIQUE_PROMPT + "\n\nProposal:\n" + dump
@@ -351,20 +469,34 @@ async def _call_until_success(messages, parse, client_factory):
     raise SkillGenUnavailable("all chat providers failed") from last_err
 
 
-async def generate_proposals(
-    material: str, condition: str, client_factory=httpx.AsyncClient
-) -> list[SkillProposal]:
-    messages = _build_proposal_messages(material, condition)
-    proposals = await _call_until_success(
-        messages, lambda p: _parse_proposals(p, material), client_factory
+async def _repair_proposal(
+    proposal: SkillProposal,
+    critique: ContinuityCritique,
+    client_factory,
+) -> SkillProposal:
+    return await _call_until_success(
+        _build_repair_messages(proposal, critique),
+        _parse_single_proposal,
+        client_factory,
     )
-    if not proposals:
-        return proposals
 
-    # Loop kritik -> auto-repair (maks 2 iterasi): kritik kontinuitas LLM digabung
-    # dengan pemeriksaan deterministik; proposal yang di-flag "perbaiki" di-repair
-    # dengan umpan balik, lalu dikritik ulang hingga kontinu atau iterasi habis.
-    current: list[SkillProposal] = list(proposals)
+
+async def generate_ideas(
+    material: str, condition: str, client_factory=httpx.AsyncClient
+) -> list[SkillIdea]:
+    """Fase 1 (two-phase): 3 ide ringkas dalam SATU panggilan LLM, tanpa
+    kritik/repair loop. Detail lengkap dihasilkan saat user memilih ide."""
+    messages = _build_idea_messages(material, condition)
+    return await _call_until_success(messages, lambda p: _parse_ideas(p, material), client_factory)
+
+
+async def _continuity_repair_loop(
+    current: list[SkillProposal], client_factory
+) -> list[SkillProposal]:
+    """Loop kritik -> auto-repair (maks 2 iterasi): kritik kontinuitas LLM digabung
+    dengan pemeriksaan deterministik; proposal yang di-flag "perbaiki" di-repair
+    dengan umpan balik, lalu dikritik ulang hingga kontinu atau iterasi habis.
+    Repair antar proposal dijalankan PARALEL (asyncio.gather) karena independen."""
     for _ in range(2):
         try:
             critiques = await _call_until_success(
@@ -376,21 +508,48 @@ async def generate_proposals(
         flagged = [c for c in critiques if c.verdict == "perbaiki"]
         if not flagged:
             return current
+        to_repair = [c for c in flagged if c.index < len(current)]
+        if not to_repair:
+            return current
+        results = await asyncio.gather(
+            *(_repair_proposal(current[c.index], c, client_factory) for c in to_repair),
+            return_exceptions=True,
+        )
         next_round = list(current)
-        for critique in flagged:
-            if critique.index >= len(next_round):
-                continue
-            try:
-                fixed = await _call_until_success(
-                    _build_repair_messages(next_round[critique.index], critique),
-                    _parse_single_proposal,
-                    client_factory,
-                )
-                next_round[critique.index] = fixed
-            except SkillGenUnavailable:
-                pass
+        for critique, result in zip(to_repair, results):
+            if isinstance(result, SkillProposal):
+                next_round[critique.index] = result
         current = next_round
     return current
+
+
+async def generate_proposals(
+    material: str, condition: str, client_factory=httpx.AsyncClient
+) -> list[SkillProposal]:
+    messages = _build_proposal_messages(material, condition)
+    proposals = await _call_until_success(
+        messages, lambda p: _parse_proposals(p, material), client_factory
+    )
+    if not proposals:
+        return proposals
+    return await _continuity_repair_loop(proposals, client_factory)
+
+
+async def expand_proposal(
+    material: str,
+    condition: str,
+    idea: SkillIdea,
+    client_factory=httpx.AsyncClient,
+) -> SkillProposal:
+    """Fase 2 (two-phase): jadikan ide ringkas yang dipilih user menjadi
+    draft skill LENGKAP (steps, tools, additional_materials), lalu jalankan
+    kritik kontinuitas + auto-repair pada SATU proposal tersebut."""
+    messages = _build_expand_messages(material, condition, idea)
+    draft = await _call_until_success(messages, _parse_single_proposal, client_factory)
+    if draft.material.value != material:
+        raise SkillGenUnavailable("expanded proposal material mismatch")
+    fixed = await _continuity_repair_loop([draft], client_factory)
+    return fixed[0]
 
 
 async def verify_draft(

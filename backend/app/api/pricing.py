@@ -59,6 +59,12 @@ async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
         profit_margin = DEFAULT_MARGIN
         suggested_price = round(int(total_cost * (1 + profit_margin)) / 1000) * 1000
 
+    # Floor: margin tidak boleh negatif. Bila est_price < total_cost, naikkan
+    # suggested_price ke biaya + margin default.
+    if suggested_price < total_cost:
+        profit_margin = DEFAULT_MARGIN
+        suggested_price = round(int(total_cost * (1 + profit_margin)) / 1000) * 1000
+
     return {
         "skill_id": skill["id"],
         "title": skill["title"],

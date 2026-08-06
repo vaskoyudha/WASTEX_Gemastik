@@ -1,4 +1,4 @@
-import type { ChatMessage, SkillProposal, SkillVerifyResponse } from './types';
+import type { ChatMessage, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -94,8 +94,20 @@ export const apiClient = {
     });
   },
 
-  async getSkillProposals(data: { material: string; condition: string }): Promise<SkillProposal[]> {
+  async getSkillIdeas(data: { material: string; condition: string }): Promise<SkillIdea[]> {
     return request('/skills/proposals', { method: 'POST', body: data, headers: await authHeaders() });
+  },
+
+  async expandSkillProposal(data: {
+    material: string;
+    condition: string;
+    idea: SkillIdea;
+  }): Promise<SkillProposal> {
+    return request('/skills/proposals/expand', {
+      method: 'POST',
+      body: data,
+      headers: await authHeaders(),
+    });
   },
 
   async verifySkill(data: { draft: SkillProposal; chat_history: ChatMessage[] }): Promise<SkillVerifyResponse> {

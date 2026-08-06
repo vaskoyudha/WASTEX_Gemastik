@@ -61,3 +61,29 @@ def test_selling_kit_unapproved_skill_404(fake_sb, stub_agent):
     client = TestClient(app)
     r = client.get("/selling/s1")
     assert r.status_code == 404
+
+
+async def test_generate_selling_kit_uses_chat_json(monkeypatch):
+    import app.agent.selling as selling_module
+
+    captured = {}
+
+    async def fake_chat_json(system, user, model, client_factory=None):
+        captured["system"] = system
+        captured["user"] = user
+        return SellingKit(
+            product_name="Vas Estetik",
+            description="Dari botol PET bekas.",
+            captions=["Cuan!"],
+            photo_tips=["Cahaya alami."],
+            packaging_ideas=["Koran bekas."],
+            hashtags=["#wastex"],
+        )
+
+    monkeypatch.setattr(selling_module, "chat_json", fake_chat_json)
+    kit = await selling_module.generate_selling_kit(
+        {"id": "s9", "title": "Vas Botol", "material": "plastik_pet", "difficulty": "pemula"}
+    )
+    assert kit.product_name == "Vas Estetik"
+    assert kit.skill_id == "s9"
+    assert "Vas Botol" in captured["user"]

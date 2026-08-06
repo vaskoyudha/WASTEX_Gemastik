@@ -65,6 +65,27 @@ def test_pricing_unknown_skill_404(fake_sb):
     assert r.status_code == 404
 
 
+def test_pricing_never_returns_negative_margin(fake_sb):
+    # est_price rendah (25000) < total_cost (material 8000 + labor 5*0.5*15000=37500 = 45500)
+    fake_sb.table("skills").insert(
+        {
+            "id": "sneg",
+            "title": "Hidropot",
+            "material": "plastik_pet",
+            "difficulty": "pemula",
+            "steps": [{"order": i, "instruction": "x"} for i in range(1, 6)],
+            "est_cost_idr": 8000,
+            "est_price_idr": 25000,
+        }
+    )
+    client = TestClient(app)
+    r = client.get("/pricing/sneg")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["profit_margin"] >= 0
+    assert body["suggested_price"] >= body["total_cost"]
+
+
 def test_pricing_includes_additional_materials(fake_sb):
     fake_sb.table("skills").insert(
         {

@@ -17,6 +17,15 @@ PROPOSAL = {
     "est_price_idr": 25000,
 }
 
+IDEA = {
+    "title": "Pot Tanaman dari Botol PET",
+    "description": "Mengubah botol PET bekas menjadi pot gantung sederhana.",
+    "material": "plastik_pet",
+    "difficulty": "pemula",
+    "est_cost_idr": 5000,
+    "est_price_idr": 25000,
+}
+
 
 @pytest.fixture()
 def fake_sb():
@@ -35,28 +44,66 @@ def test_proposals_requires_auth(fake_sb):
     assert r.status_code == 401
 
 
-def test_proposals_returns_ai_list(monkeypatch):
-    async def fake_generate(material, condition, client_factory=None):
-        return [PROPOSAL]
+def test_proposals_returns_ai_ideas(monkeypatch):
+    async def fake_ideas(material, condition, client_factory=None):
+        return [IDEA]
 
-    monkeypatch.setattr("app.api.skills.generate_proposals", fake_generate)
+    monkeypatch.setattr("app.api.skills.generate_ideas", fake_ideas)
     r = TestClient(app).post(
         "/skills/proposals",
         json={"material": "plastik_pet", "condition": "bersih"},
         headers=_auth(),
     )
     assert r.status_code == 200
-    assert r.json()[0]["title"] == PROPOSAL["title"]
+    body = r.json()[0]
+    assert body["title"] == IDEA["title"]
+    assert "steps" not in body  # fase 1: ide ringkas tanpa langkah detail
 
 
 def test_proposals_503_when_ai_unavailable(monkeypatch):
     from app.agent.tools.skill_proposals import SkillGenUnavailable
 
-    async def fake_generate(material, condition, client_factory=None):
+    async def fake_ideas(material, condition, client_factory=None):
         raise SkillGenUnavailable("down")
 
-    monkeypatch.setattr("app.api.skills.generate_proposals", fake_generate)
+    monkeypatch.setattr("app.api.skills.generate_ideas", fake_ideas)
     r = TestClient(app).post("/skills/proposals", json={"material": "kaca"}, headers=_auth())
+    assert r.status_code == 503
+
+
+def test_proposals_expand_requires_auth(fake_sb):
+    r = TestClient(app).post("/skills/proposals/expand", json={"material": "kardus", "idea": IDEA})
+    assert r.status_code == 401
+
+
+def test_proposals_expand_returns_full_proposal(monkeypatch):
+    async def fake_expand(material, condition, idea, client_factory=None):
+        return PROPOSAL
+
+    monkeypatch.setattr("app.api.skills.expand_proposal", fake_expand)
+    r = TestClient(app).post(
+        "/skills/proposals/expand",
+        json={"material": "plastik_pet", "condition": "bersih", "idea": IDEA},
+        headers=_auth(),
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["title"] == PROPOSAL["title"]
+    assert "steps" in body  # fase 2: detail lengkap
+
+
+def test_proposals_expand_503_when_ai_unavailable(monkeypatch):
+    from app.agent.tools.skill_proposals import SkillGenUnavailable
+
+    async def fake_expand(material, condition, idea, client_factory=None):
+        raise SkillGenUnavailable("down")
+
+    monkeypatch.setattr("app.api.skills.expand_proposal", fake_expand)
+    r = TestClient(app).post(
+        "/skills/proposals/expand",
+        json={"material": "kardus", "condition": "bersih", "idea": IDEA},
+        headers=_auth(),
+    )
     assert r.status_code == 503
 
 

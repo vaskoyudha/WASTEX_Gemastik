@@ -1,9 +1,7 @@
-from functools import lru_cache
-
-from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
+from app.agent.json_chat import chat_json
 from app.agent.tools.retrieval import RetrievedChunk
 from app.config import get_settings
 from app.schemas import SolutionPackage
@@ -56,16 +54,6 @@ def _openrouter_model(model_name: str):
     )
 
 
-@lru_cache
-def generation_agent() -> Agent:
-    return Agent(
-        _openrouter_model(get_settings().chat_model),
-        output_type=SolutionPackage,
-        system_prompt=GROUNDING_PROMPT,
-        retries=1,
-    )
-
-
 def build_query(material: str, condition: str, user_intent: str) -> str:
     parts = [f"Material: {material}"]
     if condition:
@@ -85,5 +73,4 @@ async def generate_solution(query: str, chunks: list[RetrievedChunk]) -> Solutio
         labeled.append(f"{label}\n{c.content}")
     context = "\n\n".join(labeled)
     prompt = f"Konteks:\n{context}\n\nPermintaan:\n{query}"
-    result = await generation_agent().run(prompt)
-    return result.output
+    return await chat_json(GROUNDING_PROMPT, prompt, SolutionPackage)

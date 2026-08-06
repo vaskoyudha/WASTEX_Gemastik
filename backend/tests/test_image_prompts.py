@@ -106,6 +106,33 @@ def test_storyboard_prompt_marks_transformative_step():
     assert "jangan pertahankan tampilan lama" in p
 
 
+def test_storyboard_prompt_marks_imperative_transform_verbs():
+    for instruction in (
+        "Potong bagian atas botol (mulut dan kerucut) sekitar 1/3",
+        "Lubangi dasar kaleng untuk drainase",
+        "Cat seluruh permukaan luar kaleng dengan cat akrilik",
+        "Buka bagian atas kaleng dengan pembuka kaleng",
+        "Lepas label botol dengan hati-hati",
+        "Ampelas tepi potongan hingga halus",
+        "Lipat kardus mengikuti garis pola",
+    ):
+        step = {"order": 2, "instruction": instruction, "warning": None}
+        p = build_storyboard_prompt(SKILL, step)
+        assert "[PENTING — AKSI INI MENGUBAH TAMPILAN]" in p, instruction
+        assert "jangan pertahankan tampilan lama" in p, instruction
+
+
+def test_storyboard_prompt_imperative_does_not_flag_common_words():
+    for instruction in (
+        "Gunting ada di dalam kotak peralatan",
+        "Hitung jumlah botol yang tersedia",
+        "Perhatikan gambar contoh sebelum mulai",
+    ):
+        step = {"order": 2, "instruction": instruction, "warning": None}
+        p = build_storyboard_prompt(SKILL, step)
+        assert "[PENTING — AKSI INI MENGUBAH TAMPILAN]" not in p, instruction
+
+
 def test_storyboard_prompt_non_transformative_no_clause():
     step = {"order": 1, "instruction": "Bersihkan kaleng dari sisa minuman", "warning": None}
     p = build_storyboard_prompt(SKILL, step)
@@ -118,7 +145,14 @@ def test_storyboard_prompt_no_false_positive_for_menutupi():
         "instruction": "Isi kaleng dengan tanah hingga menutupi akar dengan mantap",
         "warning": None,
     }
-    p = build_storyboard_prompt(SKILL, step)
+    skill = {
+        **SKILL,
+        "steps": [
+            {"order": 1, "instruction": "Cuci botol hingga bersih", "warning": None},
+            {"order": 2, "instruction": "Keringkan dengan lap", "warning": None},
+        ],
+    }
+    p = build_storyboard_prompt(skill, step)
     assert "[PENTING — AKSI INI MENGUBAH TAMPILAN]" not in p
     assert "[KONDISI TAMPAK SAAT INI" not in p
     assert "Instruksi: Isi kaleng dengan tanah hingga menutupi akar" in p

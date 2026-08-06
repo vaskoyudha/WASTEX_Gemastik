@@ -1,3 +1,6 @@
+import asyncio
+import time
+
 import pytest
 from pydantic import ValidationError
 
@@ -9,7 +12,7 @@ from app.agent.tools.skill_proposals import (
     _parse_proposals,
     _parse_verdict,
 )
-from app.schemas import SkillProposal
+from app.schemas import SkillIdea, SkillProposal
 
 VALID_PROPOSAL = {
     "title": "Pot Gantung dari Botol PET",
@@ -132,12 +135,25 @@ from app.agent.tools.skill_proposals import (
     _build_critique_messages,
     _build_repair_messages,
     _parse_critiques,
+    _parse_ideas,
     _parse_single_proposal,
+    expand_proposal,
+    generate_ideas,
     generate_proposals,
     verify_draft,
 )
 
 VALID_PAYLOAD = {"proposals": [VALID_PROPOSAL]}
+IDEA = {
+    "title": "Pot Gantung dari Botol PET",
+    "description": "Botol PET diubah menjadi pot gantung sederhana.",
+    "material": "plastik_pet",
+    "difficulty": "pemula",
+    "est_cost_idr": 5000,
+    "est_price_idr": 20000,
+}
+IDEAS_PAYLOAD = {"ideas": [IDEA, {**IDEA, "title": "Pot Gantung B"}]}
+EXPAND_PAYLOAD = {"proposal": VALID_PROPOSAL}
 VERDICT_PAYLOAD = {"verdict": "layak", "feedback": [], "suggestions": []}
 KONTINU_PAYLOAD = {"critiques": [{"index": 0, "verdict": "kontinu", "steps": []}]}
 PERBAIKI_PAYLOAD = {
@@ -234,6 +250,38 @@ async def test_generate_proposals_repairs_flagged_proposal():
     assert result[0].title == "Pot Gantung dari Botol PET (diperbaiki)"
     assert len(result[0].steps) == 4
     assert client.post_calls == 4  # generate + kritik + repair + re-kritik
+
+
+class SlowClient(FakeClient):
+    async def post(self, url, headers, json):
+        await asyncio.sleep(0.05)
+        return await super().post(url, headers, json)
+
+
+async def test_generate_proposals_repairs_flagged_proposals_in_parallel():
+    _, client = _factory(
+        [
+            {"proposals": [VALID_PROPOSAL, {**VALID_PROPOSAL, "title": "Pot Gantung B"}]},
+            {
+                "critiques": [
+                    {"index": 0, "verdict": "perbaiki", "steps": [], "suggestions": ["x"]},
+                    {"index": 1, "verdict": "perbaiki", "steps": [], "suggestions": ["y"]},
+                ]
+            },
+            REPAIRED_PAYLOAD,
+            REPAIRED_PAYLOAD,
+            KONTINU_PAYLOAD,
+        ],
+        failures=0,
+    )
+    slow = SlowClient(client._payloads)
+    start = time.monotonic()
+    result = await generate_proposals("plastik_pet", "bersih", client_factory=lambda **kw: slow)
+    elapsed = time.monotonic() - start
+    assert len(result) == 2
+    assert result[0].title == "Pot Gantung dari Botol PET (diperbaiki)"
+    assert result[1].title == "Pot Gantung dari Botol PET (diperbaiki)"
+    assert elapsed < 0.25, f"repair tidak paralel: {elapsed:.3f}s"
 
 
 async def test_generate_proposals_keeps_proposal_when_critique_fails():
@@ -384,3 +432,54 @@ def test_find_missing_prerequisites_ignores_open_top_for_open_materials():
     )
     issues = find_missing_prerequisites(p)
     assert not any("bagian atas wadah" in i.missing_prerequisite for i in issues)
+
+
+# ---- Two-phase: ideas (ringkas) lalu expand (detail) ----
+
+
+def test_parse_ideas_keeps_matching_material_only():
+    result = _parse_ideas({"ideas": [IDEA, {**IDEA, "material": "kaca"}]}, "plastik_pet")
+    assert len(result) == 1
+    assert isinstance(result[0], SkillIdea)
+    assert result[0].title == "Pot Gantung dari Botol PET"
+
+
+def test_parse_ideas_skips_invalid_items():
+    result = _parse_ideas({"ideas": [IDEA, {"title": "x"}]}, "plastik_pet")
+    assert len(result) == 1
+
+
+def test_parse_ideas_empty_when_none():
+    assert _parse_ideas({"ideas": []}, "plastik_pet") == []
+
+
+async def test_generate_ideas_single_llm_call_no_repair_loop():
+    make, client = _factory([IDEAS_PAYLOAD])
+    result = await generate_ideas("plastik_pet", "bersih", client_factory=make)
+    assert len(result) == 2
+    assert isinstance(result[0], SkillIdea)
+    assert client.post_calls == 1  # satu panggilan ringkas, tanpa kritik/repair
+
+
+async def test_generate_ideas_falls_back_to_next_model():
+    make, client = _factory([IDEAS_PAYLOAD, IDEAS_PAYLOAD], failures=1)
+    result = await generate_ideas("plastik_pet", "bersih", client_factory=make)
+    assert len(result) == 2
+    assert client.post_calls == 2
+
+
+async def test_expand_proposal_generates_detail_then_repairs_loop():
+    make, client = _factory([EXPAND_PAYLOAD, PERBAIKI_PAYLOAD, REPAIRED_PAYLOAD, KONTINU_PAYLOAD])
+    idea = SkillIdea.model_validate(IDEA)
+    result = await expand_proposal("plastik_pet", "bersih", idea, client_factory=make)
+    assert result.title == "Pot Gantung dari Botol PET (diperbaiki)"
+    assert len(result.steps) == 4
+    assert client.post_calls == 4  # detail + kritik + repair + re-kritik
+
+
+async def test_expand_proposal_keeps_idea_when_critique_fails():
+    make, client = _factory([EXPAND_PAYLOAD, EXPAND_PAYLOAD])
+    idea = SkillIdea.model_validate(IDEA)
+    result = await expand_proposal("plastik_pet", "bersih", idea, client_factory=make)
+    assert result.title == "Pot Gantung dari Botol PET"
+    assert client.post_calls == 5  # 1 detail + 4 percobaan kritik yang gagal parse

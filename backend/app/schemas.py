@@ -236,9 +236,27 @@ class SkillProposal(BaseModel):
     est_price_idr: int | None = None
 
 
+class SkillIdea(BaseModel):
+    """Ide ringkas fase 1 (two-phase): tanpa langkah detail. Di-expand menjadi
+    SkillProposal lengkap pada fase 2 setelah user memilih."""
+
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=10, max_length=2000)
+    material: Material
+    difficulty: Difficulty
+    est_cost_idr: int | None = Field(default=None, ge=0)
+    est_price_idr: int | None = None
+
+
 class SkillProposalRequest(BaseModel):
     material: Material
     condition: str = ""
+
+
+class SkillExpandRequest(BaseModel):
+    material: Material
+    condition: str = ""
+    idea: SkillIdea
 
 
 class SkillVerifyRequest(BaseModel):

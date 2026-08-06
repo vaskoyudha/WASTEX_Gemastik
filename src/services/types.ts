@@ -232,6 +232,15 @@ export interface SkillProposal {
   est_price_idr?: number | null;
 }
 
+export interface SkillIdea {
+  title: string;
+  description: string;
+  material: BackendMaterial;
+  difficulty: BackendDifficulty;
+  est_cost_idr?: number | null;
+  est_price_idr?: number | null;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;

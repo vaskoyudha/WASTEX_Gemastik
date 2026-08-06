@@ -8,6 +8,7 @@ import { apiClient } from '../../src/services/api';
 import type {
   BackendDifficulty,
   ChatMessage,
+  SkillIdea,
   SkillProposal,
   SkillVerifyResponse,
 } from '../../src/services/types';
@@ -24,6 +25,7 @@ export default function SkillCreatorScreen() {
   const [stage, setStage] = useState<Stage>('ideas');
   const [selected, setSelected] = useState<SkillProposal | null>(null);
   const [draft, setDraft] = useState<SkillProposal | null>(null);
+  const [expanding, setExpanding] = useState(false);
   const [verifyVisible, setVerifyVisible] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [verdict, setVerdict] = useState<SkillVerifyResponse | null>(null);
@@ -37,11 +39,17 @@ export default function SkillCreatorScreen() {
 
   const generateSkills = useCallback(
     (material: string, condition: string) =>
-      apiClient.getSkillProposals({ material, condition }),
+      apiClient.getSkillIdeas({ material, condition }),
     [],
   );
 
-  const generateCall = useServiceCall<SkillProposal[], [string, string]>(
+  const expandSkill = useCallback(
+    (material: string, condition: string, idea: SkillIdea) =>
+      apiClient.expandSkillProposal({ material, condition, idea }),
+    [],
+  );
+
+  const generateCall = useServiceCall<SkillIdea[], [string, string]>(
     generateSkills,
     { autoCall: scanResult !== null, initialArgs: generateArgs },
   );
@@ -60,10 +68,19 @@ export default function SkillCreatorScreen() {
     );
   }
 
-  const handleSelect = (proposal: SkillProposal) => {
-    setSelected(proposal);
-    setDraft({ ...proposal, steps: proposal.steps.map((s) => ({ ...s })) });
-    setStage('edit');
+  const handleSelect = async (idea: SkillIdea) => {
+    if (!scanResult || expanding) return;
+    setExpanding(true);
+    try {
+      const full = await expandSkill(scanResult.materialType, scanResult.condition, idea);
+      setSelected(full);
+      setDraft({ ...full, steps: full.steps.map((s) => ({ ...s })) });
+      setStage('edit');
+    } catch {
+      Alert.alert('Detail Gagal Dimuat', 'AI tidak bisa menyusun detail skill. Coba pilih ide lain.');
+    } finally {
+      setExpanding(false);
+    }
   };
 
   const updateStep = (index: number, field: 'instruction' | 'warning', value: string) => {
@@ -154,7 +171,12 @@ export default function SkillCreatorScreen() {
     return (
       <View>
         {ideas.map((idea) => (
-          <TouchableOpacity key={idea.title} onPress={() => handleSelect(idea)} activeOpacity={0.7}>
+          <TouchableOpacity
+            key={idea.title}
+            onPress={() => handleSelect(idea)}
+            disabled={expanding}
+            activeOpacity={0.7}
+          >
             <Card className="p-4 border border-slate-100 mb-3">
               <Text className="text-sm font-bold text-slate-900 mb-1">{idea.title}</Text>
               <Text className="text-xs text-slate-500 mb-2">{idea.description}</Text>
@@ -168,20 +190,16 @@ export default function SkillCreatorScreen() {
                   </Text>
                 )}
               </View>
-              {idea.additional_materials && idea.additional_materials.length > 0 && (
-                <Text className="text-[10px] text-amber-700 mt-1">
-                  Bahan tambahan:{' '}
-                  {idea.additional_materials
-                    .slice(0, 3)
-                    .map((m) => m.name)
-                    .join(', ')}
-                  {idea.additional_materials.length > 3 ? ' + lainnya' : ''}
-                </Text>
-              )}
             </Card>
           </TouchableOpacity>
         ))}
-        <Button title="Generate Ulang" onPress={generateCall.refetch} variant="secondary" />
+        {expanding && <Text className="text-xs text-slate-500 mb-3">AI sedang menyusun detail skill...</Text>}
+        <Button
+          title={expanding ? 'Menyusun Detail...' : 'Generate Ulang'}
+          onPress={generateCall.refetch}
+          variant="secondary"
+          disabled={expanding}
+        />
       </View>
     );
   };

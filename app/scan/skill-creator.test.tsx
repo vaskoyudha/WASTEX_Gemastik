@@ -3,7 +3,8 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { Pressable as MockPressable, Text as MockText } from 'react-native';
 import SkillCreatorScreen from './skill-creator';
 
-const mockGetProposals = jest.fn();
+const mockGetIdeas = jest.fn();
+const mockExpand = jest.fn();
 const mockRouterPush = jest.fn();
 const mockVerify = jest.fn();
 const mockCreate = jest.fn();
@@ -29,7 +30,8 @@ jest.mock('../../src/store/useScanStore', () => ({
 
 jest.mock('../../src/services/api', () => ({
   apiClient: {
-    getSkillProposals: (...args: unknown[]) => mockGetProposals(...args),
+    getSkillIdeas: (...args: unknown[]) => mockGetIdeas(...args),
+    expandSkillProposal: (...args: unknown[]) => mockExpand(...args),
     verifySkill: (...args: unknown[]) => mockVerify(...args),
     createSkill: (...args: unknown[]) => mockCreate(...args),
   },
@@ -53,61 +55,77 @@ jest.mock('lucide-react-native', () => ({
   AlertTriangle: () => null,
 }));
 
-const proposals = [
+const ideas = [
   {
     title: 'Pot Gantung PET',
     description: 'Pot gantung dari botol bekas.',
     material: 'plastik_pet',
     difficulty: 'pemula',
-    steps: [{ order: 1, instruction: 'Cuci botol', warning: 'Sarung tangan' }],
-    tools: [{ name: 'gunting' }],
     est_cost_idr: 5000,
     est_price_idr: 25000,
-    additional_materials: [
-      { name: 'tali', category: 'tali', est_cost_idr: 3000, purpose: 'untuk gantungan' },
-      { name: 'cat', category: 'cat', est_cost_idr: 12000, purpose: 'untuk dekorasi' },
-    ],
   },
 ];
+
+const fullProposal = {
+  title: 'Pot Gantung PET',
+  description: 'Pot gantung dari botol bekas.',
+  material: 'plastik_pet',
+  difficulty: 'pemula',
+  steps: [{ order: 1, instruction: 'Cuci botol', warning: 'Sarung tangan' }],
+  tools: [{ name: 'gunting', optional: false }],
+  est_cost_idr: 5000,
+  est_price_idr: 25000,
+  additional_materials: [
+    { name: 'tali', category: 'tali', est_cost_idr: 3000, purpose: 'untuk gantungan' },
+    { name: 'cat', category: 'cat', est_cost_idr: 12000, purpose: 'untuk dekorasi' },
+  ],
+};
 
 describe('SkillCreatorScreen ideas stage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetProposals.mockResolvedValue(proposals);
+    mockGetIdeas.mockResolvedValue(ideas);
+    mockExpand.mockResolvedValue(fullProposal);
   });
 
-  it('generates proposals on mount and renders them', async () => {
-    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+  it('generates ideas on mount and renders them', async () => {
+    const { findByText } = await render(<SkillCreatorScreen />);
     expect(await findByText('Pot Gantung PET')).toBeTruthy();
-    expect(mockGetProposals).toHaveBeenCalledWith({
+    expect(mockGetIdeas).toHaveBeenCalledWith({
       material: 'plastik_pet',
       condition: 'Bersih',
     });
   });
 
-  it('selecting a proposal moves to edit stage', async () => {
-    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+  it('selecting an idea expands it to full draft and moves to edit stage', async () => {
+    const { findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
     expect(await findByText('Edit Draft Skill')).toBeTruthy();
+    expect(mockExpand).toHaveBeenCalledWith({
+      material: 'plastik_pet',
+      condition: 'Bersih',
+      idea: ideas[0],
+    });
   });
 
-  it('regenerate refetches proposals', async () => {
-    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+  it('regenerate refetches ideas', async () => {
+    const { findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Generate Ulang'));
-    expect(mockGetProposals).toHaveBeenCalledTimes(2);
+    expect(mockGetIdeas).toHaveBeenCalledTimes(2);
   });
 });
 
 describe('SkillCreatorScreen verify + submit', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetProposals.mockResolvedValue(proposals);
+    mockGetIdeas.mockResolvedValue(ideas);
+    mockExpand.mockResolvedValue(fullProposal);
     mockVerify.mockResolvedValue({ verdict: 'layak', feedback: [], suggestions: [] });
     mockCreate.mockResolvedValue({ id: 'new-skill' });
   });
 
   it('opens verify popup and shows verdict', async () => {
-    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    const { findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
     fireEvent.press(await findByText('Verifikasi dengan AI'));
     expect(await findByText('Skill layak dikirim')).toBeTruthy();
@@ -124,11 +142,6 @@ describe('SkillCreatorScreen verify + submit', () => {
     fireEvent.press(getByText('Kirim Skill untuk Verifikasi'));
     expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pot Gantung PET' }));
     expect(await findByText('Skill Terkirim')).toBeTruthy();
-  });
-
-  it('shows additional materials badge on proposal card', async () => {
-    const { findByText } = await render(<SkillCreatorScreen />);
-    expect(await findByText('Bahan tambahan: tali, cat')).toBeTruthy();
   });
 
   it('shows warning in verify popup when laidak with additional materials', async () => {

@@ -1,9 +1,4 @@
-from functools import lru_cache
-
-from pydantic_ai import Agent
-
-from app.agent.orchestrator import _openrouter_model
-from app.config import get_settings
+from app.agent.json_chat import chat_json
 from app.schemas import SellingKit
 
 SELLING_PROMPT = """# Tugas
@@ -38,25 +33,14 @@ Sesuaikan nada dengan tingkat kesulitan dan material produk.
 - Semua 6 bagian lengkap sesuai format?"""
 
 
-@lru_cache
-def selling_agent() -> Agent:
-    return Agent(
-        _openrouter_model(get_settings().chat_model),
-        output_type=SellingKit,
-        system_prompt=SELLING_PROMPT,
-        retries=1,
-    )
-
-
 async def generate_selling_kit(skill: dict) -> SellingKit:
-    prompt = (
+    user = (
         f"Produk: {skill.get('title')}\n"
         f"Material: {skill.get('material')}\n"
         f"Tingkat kesulitan: {skill.get('difficulty')}\n"
         f"Perkiraan harga jual (IDR): {skill.get('est_price_idr') or 'tidak tersedia'}\n"
         f"Langkah pembuatan: {skill.get('steps') or []}"
     )
-    result = await selling_agent().run(prompt)
-    kit = result.output
+    kit = await chat_json(SELLING_PROMPT, user, SellingKit)
     kit.skill_id = str(skill.get("id", ""))
     return kit

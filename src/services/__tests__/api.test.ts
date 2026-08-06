@@ -1,5 +1,5 @@
 import { apiClient } from '../api';
-import type { SkillProposal } from '../types';
+import type { SkillIdea, SkillProposal } from '../types';
 
 describe('apiClient', () => {
   it('should have scan method', () => {
@@ -47,13 +47,37 @@ describe('apiClient skill methods', () => {
     });
   });
 
-  it('getSkillProposals posts material and attaches bearer token', async () => {
-    await apiClient.getSkillProposals({ material: 'plastik_pet', condition: 'bersih' });
+  it('getSkillIdeas posts material and attaches bearer token', async () => {
+    await apiClient.getSkillIdeas({ material: 'plastik_pet', condition: 'bersih' });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toContain('/skills/proposals');
     expect(init.method).toBe('POST');
     expect(JSON.parse(init.body)).toEqual({ material: 'plastik_pet', condition: 'bersih' });
     expect(init.headers.Authorization).toBe('Bearer tok-123');
+  });
+
+  it('expandSkillProposal posts idea to /skills/proposals/expand', async () => {
+    const idea: SkillIdea = {
+      title: 'Pot Botol PET',
+      description: 'Pot gantung dari botol bekas.',
+      material: 'plastik_pet',
+      difficulty: 'pemula',
+      est_cost_idr: 5000,
+      est_price_idr: 25000,
+    };
+    await apiClient.expandSkillProposal({
+      material: 'plastik_pet',
+      condition: 'bersih',
+      idea,
+    });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain('/skills/proposals/expand');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body)).toEqual({
+      material: 'plastik_pet',
+      condition: 'bersih',
+      idea,
+    });
   });
 
   it('verifySkill posts draft and chat history', async () => {
