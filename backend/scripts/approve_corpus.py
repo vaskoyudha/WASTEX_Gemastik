@@ -58,9 +58,15 @@ async def main(ids: list[str], reject: list[str], all_lolos: bool) -> int:
         )
         ids = [str(r["id"]) for r in rows]
     for skill_id in ids:
-        if all_lolos and not await _is_safe(sb, skill_id):
-            print(f"SKIP {skill_id}: tidak lolos safety check")
-            continue
+        if all_lolos:
+            try:
+                safe = await _is_safe(sb, skill_id)
+            except Exception as exc:
+                print(f"SKIP {skill_id}: safety check gagal ({exc})")
+                continue
+            if not safe:
+                print(f"SKIP {skill_id}: tidak lolos safety check")
+                continue
         result = await cc.approve_skill(sb, skill_id)
         if result.get("skipped"):
             print(f"SKIP {skill_id}: bukan draft")
