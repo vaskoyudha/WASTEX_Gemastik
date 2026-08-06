@@ -1,6 +1,7 @@
-from uuid import UUID
+import logging
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 
 from app.agent.tools.skill_proposals import (
     SkillGenUnavailable,
@@ -13,6 +14,7 @@ from app.auth import get_current_user
 from app.deps import get_optional_user_id, get_supabase, require_expert_or_service
 from app.rag.ingest import ingest_skill
 from app.schemas import (
+    SkillCompletion,
     SkillCreateRequest,
     SkillExpandRequest,
     SkillFlagIn,
@@ -30,6 +32,10 @@ router = APIRouter()
 
 
 FLAG_THRESHOLD = 3
+
+logger = logging.getLogger(__name__)
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"]
 
 
 @router.post("/{skill_id}/flag", status_code=201)
@@ -164,6 +170,68 @@ def create_skill(
     )
     res = sb.table("skills").insert(payload).execute()
     return res.data[0]
+
+
+@router.post("/{skill_id}/complete", status_code=201, response_model=SkillCompletion)
+async def complete_skill(
+    skill_id: str,
+    file: UploadFile = File(...),
+    rating: int = Form(..., ge=1, le=5),
+    comment: str | None = Form(None),
+    user: dict = Depends(get_current_user),
+    sb: Client = Depends(get_supabase),
+) -> SkillCompletion:
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.content_type}")
+    image = await file.read()
+    if len(image) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large")
+    if not image:
+        raise HTTPException(status_code=400, detail="empty image")
+
+    if not sb.table("skills").select("id").eq("id", skill_id).execute().data:
+        raise HTTPException(status_code=404, detail="skill not found")
+
+    existing = (
+        sb.table("skill_completions").select("*").eq("skill_id", skill_id).execute().data or []
+    )
+    if any(c.get("skill_id") == skill_id and c.get("user_id") == user["user_id"] for c in existing):
+        raise HTTPException(status_code=409, detail="Anda sudah mengirimkan hasil untuk skill ini")
+
+    completion_id = str(uuid4())
+    photo_path = f"{completion_id}.{file.content_type.split('/')[-1]}"
+    try:
+        sb.storage.from_("completions").upload(
+            photo_path, image, {"content-type": file.content_type}
+        )
+    except Exception:
+        logger.exception("completion photo upload failed")
+        raise HTTPException(status_code=502, detail="photo upload failed")
+
+    row = (
+        sb.table("skill_completions")
+        .insert(
+            {
+                "id": completion_id,
+                "user_id": user["user_id"],
+                "skill_id": skill_id,
+                "photo_path": photo_path,
+                "rating": rating,
+                "comment": comment,
+            }
+        )
+        .execute()
+        .data[0]
+    )
+    return SkillCompletion(
+        id=row["id"],
+        user_id=row["user_id"],
+        skill_id=row["skill_id"],
+        photo_path=row["photo_path"],
+        rating=row["rating"],
+        comment=row.get("comment"),
+        created_at=row["created_at"],
+    )
 
 
 @router.patch("/{skill_id}/status", dependencies=[Depends(require_expert_or_service)])
