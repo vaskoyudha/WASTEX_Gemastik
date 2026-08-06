@@ -62,3 +62,6 @@ backend/.venv/
 .playwright-mcp/
 backend/supabase/.temp/
 *.png
+
+# manual image-gen playbooks (local experiments, not in repo)
+visuals/
