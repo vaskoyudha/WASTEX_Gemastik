@@ -11,10 +11,13 @@ from app.agent.tools.skill_proposals import (
 )
 from app.api.visuals import generate_all_visuals
 from app.auth import get_current_user
+from app.config import get_settings
 from app.deps import get_optional_user_id, get_supabase, require_expert_or_service
 from app.rag.ingest import ingest_skill
 from app.schemas import (
+    CompletionGalleryItem,
     SkillCompletion,
+    SkillCompletionsSummary,
     SkillCreateRequest,
     SkillExpandRequest,
     SkillFlagIn,
@@ -231,6 +234,47 @@ async def complete_skill(
         rating=row["rating"],
         comment=row.get("comment"),
         created_at=row["created_at"],
+    )
+
+
+def _display_names(sb: Client, user_ids: list) -> dict:
+    ids = [u for u in set(user_ids) if u]
+    if not ids:
+        return {}
+    try:
+        profs = sb.table("profiles").select("auth_user_id,display_name").execute().data or []
+        return {p["auth_user_id"]: p["display_name"] for p in profs if p.get("auth_user_id") in ids}
+    except Exception:
+        return {}
+
+
+@router.get("/{skill_id}/completions", response_model=SkillCompletionsSummary)
+def get_skill_completions(
+    skill_id: str, sb: Client = Depends(get_supabase)
+) -> SkillCompletionsSummary:
+    if not sb.table("skills").select("id").eq("id", skill_id).execute().data:
+        raise HTTPException(status_code=404, detail="skill not found")
+
+    rows = sb.table("skill_completions").select("*").eq("skill_id", skill_id).execute().data or []
+    rows = [r for r in rows if r.get("skill_id") == skill_id]
+    rows.sort(key=lambda r: r.get("created_at", ""), reverse=True)
+
+    count = len(rows)
+    avg_rating = round(sum(r["rating"] for r in rows) / count, 1) if count else 0.0
+    names = _display_names(sb, [r.get("user_id") for r in rows])
+    base = get_settings().supabase_url.rstrip("/")
+    gallery = [
+        CompletionGalleryItem(
+            photo_url=f"{base}/storage/v1/object/public/completions/{r['photo_path']}",
+            rating=r["rating"],
+            comment=r.get("comment"),
+            created_at=r.get("created_at", ""),
+            user_display_name=names.get(r.get("user_id"), ""),
+        )
+        for r in rows
+    ]
+    return SkillCompletionsSummary(
+        skill_id=skill_id, avg_rating=avg_rating, count=count, gallery=gallery
     )
 
 

@@ -80,3 +80,49 @@ def test_complete_bad_type_415(fake_sb):
     fake_sb.table("skills").insert(SKILL)
     r = _post(TestClient(app), ctype="text/plain")
     assert r.status_code == 415
+
+
+def test_get_completions_summary_and_gallery(fake_sb):
+    fake_sb.table("skills").insert(SKILL)
+    fake_sb.table("skill_completions").insert(
+        [
+            {
+                "user_id": "u1",
+                "skill_id": "s1",
+                "photo_path": "a.jpeg",
+                "rating": 5,
+                "comment": "mantap",
+                "created_at": "2026-01-02T00:00:00Z",
+            },
+            {
+                "user_id": "u2",
+                "skill_id": "s1",
+                "photo_path": "b.jpeg",
+                "rating": 3,
+                "comment": None,
+                "created_at": "2026-01-01T00:00:00Z",
+            },
+        ]
+    )
+    fake_sb.table("profiles").insert([{"auth_user_id": "u1", "display_name": "Budi"}])
+    r = TestClient(app).get("/skills/s1/completions")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["count"] == 2
+    assert body["avg_rating"] == 4.0
+    assert body["gallery"][0]["photo_url"].endswith("completions/a.jpeg")
+    assert body["gallery"][0]["user_display_name"] == "Budi"
+    assert body["gallery"][0]["rating"] == 5
+
+
+def test_get_completions_empty(fake_sb):
+    fake_sb.table("skills").insert(SKILL)
+    r = TestClient(app).get("/skills/s1/completions")
+    assert r.status_code == 200
+    assert r.json()["count"] == 0
+    assert r.json()["gallery"] == []
+
+
+def test_get_completions_skill_not_found(fake_sb):
+    r = TestClient(app).get("/skills/nope/completions")
+    assert r.status_code == 404
