@@ -211,21 +211,27 @@ async def complete_skill(
         logger.exception("completion photo upload failed")
         raise HTTPException(status_code=502, detail="photo upload failed")
 
-    row = (
-        sb.table("skill_completions")
-        .insert(
-            {
-                "id": completion_id,
-                "user_id": user["user_id"],
-                "skill_id": skill_id,
-                "photo_path": photo_path,
-                "rating": rating,
-                "comment": comment,
-            }
+    try:
+        row = (
+            sb.table("skill_completions")
+            .insert(
+                {
+                    "id": completion_id,
+                    "user_id": user["user_id"],
+                    "skill_id": skill_id,
+                    "photo_path": photo_path,
+                    "rating": rating,
+                    "comment": comment,
+                }
+            )
+            .execute()
+            .data[0]
         )
-        .execute()
-        .data[0]
-    )
+    except Exception:
+        # Atomic backstop for the pre-check race: the table's only unique constraint is
+        # unique(skill_id, user_id), so an insert failure here means a duplicate submission.
+        logger.exception("skill completion insert failed (duplicate)")
+        raise HTTPException(status_code=409, detail="Anda sudah mengirimkan hasil untuk skill ini")
     return SkillCompletion(
         id=row["id"],
         user_id=row["user_id"],

@@ -65,6 +65,21 @@ def test_complete_duplicate_409(fake_sb):
     assert r.status_code == 409
 
 
+def test_complete_insert_race_maps_to_409(fake_sb, monkeypatch):
+    # Race backstop: two concurrent requests both pass the Python pre-check; the losing
+    # insert violates unique(skill_id, user_id). The endpoint must map that to 409, not 500.
+    fake_sb.table("skills").insert(SKILL)
+
+    def _dup_insert(_data):
+        raise RuntimeError(
+            'duplicate key value violates unique constraint "skill_completions_skill_id_user_id_key"'
+        )
+
+    monkeypatch.setattr(fake_sb.table("skill_completions"), "insert", _dup_insert)
+    r = _post(TestClient(app, raise_server_exceptions=False))
+    assert r.status_code == 409
+
+
 def test_complete_skill_not_found_404(fake_sb):
     r = _post(TestClient(app), skill_id="nope")
     assert r.status_code == 404
