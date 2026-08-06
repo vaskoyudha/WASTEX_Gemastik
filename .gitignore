@@ -65,3 +65,8 @@ backend/supabase/.temp/
 
 # manual image-gen playbooks (local experiments, not in repo)
 visuals/
+
+# local tooling / agent state
+.qwen/
+QWEN.md
+test-results/
