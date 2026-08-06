@@ -115,4 +115,25 @@ describe('apiClient skill methods', () => {
     expect(JSON.parse(init.body)).toEqual({ status: 'approved', reviewed_by: 'expert-1' });
     expect(init.headers.Authorization).toBe('Bearer tok-123');
   });
+
+  it('completeSkill posts multipart with auth to /skills/{id}/complete', async () => {
+    (global as any).fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({}),
+      blob: async () => new Blob(['fake-image']),
+    });
+    await apiClient.completeSkill('s1', 'file:///tmp/x.jpg', 5, 'mantap');
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[1];
+    expect(url).toContain('/skills/s1/complete');
+    expect(init.method).toBe('POST');
+    expect(init.headers.Authorization).toBe('Bearer tok-123');
+    expect(init.body).toBeInstanceOf(FormData);
+  });
+
+  it('getSkillCompletions hits /skills/{id}/completions', async () => {
+    await apiClient.getSkillCompletions('s1');
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toContain('/skills/s1/completions');
+  });
 });

@@ -321,3 +321,29 @@ export interface AuthService {
   updateProfile(data: UpdateProfileRequest): Promise<UserProfile>;
   deleteAccount(): Promise<void>;
 }
+
+// ---- Skill Completions ----
+export interface SkillCompletion {
+  id: string;
+  user_id: string;
+  skill_id: string;
+  photo_path: string;
+  rating: number;
+  comment?: string | null;
+  created_at: string;
+}
+
+export interface CompletionGalleryItem {
+  photo_url: string;
+  rating: number;
+  comment?: string | null;
+  created_at: string;
+  user_display_name?: string;
+}
+
+export interface SkillCompletionsSummary {
+  skill_id: string;
+  avg_rating: number;
+  count: number;
+  gallery: CompletionGalleryItem[];
+}

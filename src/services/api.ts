@@ -1,4 +1,4 @@
-import type { ChatMessage, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
+import type { ChatMessage, SkillCompletionsSummary, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -80,6 +80,32 @@ export const apiClient = {
 
   async getSkill(id: string) {
     return request(`/skills/${id}`);
+  },
+
+  async completeSkill(skillId: string, imageUri: string, rating: number, comment?: string) {
+    const formData = new FormData();
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    formData.append('file', blob, 'completion.jpg');
+    formData.append('rating', String(rating));
+    if (comment) formData.append('comment', comment);
+    const headers = await authHeaders();
+    const res = await fetch(`${API_BASE}/skills/${skillId}/complete`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: 'Submit gagal' }));
+      const err = new Error(error.detail || `API error: ${res.status}`) as Error & { status?: number };
+      err.status = res.status;
+      throw err;
+    }
+    return res.json();
+  },
+
+  async getSkillCompletions(skillId: string): Promise<SkillCompletionsSummary> {
+    return request(`/skills/${skillId}/completions`);
   },
 
   async createSkill(data: SkillProposal & { reference_scan_id?: string }) {
