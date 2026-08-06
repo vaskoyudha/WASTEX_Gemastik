@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
-from app.deps import get_supabase
+from app.config import get_settings
 from app.schemas import (
     AuthLoginResponse,
     AuthRegisterResponse,
@@ -11,12 +11,13 @@ from app.schemas import (
     RegisterRequest,
     UserProfileResponse,
 )
-from supabase import Client
+from supabase import Client, create_client
 
 
 async def get_auth_supabase() -> Client:
     """Dependency that always returns fresh Supabase client."""
-    return get_supabase()
+    s = get_settings()
+    return create_client(s.supabase_url, s.supabase_service_key)
 
 
 router = APIRouter(tags=["auth"])
