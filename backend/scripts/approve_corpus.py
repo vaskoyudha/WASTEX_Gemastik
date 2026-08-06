@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import corpus_common as cc
+
 from app.agent.tools.discovery import _safety_checker
 from app.deps import get_supabase
 from app.schemas import SkillDraft
@@ -23,10 +24,22 @@ async def _is_safe(sb, skill_id: str) -> bool:
     row = next((r for r in (res.data or []) if str(r.get("id")) == skill_id), None)
     if not row:
         return False
-    draft = SkillDraft(**{k: row[k] for k in (
-        "title", "material", "difficulty", "tools", "steps", "risks",
-        "est_cost_idr", "est_price_idr", "sources",
-    )})
+    draft = SkillDraft(
+        **{
+            k: row[k]
+            for k in (
+                "title",
+                "material",
+                "difficulty",
+                "tools",
+                "steps",
+                "risks",
+                "est_cost_idr",
+                "est_price_idr",
+                "sources",
+            )
+        }
+    )
     result = await _safety_checker().run(draft.model_dump_json())
     return result.output.safe
 
@@ -35,7 +48,14 @@ async def main(ids: list[str], reject: list[str], all_lolos: bool) -> int:
     sb = get_supabase()
     failed = 0
     if all_lolos:
-        rows = sb.table("skills").select("id").eq("origin", "seed").eq("status", "draft").execute().data
+        rows = (
+            sb.table("skills")
+            .select("id")
+            .eq("origin", "seed")
+            .eq("status", "draft")
+            .execute()
+            .data
+        )
         ids = [str(r["id"]) for r in rows]
     for skill_id in ids:
         if all_lolos and not await _is_safe(sb, skill_id):

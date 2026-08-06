@@ -126,6 +126,7 @@ def test_extract_url_sends_browser_user_agent():
     assert ua.startswith("Mozilla/5.0")
     assert "Chrome/" in ua
 
+
 def test_extract_url_raises_on_http_error():
     async def run():
         return await extract_url(
