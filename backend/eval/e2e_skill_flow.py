@@ -58,7 +58,8 @@ def main(base: str) -> int:
 
             # 2. recommend (RAG path) — assert grounded per spec
             r = client.post(
-                f"{base}/recommend", json={"material": material, "user_intent": "buat vas dari botol kaca"}
+                f"{base}/recommend",
+                json={"material": material, "user_intent": "buat vas dari botol kaca"},
             )
             ok &= _check(
                 "recommend grounded",
