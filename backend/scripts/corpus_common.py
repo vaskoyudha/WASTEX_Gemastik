@@ -96,7 +96,16 @@ async def ingest_document_source(sb, source: dict) -> dict:
         "pdf" if source["url"].lower().endswith(".pdf") else "url"
     )
     if source_type == "pdf":
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(
+            timeout=60,
+            follow_redirects=True,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+                )
+            },
+        ) as client:
             r = await client.get(source["url"])
             r.raise_for_status()
         from uuid import uuid4
