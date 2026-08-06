@@ -81,6 +81,9 @@ async def approve_skill(sb, skill_id: str, reviewed_by: str = "seed-pipeline") -
         chunks = await ingest_skill(sb, skill_id)
         return {"id": skill_id, "status": "approved", "chunks": chunks}
     except Exception as exc:
+        # Revert to draft so a later run can retry; otherwise the skill stays
+        # approved-with-0-chunks and approve_corpus.py forever SKIPs it.
+        sb.table("skills").update({"status": "draft"}).eq("id", skill_id).execute()
         return {"id": skill_id, "status": "approved", "error": str(exc)}
 
 
