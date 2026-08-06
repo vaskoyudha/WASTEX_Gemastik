@@ -98,7 +98,7 @@ export default function SkillCreatorScreen() {
     runCheck([]);
   };
 
-  const runCheck = async (history: ChatMessage[] = chatHistory) => {
+  const runCheck = async (history: ChatMessage[] = []) => {
     if (!draft || checking) return;
     setChecking(true);
     const userMsg: ChatMessage = {
@@ -106,6 +106,8 @@ export default function SkillCreatorScreen() {
       content: `Draft skill: ${draft.title}\n${draft.description}`,
     };
     try {
+      // Hanya kirim ronde saat ini — riwayat lama membuat LLM meng-echo
+      // feedback yang sudah diperbaiki (stale feedback bias).
       const result = await apiClient.verifySkill({
         draft,
         chat_history: [...history, userMsg],

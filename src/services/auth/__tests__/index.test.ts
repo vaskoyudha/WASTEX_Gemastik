@@ -13,6 +13,7 @@ jest.mock("../../supabase/client", () => ({
     auth: {
       signUp: jest.fn(),
       signInWithPassword: jest.fn(),
+      refreshSession: jest.fn(),
       signOut: jest.fn(),
       admin: { deleteUser: jest.fn() },
     },
@@ -196,5 +197,77 @@ describe("AuthService", () => {
   it("getUser returns null when not logged in", () => {
     const authService = createAuthService(apiClient);
     expect(authService.getUser()).toBe(null);
+  });
+
+  it("getValidAccessToken returns token without refresh when not expired", async () => {
+    const mockSignIn = supabase.auth.signInWithPassword as jest.Mock;
+    mockSignIn.mockReturnValue(
+      Promise.resolve({
+        data: { user: { id: "user-123" }, session: { access_token: "token123", expires_at: Math.floor(Date.now() / 1000) + 3600 } },
+        error: null,
+      })
+    );
+    (apiClient.login as jest.Mock).mockResolvedValue({
+      access_token: "token123",
+      user_id: "user-123",
+      profile: { id: "prof-123", auth_user_id: "user-123", display_name: "Test", first_name: null, last_name: null, bio: null, phone: null, avatar_url: null, created_at: "2026-01-01T00:00:00Z", updated_at: null },
+    });
+
+    const authService = createAuthService(apiClient);
+    await authService.signIn("test@example.com", "pass");
+    const token = await authService.getValidAccessToken();
+    expect(token).toBe("token123");
+    expect(supabase.auth.refreshSession).not.toHaveBeenCalled();
+  });
+
+  it("getValidAccessToken refreshes expired token via supabase", async () => {
+    const mockSignIn = supabase.auth.signInWithPassword as jest.Mock;
+    mockSignIn.mockReturnValue(
+      Promise.resolve({
+        data: { user: { id: "user-123" }, session: { access_token: "old-token", expires_at: Math.floor(Date.now() / 1000) - 60 } },
+        error: null,
+      })
+    );
+    (apiClient.login as jest.Mock).mockResolvedValue({
+      access_token: "old-token",
+      user_id: "user-123",
+      profile: { id: "prof-123", auth_user_id: "user-123", display_name: "Test", first_name: null, last_name: null, bio: null, phone: null, avatar_url: null, created_at: "2026-01-01T00:00:00Z", updated_at: null },
+    });
+
+    const mockRefresh = supabase.auth.refreshSession as jest.Mock;
+    mockRefresh.mockReturnValue(
+      Promise.resolve({ data: { session: { access_token: "new-token", expires_at: Math.floor(Date.now() / 1000) + 3600 } }, error: null })
+    );
+
+    const authService = createAuthService(apiClient);
+    await authService.signIn("test@example.com", "pass");
+    const token = await authService.getValidAccessToken();
+    expect(token).toBe("new-token");
+    expect(supabase.auth.refreshSession).toHaveBeenCalled();
+    expect(authService.getAccessToken()).toBe("new-token");
+  });
+
+  it("getValidAccessToken signs out when refresh fails", async () => {
+    const mockSignIn = supabase.auth.signInWithPassword as jest.Mock;
+    mockSignIn.mockReturnValue(
+      Promise.resolve({
+        data: { user: { id: "user-123" }, session: { access_token: "old-token", expires_at: Math.floor(Date.now() / 1000) - 60 } },
+        error: null,
+      })
+    );
+    (apiClient.login as jest.Mock).mockResolvedValue({
+      access_token: "old-token",
+      user_id: "user-123",
+      profile: { id: "prof-123", auth_user_id: "user-123", display_name: "Test", first_name: null, last_name: null, bio: null, phone: null, avatar_url: null, created_at: "2026-01-01T00:00:00Z", updated_at: null },
+    });
+
+    const mockRefresh = supabase.auth.refreshSession as jest.Mock;
+    mockRefresh.mockResolvedValue({ data: { session: null }, error: new Error("refresh failed") });
+
+    const authService = createAuthService(apiClient);
+    await authService.signIn("test@example.com", "pass");
+    const token = await authService.getValidAccessToken();
+    expect(token).toBeNull();
+    expect(authService.isLoggedIn()).toBe(false);
   });
 });

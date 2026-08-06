@@ -21,14 +21,22 @@ def _auth(user="u1"):
 
 def test_flag_requires_auth(fake_sb):
     client = TestClient(app)
-    r = client.post("/skills/66666666-aaaa-4aaa-8aaa-666666666666/flag", json={"reason": "langkah berbahaya"})
+    r = client.post(
+        "/skills/66666666-aaaa-4aaa-8aaa-666666666666/flag", json={"reason": "langkah berbahaya"}
+    )
     assert r.status_code == 401
 
 
 def test_flag_inserts_and_reports_count(fake_sb):
-    fake_sb.table("skills").insert({"id": "66666666-aaaa-4aaa-8aaa-666666666666", "title": "Vas", "status": "approved"})
+    fake_sb.table("skills").insert(
+        {"id": "66666666-aaaa-4aaa-8aaa-666666666666", "title": "Vas", "status": "approved"}
+    )
     client = TestClient(app)
-    r = client.post("/skills/66666666-aaaa-4aaa-8aaa-666666666666/flag", json={"reason": "langkah berbahaya"}, headers=_auth())
+    r = client.post(
+        "/skills/66666666-aaaa-4aaa-8aaa-666666666666/flag",
+        json={"reason": "langkah berbahaya"},
+        headers=_auth(),
+    )
     assert r.status_code == 201
     body = r.json()
     assert body["flag_count"] == 1
@@ -37,7 +45,9 @@ def test_flag_inserts_and_reports_count(fake_sb):
 
 
 def test_third_flag_triggers_needs_revision(fake_sb):
-    fake_sb.table("skills").insert({"id": "66666666-aaaa-4aaa-8aaa-666666666666", "title": "Vas", "status": "approved"})
+    fake_sb.table("skills").insert(
+        {"id": "66666666-aaaa-4aaa-8aaa-666666666666", "title": "Vas", "status": "approved"}
+    )
     fake_sb.table("skill_flags").insert(
         [
             {"skill_id": "66666666-aaaa-4aaa-8aaa-666666666666", "user_id": "u1", "reason": "aaaa"},
@@ -45,7 +55,11 @@ def test_third_flag_triggers_needs_revision(fake_sb):
         ]
     )
     client = TestClient(app)
-    r = client.post("/skills/66666666-aaaa-4aaa-8aaa-666666666666/flag", json={"reason": "cccc"}, headers=_auth("u3"))
+    r = client.post(
+        "/skills/66666666-aaaa-4aaa-8aaa-666666666666/flag",
+        json={"reason": "cccc"},
+        headers=_auth("u3"),
+    )
     assert r.status_code == 201
     body = r.json()
     assert body["flag_count"] == 3

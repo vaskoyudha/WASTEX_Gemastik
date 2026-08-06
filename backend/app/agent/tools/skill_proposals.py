@@ -6,12 +6,14 @@ import httpx
 
 from app.agent.tools.vision import parse_proxy_json
 from app.schemas import (
+    AdditionalMaterial,
     ContinuityCritique,
     ContinuityCritiqueBatch,
     ContinuityStepIssue,
     SkillIdea,
     SkillProposal,
     SkillVerifyResponse,
+    Step,
 )
 
 SKILL_IDEA_PROMPT = """# Tugas
@@ -372,6 +374,140 @@ def find_missing_prerequisites(proposal: SkillProposal) -> list[ContinuityStepIs
     return issues
 
 
+# Kata kunci bahan pelengkap yang umum disebut di langkah, dipetakan ke entri
+# additional_materials kanonik (nama, kategori, estimasi biaya, tujuan).
+_MATERIAL_KEYWORD_MAP: dict[str, tuple[str, str, int, str]] = {
+    "alkohol": ("alkohol", "lainnya", 5000, "membersihkan dan mengeringkan permukaan"),
+    "amplas": ("amplas", "alat", 3000, "menghaluskan tepi potongan yang tajam"),
+    "ampelas": ("amplas", "alat", 3000, "menghaluskan tepi potongan yang tajam"),
+    "kuas": ("kuas", "alat", 10000, "mengoleskan cat atau lem pada permukaan"),
+    "cat": ("cat", "cat", 15000, "menghias permukaan produk jadi"),
+    "akrilik": ("cat akrilik", "cat", 15000, "menghias permukaan produk jadi"),
+    "primer": ("primer", "cat", 10000, "melapisi permukaan sebelum pengecatan"),
+    "pernis": ("pernis", "cat", 12000, "melapisi permukaan agar mengilap"),
+    "clear coat": ("clear coat", "cat", 12000, "melapisi permukaan agar tahan lama"),
+    "lem": ("lem", "lem", 8000, "merekatkan bagian yang terpisah"),
+    "perekat": ("perekat", "lem", 8000, "merekatkan bagian yang terpisah"),
+    "tali": ("tali", "tali", 5000, "mengikat atau menggantung produk"),
+    "rafia": ("rafia", "tali", 3000, "mengikat atau menggantung produk"),
+    "benang": ("benang", "tali", 5000, "menjahit atau mengikat produk"),
+    "tanah": ("tanah", "tanah_tanaman", 5000, "sebagai media tanam tanaman"),
+    "bibit": ("bibit", "tanah_tanaman", 5000, "tanaman yang akan ditanam"),
+    "pupuk": ("pupuk", "tanah_tanaman", 8000, "menyuburkan media tanam"),
+    "pengait": ("pengait", "pengait", 3000, "menggantung produk pada dinding"),
+    "kait": ("kait", "pengait", 3000, "menggantung produk pada dinding"),
+}
+
+
+def find_missing_materials(proposal: SkillProposal) -> list[AdditionalMaterial]:
+    """Pemeriksaan deterministik: bahan pelengkap yang disebut di langkah
+    (instruction atau warning) tapi belum terdaftar di additional_materials.
+    Mengembalikan entri kanonik yang HARUS ditambahkan agar langkah konsisten
+    dengan deklarasi bahan (aturan verifier). Alat (tools) tidak dihitung."""
+    tool_names = {t.name.lower() for t in proposal.tools}
+    declared = {m.name.lower() for m in proposal.additional_materials}
+    hay = " ".join(f"{s.instruction} {s.warning or ''}".lower() for s in proposal.steps)
+    missing: dict[str, AdditionalMaterial] = {}
+    for keyword, (name, category, cost, purpose) in _MATERIAL_KEYWORD_MAP.items():
+        if keyword not in hay:
+            continue
+        if name.lower() in declared or name.lower() in tool_names:
+            continue
+        missing.setdefault(
+            name.lower(),
+            AdditionalMaterial(
+                name=name,
+                category=category,  # type: ignore[arg-type]
+                est_cost_idr=cost,
+                purpose=purpose,
+            ),
+        )
+    return list(missing.values())
+
+
+def auto_add_missing_materials(proposal: SkillProposal) -> SkillProposal:
+    """Tambahkan bahan pelengkap yang hilang secara deterministik (tanpa LLM)."""
+    missing = find_missing_materials(proposal)
+    if not missing:
+        return proposal
+    return proposal.model_copy(
+        update={"additional_materials": proposal.additional_materials + missing}
+    )
+
+
+# ---------------------------------------------------------------------------
+# Deterministic step auto-insertion: instead of asking the LLM to critique
+# and repair missing prerequisite steps (2-4 extra round-trips), we insert
+# pre-written template steps at the correct position.  The templates cover
+# the same 4 prerequisite patterns checked by _PREREQ_RULES / the old LLM
+# STEP_CONTINUITY_CRITIQUE_PROMPT.
+# ---------------------------------------------------------------------------
+
+_PREREQ_INSERTIONS: dict[str, Step] = {
+    "lubang drainase di bagian bawah wadah belum dibuat": Step(
+        order=0,
+        instruction=(
+            "Balik wadah dan lubangi bagian bawah menggunakan paku panas atau bor kecil. "
+            "Buat 3-5 lubang kecil agar air dapat mengalir keluar sebagai drainase."
+        ),
+        warning="Hati-hati saat melubangi — gunakan alas keras, pegang wadah dengan stabil, dan jauhkan tangan dari titik tusuk.",
+    ),
+    "bagian atas wadah tertutup belum dibuka/dipotong": Step(
+        order=0,
+        instruction=(
+            "Potong atau buka bagian atas wadah menggunakan gunting atau cutter. "
+            "Pastikan bukaan cukup lebar untuk keperluan langkah selanjutnya."
+        ),
+        warning="Tepi potongan bisa sangat tajam. Gunakan sarung tangan dan haluskan tepi dengan amplas atau lakban.",
+    ),
+    "lubang untuk tali/pengait belum dibuat": Step(
+        order=0,
+        instruction=(
+            "Tandai posisi lubang pada wadah, lalu lubangi menggunakan paku atau bor kecil. "
+            "Pastikan lubang cukup besar untuk memasukkan tali atau pengait."
+        ),
+        warning="Lubangi dengan hati-hati agar wadah tidak retak. Gunakan alas keras di bawah wadah.",
+    ),
+    "permukaan belum kering/bersih sebelum dicat atau dilem": Step(
+        order=0,
+        instruction=(
+            "Cuci seluruh permukaan wadah dengan sabun dan air bersih untuk menghilangkan "
+            "kotoran dan minyak. Bilas, lalu keringkan sepenuhnya sebelum melanjutkan."
+        ),
+        warning=None,
+    ),
+}
+
+
+def auto_insert_missing_steps(proposal: SkillProposal) -> SkillProposal:
+    """Sisipkan langkah prasyarat yang hilang secara deterministik (tanpa LLM).
+
+    Memanfaatkan find_missing_prerequisites() untuk mendeteksi celah
+    kontinuitas, lalu menyisipkan template step dari _PREREQ_INSERTIONS
+    di posisi yang tepat (tepat sebelum step yang membutuhkannya).
+    Setelah penyisipan, seluruh step di-renumber ulang secara berurutan."""
+    issues = find_missing_prerequisites(proposal)
+    if not issues:
+        return proposal
+
+    steps = sorted(proposal.steps, key=lambda s: s.order)
+
+    for issue in reversed(issues):
+        template = _PREREQ_INSERTIONS.get(issue.missing_prerequisite)
+        if template is None:
+            continue
+        insert_idx = next(
+            (i for i, s in enumerate(steps) if s.order >= issue.order), len(steps)
+        )
+        new_step = template.model_copy(update={"order": 0})
+        steps.insert(insert_idx, new_step)
+
+    for i, step in enumerate(steps, start=1):
+        step.order = i
+
+    return proposal.model_copy(update={"steps": steps})
+
+
 def _merge_deterministic(
     proposals: list[SkillProposal], critiques: list[ContinuityCritique]
 ) -> list[ContinuityCritique]:
@@ -532,7 +668,8 @@ async def generate_proposals(
     )
     if not proposals:
         return proposals
-    return await _continuity_repair_loop(proposals, client_factory)
+    fixed = await _continuity_repair_loop(proposals, client_factory)
+    return [auto_add_missing_materials(p) for p in fixed]
 
 
 async def expand_proposal(
@@ -542,14 +679,17 @@ async def expand_proposal(
     client_factory=httpx.AsyncClient,
 ) -> SkillProposal:
     """Fase 2 (two-phase): jadikan ide ringkas yang dipilih user menjadi
-    draft skill LENGKAP (steps, tools, additional_materials), lalu jalankan
-    kritik kontinuitas + auto-repair pada SATU proposal tersebut."""
+    draft skill LENGKAP (steps, tools, additional_materials).  Perbaikan
+    kontinuitas langkah dilakukan secara DETERMINISTIK (tanpa LLM tambahan):
+    find_missing_prerequisites mendeteksi celah, auto_insert_missing_steps
+    menyisipkan template step, dan auto_add_missing_materials melengkapi
+    bahan pelengkap yang terpakai di langkah tapi belum dideklarasikan."""
     messages = _build_expand_messages(material, condition, idea)
     draft = await _call_until_success(messages, _parse_single_proposal, client_factory)
     if draft.material.value != material:
         raise SkillGenUnavailable("expanded proposal material mismatch")
-    fixed = await _continuity_repair_loop([draft], client_factory)
-    return fixed[0]
+    draft = auto_insert_missing_steps(draft)
+    return auto_add_missing_materials(draft)
 
 
 async def verify_draft(

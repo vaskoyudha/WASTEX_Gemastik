@@ -468,18 +468,141 @@ async def test_generate_ideas_falls_back_to_next_model():
     assert client.post_calls == 2
 
 
-async def test_expand_proposal_generates_detail_then_repairs_loop():
-    make, client = _factory([EXPAND_PAYLOAD, PERBAIKI_PAYLOAD, REPAIRED_PAYLOAD, KONTINU_PAYLOAD])
-    idea = SkillIdea.model_validate(IDEA)
-    result = await expand_proposal("plastik_pet", "bersih", idea, client_factory=make)
-    assert result.title == "Pot Gantung dari Botol PET (diperbaiki)"
-    assert len(result.steps) == 4
-    assert client.post_calls == 4  # detail + kritik + repair + re-kritik
-
-
-async def test_expand_proposal_keeps_idea_when_critique_fails():
-    make, client = _factory([EXPAND_PAYLOAD, EXPAND_PAYLOAD])
+async def test_expand_proposal_single_llm_call_deterministic_fix():
+    """expand_proposal now uses exactly 1 LLM call + deterministic fixes."""
+    make, client = _factory([EXPAND_PAYLOAD])
     idea = SkillIdea.model_validate(IDEA)
     result = await expand_proposal("plastik_pet", "bersih", idea, client_factory=make)
     assert result.title == "Pot Gantung dari Botol PET"
-    assert client.post_calls == 5  # 1 detail + 4 percobaan kritik yang gagal parse
+    assert len(result.steps) >= 1
+    assert client.post_calls == 1  # single LLM call, no critique/repair loop
+
+
+async def test_expand_proposal_auto_inserts_missing_prerequisite_steps():
+    """When steps mention soil/planting without drainage, a drainage step is auto-inserted."""
+    payload_missing_drainage = {
+        "proposal": {
+            **VALID_PROPOSAL,
+            "material": "kaleng",
+            "steps": [
+                {"order": 1, "instruction": "Cuci kaleng hingga bersih", "warning": None},
+                {"order": 2, "instruction": "Isi kaleng dengan tanah dan tanam bibit", "warning": None},
+            ],
+        }
+    }
+    make, client = _factory([payload_missing_drainage])
+    idea = SkillIdea.model_validate({**IDEA, "material": "kaleng"})
+    result = await expand_proposal("kaleng", "bersih", idea, client_factory=make)
+    assert client.post_calls == 1  # no extra LLM calls for repair
+    instructions = [s.instruction for s in result.steps]
+    assert any("drainase" in inst.lower() for inst in instructions)
+    assert len(result.steps) > 2  # at least one step was auto-inserted
+
+
+# ---- Deterministic material auto-add (B+D) ----
+
+
+def test_find_missing_materials_detects_undeclared_step_material():
+    from app.agent.tools.skill_proposals import find_missing_materials
+
+    p = SkillProposal.model_validate(
+        {
+            **VALID_PROPOSAL,
+            "steps": [
+                {
+                    "order": 1,
+                    "instruction": "Bersihkan dengan alkohol lalu keringkan",
+                    "warning": None,
+                },
+            ],
+            "additional_materials": [],
+        }
+    )
+    missing = find_missing_materials(p)
+    assert any(m.name == "alkohol" for m in missing)
+
+
+def test_find_missing_materials_ignores_declared_material():
+    from app.agent.tools.skill_proposals import find_missing_materials
+
+    p = SkillProposal.model_validate(
+        {
+            **VALID_PROPOSAL,
+            "steps": [
+                {
+                    "order": 1,
+                    "instruction": "Bersihkan dengan alkohol lalu keringkan",
+                    "warning": None,
+                },
+            ],
+            "additional_materials": [
+                {
+                    "name": "alkohol",
+                    "category": "lainnya",
+                    "est_cost_idr": 5000,
+                    "purpose": "membersihkan permukaan",
+                }
+            ],
+        }
+    )
+    assert find_missing_materials(p) == []
+
+
+def test_find_missing_materials_ignores_tool_not_material():
+    from app.agent.tools.skill_proposals import find_missing_materials
+
+    p = SkillProposal.model_validate(
+        {
+            **VALID_PROPOSAL,
+            "steps": [
+                {"order": 1, "instruction": "Gunting botol dengan gunting logam", "warning": None},
+            ],
+            "tools": [{"name": "gunting"}],
+            "additional_materials": [],
+        }
+    )
+    assert find_missing_materials(p) == []
+
+
+def test_find_missing_materials_matches_warning_too():
+    from app.agent.tools.skill_proposals import find_missing_materials
+
+    p = SkillProposal.model_validate(
+        {
+            **VALID_PROPOSAL,
+            "steps": [
+                {
+                    "order": 1,
+                    "instruction": "Potong kaleng",
+                    "warning": "Pakai sarung tangan dan amplas tepi",
+                },
+            ],
+            "additional_materials": [],
+        }
+    )
+    missing = find_missing_materials(p)
+    assert any(m.name == "amplas" for m in missing)
+
+
+async def test_expand_proposal_auto_adds_undeclared_step_materials():
+    make, client = _factory(
+        [
+            {
+                "proposal": {
+                    **VALID_PROPOSAL,
+                    "steps": [
+                        {
+                            "order": 1,
+                            "instruction": "Bersihkan dengan alkohol lalu keringkan",
+                            "warning": None,
+                        },
+                    ],
+                    "additional_materials": [],
+                }
+            },
+        ]
+    )
+    idea = SkillIdea.model_validate(IDEA)
+    result = await expand_proposal("plastik_pet", "bersih", idea, client_factory=make)
+    assert any(m.name == "alkohol" for m in result.additional_materials)
+    assert client.post_calls == 1  # single LLM call; auto-add is deterministic

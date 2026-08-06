@@ -6,7 +6,12 @@ from app.deps import get_supabase
 from app.main import app
 from tests.fakes import FakeSupabase
 
-SKILL = {"id": "77777777-aaaa-4aaa-8aaa-777777777777", "title": "Pot", "material": "plastik_pet", "status": "approved"}
+SKILL = {
+    "id": "77777777-aaaa-4aaa-8aaa-777777777777",
+    "title": "Pot",
+    "material": "plastik_pet",
+    "status": "approved",
+}
 JPEG = b"\xff\xd8\xff fakejpegdata"
 
 
@@ -23,7 +28,13 @@ def _auth(user="u1"):
 
 
 def _post(
-    client, skill_id="77777777-aaaa-4aaa-8aaa-777777777777", rating="5", comment="bagus", user="u1", ctype="image/jpeg", body=JPEG
+    client,
+    skill_id="77777777-aaaa-4aaa-8aaa-777777777777",
+    rating="5",
+    comment="bagus",
+    user="u1",
+    ctype="image/jpeg",
+    body=JPEG,
 ):
     return client.post(
         f"/skills/{skill_id}/complete",
@@ -59,7 +70,12 @@ def test_complete_creates_row_and_uploads(fake_sb):
 def test_complete_duplicate_409(fake_sb):
     fake_sb.table("skills").insert(SKILL)
     fake_sb.table("skill_completions").insert(
-        {"user_id": "u1", "skill_id": "77777777-aaaa-4aaa-8aaa-777777777777", "photo_path": "a.jpeg", "rating": 4}
+        {
+            "user_id": "u1",
+            "skill_id": "77777777-aaaa-4aaa-8aaa-777777777777",
+            "photo_path": "a.jpeg",
+            "rating": 4,
+        }
     )
     r = _post(TestClient(app))
     assert r.status_code == 409

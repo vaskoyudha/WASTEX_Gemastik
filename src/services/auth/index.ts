@@ -23,6 +23,12 @@ export class LocalAuthService implements AuthService {
     } catch {
       this.user = null;
     }
+    // Sesi yang dipulihkan dari storage bisa jadi tokennya sudah kedaluwarsa
+    // (Supabase access token ~1 jam). Refresh di latar belakang agar status
+    // "sudah login" tetap benar dan request auth tidak gagal 401.
+    if (this.user?.accessToken) {
+      void this.getValidAccessToken();
+    }
   }
 
   private saveUserToStorage(user: User): void {
@@ -103,6 +109,7 @@ export class LocalAuthService implements AuthService {
           email,
           response.data.user.id,
           response.data.session?.access_token ?? profileResponse.access_token ?? null,
+          response.data.session?.expires_at ?? null,
           profileResponse
         );
       }
@@ -115,6 +122,7 @@ export class LocalAuthService implements AuthService {
       email,
       profileResponse.user_id,
       profileResponse.access_token ?? null,
+      profileResponse.expires_at ?? null,
       profileResponse
     );
   }
@@ -123,6 +131,7 @@ export class LocalAuthService implements AuthService {
     email: string,
     userId: string,
     accessToken: string | null,
+    expiresAt: number | null,
     profileResponse: any
   ): AuthResult {
     const userProfile: UserProfile = {
@@ -142,6 +151,7 @@ export class LocalAuthService implements AuthService {
       id: userId,
       email,
       accessToken,
+      expiresAt: expiresAt ?? null,
       profile: userProfile,
     };
     this.user = user;
@@ -170,6 +180,35 @@ export class LocalAuthService implements AuthService {
 
   getAccessToken(): string | null {
     return this.user?.accessToken ?? null;
+  }
+
+  async getValidAccessToken(): Promise<string | null> {
+    if (!this.user?.accessToken) return null;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const expiresAt = this.user.expiresAt ?? null;
+    // Tanpa informasi kedaluwarsa: jangan tebak, pakai token apa adanya.
+    if (expiresAt === null || nowSec < expiresAt) return this.user.accessToken;
+
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error || !data.session?.access_token) {
+        // Refresh gagal — sesi benar-benar mati, bersihkan state lokal.
+        this.user = null;
+        this.clearUserStorage();
+        return null;
+      }
+      this.user = {
+        ...this.user,
+        accessToken: data.session.access_token,
+        expiresAt: data.session.expires_at ?? null,
+      };
+      this.saveUserToStorage(this.user);
+      return data.session.access_token;
+    } catch {
+      // Supabase tidak terjangkau — jangan logout paksa, biarkan request
+      // backend mencoba dengan token lama (fallback backend login).
+      return this.user?.accessToken ?? null;
+    }
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {

@@ -20,7 +20,10 @@ describe('apiClient', () => {
 });
 
 jest.mock('../auth', () => ({
-  auth: { getAccessToken: () => 'tok-123' },
+  auth: {
+    getAccessToken: () => 'tok-123',
+    getValidAccessToken: () => Promise.resolve('tok-123'),
+  },
 }));
 
 describe('apiClient skill methods', () => {

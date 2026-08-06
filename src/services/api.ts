@@ -34,7 +34,7 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
 async function authHeaders(): Promise<Record<string, string>> {
   try {
     const { auth } = require('./auth');
-    const token = auth.getAccessToken();
+    const token = await auth.getValidAccessToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
     return {};

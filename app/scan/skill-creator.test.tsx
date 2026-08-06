@@ -134,6 +134,18 @@ describe('SkillCreatorScreen verify + submit', () => {
     );
   });
 
+  it('cek lagi sends only current round history to avoid stale feedback echo', async () => {
+    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    fireEvent.press(await findByText('Verifikasi dengan AI'));
+    await findByText('Skill layak dikirim');
+    fireEvent.press(getByText('Cek Lagi'));
+    await findByText('Skill layak dikirim');
+    expect(mockVerify).toHaveBeenCalledTimes(2);
+    const lastCall = mockVerify.mock.calls[1][0];
+    expect(lastCall.chat_history).toHaveLength(1);
+  });
+
   it('submit disabled until layak verdict', async () => {
     const { getByText, findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));

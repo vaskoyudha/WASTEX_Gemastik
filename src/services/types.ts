@@ -280,6 +280,8 @@ export interface User {
   id: string;
   email: string;
   accessToken: string | null;
+  /** Unix timestamp (detik) saat access token kedaluwarsa; null jika tidak diketahui. */
+  expiresAt?: number | null;
   profile: UserProfile | null;
 }
 
@@ -318,6 +320,8 @@ export interface AuthService {
   getUser(): User | null;
   isLoggedIn(): boolean;
   getAccessToken(): string | null;
+  /** Token valid: refresh otomatis via Supabase jika sudah kedaluwarsa. */
+  getValidAccessToken(): Promise<string | null>;
   updateProfile(data: UpdateProfileRequest): Promise<UserProfile>;
   deleteAccount(): Promise<void>;
 }
