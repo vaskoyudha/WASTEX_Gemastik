@@ -1,8 +1,22 @@
 import { test, expect } from "@playwright/test";
 
-// Requires: npm run web (Expo), backend on :8000, EXPO_PUBLIC_USE_MOCK=false.
+// Requires: npm run web (Expo), backend on :8000, EXPO_PUBLIC_USE_MOCK=false,
+// EXPO_PUBLIC_SUPABASE_URL/ANON_KEY pointing at the remote project. The test
+// user e2e-frontend@wastex.test must exist (created via Supabase admin API).
+
+const TEST_USER = { email: "e2e-frontend@wastex.test", password: "e2e-password-123" };
+
 test("user creates a skill from scan", async ({ page }) => {
-  await page.goto("http://localhost:8081");
+  // Login — proposals/verify/create require auth (get_current_user).
+  await page.goto("http://localhost:8081/login");
+  await page.getByPlaceholder("nama@example.com").fill(TEST_USER.email);
+  await page.getByPlaceholder("••••••••").fill(TEST_USER.password);
+  await page.getByText("Masuk", { exact: true }).last().click();
+  await expect(page.getByText("Upload Foto")).toBeVisible({ timeout: 30_000 });
+
+  // Home → upload screen.
+  await page.getByText("Upload Foto").click();
+
   // Scan flow: upload.tsx uses expo-image-picker, which on web only creates its
   // hidden <input type="file"> when the picker is opened — hook the file chooser
   // event from "Pilih dari Galeri" and feed the fixture through it.
