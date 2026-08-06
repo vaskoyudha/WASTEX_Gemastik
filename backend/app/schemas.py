@@ -291,6 +291,36 @@ class SkillCreateRequest(SkillProposal):
     reference_scan_id: UUID | None = None
 
 
+class SkillCompletionCreate(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str | None = Field(default=None, max_length=500)
+
+
+class SkillCompletion(BaseModel):
+    id: str
+    user_id: str
+    skill_id: str
+    photo_path: str
+    rating: int
+    comment: str | None = None
+    created_at: str
+
+
+class CompletionGalleryItem(BaseModel):
+    photo_url: str
+    rating: int
+    comment: str | None = None
+    created_at: str
+    user_display_name: str = ""
+
+
+class SkillCompletionsSummary(BaseModel):
+    skill_id: str
+    avg_rating: float
+    count: int
+    gallery: list[CompletionGalleryItem] = []
+
+
 class DocumentSourceType(str, Enum):
     pdf = "pdf"
     url = "url"
