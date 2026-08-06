@@ -6,6 +6,7 @@ from app.agent.tools.image_gen import (
     ImageGenUnavailable,
     build_before_after_prompt,
     build_master_prompt,
+    build_materials_panel_prompt,
     build_mockup_prompt,
     build_storyboard_prompt,
     generate_image,
@@ -17,7 +18,7 @@ from supabase import Client
 
 router = APIRouter()
 
-Kind = Literal["storyboard", "before_after", "mockup"]
+Kind = Literal["storyboard", "materials", "before_after", "mockup"]
 
 
 def _cache_key(skill_id: str, kind: str, step: int | None) -> str:
@@ -71,6 +72,8 @@ async def _generate_visual(
         if target is None:
             raise KeyError(f"step {step} not found")
         prompt = build_storyboard_prompt(skill, target, identity=identity, step_count=step_count)
+    elif kind == "materials":
+        prompt = build_materials_panel_prompt(skill, identity=identity)
     elif kind == "before_after":
         prompt = build_before_after_prompt(skill)
     else:
@@ -127,6 +130,22 @@ async def generate_all_visuals(sb: Client, skill_id: str) -> None:
         except VisionUnavailable:
             identity = None
     last_panel: bytes | None = None
+
+    if ("materials", None) not in have:
+        try:
+            out = await _generate_visual(
+                sb, skill, "materials", None, list(photo), identity=identity
+            )
+            last_panel = await _load_panel_bytes(sb, out["image_path"])
+        except ImageGenUnavailable:
+            last_panel = None
+    else:
+        cached_row = next(
+            r
+            for r in (cached.data or [])
+            if (r.get("kind"), r.get("step_order")) == ("materials", None)
+        )
+        last_panel = await _load_panel_bytes(sb, cached_row["image_path"])
 
     orders = sorted(
         st.get("order") for st in (skill.get("steps") or []) if st.get("order") is not None

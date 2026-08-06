@@ -90,14 +90,14 @@ def test_generate_image_raises_unavailable_on_provider_error():
 def test_master_prompt_layers():
     step = "Step 2 instruction text"
     with_refs = build_master_prompt(step, has_references=True)
-    assert "illustrator of a single DIY upcycling tutorial panel" in with_refs
-    assert "match it exactly" in with_refs
-    assert "only the action changes" in with_refs
-    assert "never photorealistic" in with_refs
+    assert "ilustrator instruksional" in with_refs
+    assert "salin PERSIS" in with_refs
+    assert "HANYA aksi yang berubah" in with_refs
+    assert "JANGAN pernah fotorealistik" in with_refs
     assert "Step 2 instruction text" in with_refs
 
     without_refs = build_master_prompt(step, has_references=False)
-    assert "only the action changes" not in without_refs
+    assert "HANYA aksi yang berubah" not in without_refs
     assert "Step 2 instruction text" in without_refs
 
 
@@ -111,7 +111,7 @@ def test_storyboard_prompt_includes_identity_block():
         notable_features=["white cap"],
     )
     prompt = build_storyboard_prompt(skill, step, identity=identity)
-    assert "Object identity is FIXED for every panel" in prompt
+    assert "IDENTITAS OBJEK" in prompt
     assert "tall clear bottle with narrow neck" in prompt
     assert "transparent" in prompt
     assert "white cap" in prompt
@@ -121,14 +121,15 @@ def test_storyboard_prompt_includes_timeline():
     skill = {"title": "Vas Botol PET", "material": "plastik_pet"}
     step = {"order": 2, "instruction": "Potong botol", "warning": None}
     prompt = build_storyboard_prompt(skill, step, step_count=3)
-    assert "step 2 of 3" in prompt
+    assert "step 2 dari 3" in prompt
 
 
 def test_storyboard_prompt_without_identity_and_count_unchanged_shape():
     skill = {"title": "Vas Botol PET", "material": "plastik_pet"}
     step = {"order": 1, "instruction": "Cuci botol", "warning": "Hati-hati gunting"}
     prompt = build_storyboard_prompt(skill, step)
-    assert "Object identity is FIXED" not in prompt
+    assert "IDENTITAS OBJEK" not in prompt
     assert "step 1" in prompt
     assert "Cuci botol" in prompt
     assert "Hati-hati gunting" in prompt
+    assert "[PERINGATAN KESELAMATAN" in prompt

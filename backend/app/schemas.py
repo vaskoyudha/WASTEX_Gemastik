@@ -252,6 +252,23 @@ class SkillVerifyResponse(BaseModel):
     suggestions: list[str] = []
 
 
+class ContinuityStepIssue(BaseModel):
+    order: int
+    missing_prerequisite: str
+    note: str = ""
+
+
+class ContinuityCritique(BaseModel):
+    index: int = 0
+    verdict: Literal["kontinu", "perbaiki"]
+    steps: list[ContinuityStepIssue] = []
+    suggestions: list[str] = []
+
+
+class ContinuityCritiqueBatch(BaseModel):
+    critiques: list[ContinuityCritique] = []
+
+
 class SkillCreateRequest(SkillProposal):
     reference_scan_id: UUID | None = None
 

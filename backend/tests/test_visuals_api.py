@@ -100,16 +100,17 @@ def test_generate_all_generates_steps_in_order(fake_sb, monkeypatch):
         await visuals_api.generate_all_visuals(fake_sb, "s1")
 
     asyncio.run(run())
-    assert len(prompts) == 5  # 3 storyboards + before_after + mockup
-    assert "step 1" in prompts[0]
-    assert "step 2" in prompts[1]
-    assert "step 3" in prompts[2]
-    assert "before and after" in prompts[3]
-    assert "mockup" in prompts[4]
-    assert len(fake_sb.storage.from_("visuals").uploads) == 5
+    assert len(prompts) == 6  # materials + 3 storyboards + before_after + mockup
+    assert "[PANEL ALAT & BAHAN]" in prompts[0]
+    assert "step 1" in prompts[1]
+    assert "step 2" in prompts[2]
+    assert "step 3" in prompts[3]
+    assert "SEBELUM & SESUDAH" in prompts[4]
+    assert "FOTO PRODUK MOCKUP" in prompts[5]
+    assert len(fake_sb.storage.from_("visuals").uploads) == 6
     rows = fake_sb.table("generated_visuals").inserted
-    assert len(rows) == 5
-    assert {r["kind"] for r in rows} == {"storyboard", "before_after", "mockup"}
+    assert len(rows) == 6
+    assert {r["kind"] for r in rows} == {"storyboard", "materials", "before_after", "mockup"}
 
 
 def test_generate_all_skips_cached_and_continues_on_failure(fake_sb, monkeypatch):
@@ -144,9 +145,11 @@ def test_generate_all_skips_cached_and_continues_on_failure(fake_sb, monkeypatch
         await visuals_api.generate_all_visuals(fake_sb, "s1")
 
     asyncio.run(run())
-    # step 1 cached -> skip; step 2 fails -> continue; before_after + mockup still done
-    assert len(prompts) == 2
-    assert all("before and after" in p or "mockup" in p for p in prompts)
+    # materials generated first; step 1 cached -> skip; step 2 fails -> continue;
+    # before_after + mockup still done
+    assert len(prompts) == 3
+    assert "[PANEL ALAT & BAHAN]" in prompts[0]
+    assert all("SEBELUM & SESUDAH" in p or "FOTO PRODUK MOCKUP" in p for p in prompts[1:])
 
 
 def test_generate_all_unapproved_skill_noop(fake_sb, monkeypatch):
@@ -202,11 +205,12 @@ def test_generate_all_threads_previous_panel(fake_sb, monkeypatch):
         await visuals_api.generate_all_visuals(fake_sb, "s1")
 
     asyncio.run(run())
-    assert len(calls) == 4  # 2 storyboards + before_after + mockup
-    # step 1: no previous panel yet -> photo only
+    assert len(calls) == 5  # materials + 2 storyboards + before_after + mockup
+    # materials panel: photo only as reference
     assert calls[0][1] == [b"photo-bytes"]
-    assert "illustrator of a single DIY upcycling tutorial panel" in calls[0][0]
-    # step 2: previous panel output is the primary reference, photo second
+    assert "ilustrator instruksional" in calls[0][0]
+    assert "[PANEL ALAT & BAHAN]" in calls[0][0]
+    # step 1: materials panel is the primary reference, photo second
     assert calls[1][1] == [b"fake-png-bytes", b"photo-bytes"]
 
 
@@ -243,10 +247,11 @@ def test_generate_all_threads_object_identity_and_timeline(fake_sb, monkeypatch)
         await visuals_api.generate_all_visuals(fake_sb, "s1")
 
     asyncio.run(run())
-    assert "Object identity is FIXED for every panel" in prompts[0]
+    assert "[PANEL ALAT & BAHAN]" in prompts[0]
+    assert "IDENTITAS OBJEK" in prompts[0]
     assert "tall clear bottle" in prompts[0]
-    assert "step 1 of 2" in prompts[0]
-    assert "step 2 of 2" in prompts[1]
+    assert "step 1 dari 2" in prompts[1]
+    assert "step 2 dari 2" in prompts[2]
 
 
 def test_generate_all_continues_when_identity_extraction_fails(fake_sb, monkeypatch):
@@ -274,6 +279,7 @@ def test_generate_all_continues_when_identity_extraction_fails(fake_sb, monkeypa
         await visuals_api.generate_all_visuals(fake_sb, "s1")
 
     asyncio.run(run())
-    assert len(prompts) == 3  # 1 storyboard + before_after + mockup
-    assert "Object identity is FIXED" not in prompts[0]
-    assert "step 1" in prompts[0]
+    assert len(prompts) == 4  # materials + 1 storyboard + before_after + mockup
+    assert "[PANEL ALAT & BAHAN]" in prompts[0]
+    assert "IDENTITAS OBJEK" not in prompts[0]
+    assert "step 1" in prompts[1]

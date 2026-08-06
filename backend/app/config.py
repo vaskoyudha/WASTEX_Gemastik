@@ -13,10 +13,10 @@ class Settings(BaseSettings):
     supabase_service_key: str
     database_url: str = ""
 
-    chat_model: str = "oc/mimo-v2.5-free"
+    chat_model: str = "oc/deepseek-v4-flash-free"
     vision_model: str = "oc/mimo-v2.5-free"
     vision_fallback_model: str = "oc/mimo-v2.5-free"
-    chat_fallback_model: str = "google/gemini-2.5-flash"
+    chat_fallback_model: str = "oc/mimo-v2.5-free"
     image_model: str = "google/gemini-2.5-flash-image-preview"
     embedding_model: str = "BAAI/bge-m3"
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
