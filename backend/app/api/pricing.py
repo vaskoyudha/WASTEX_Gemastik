@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.deps import get_supabase
+from app.deps import ensure_uuid, get_supabase
 from supabase import Client
 
 router = APIRouter()
@@ -25,6 +25,7 @@ DEFAULT_MARGIN = 0.4
 
 @router.get("/{skill_id}")
 async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
+    ensure_uuid(skill_id, "Skill not found")
     resp = (
         sb.table("skills")
         .select(
@@ -32,7 +33,7 @@ async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
             "additional_materials, additional_materials_cost_idr"
         )
         .eq("id", skill_id)
-        .single()
+        .maybe_single()
         .execute()
     )
     if not resp.data:

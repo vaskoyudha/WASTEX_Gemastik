@@ -1,4 +1,5 @@
 from functools import lru_cache
+from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
@@ -6,6 +7,18 @@ from fastapi.security import HTTPAuthorizationCredentials
 from app.auth import get_current_user
 from app.config import get_settings
 from supabase import Client, create_client
+
+
+def ensure_uuid(value: str, detail: str = "not found") -> None:
+    """404 bila value bukan UUID valid.
+
+    Kolom id bertipe uuid di PostgREST menolak nilai non-uuid dengan error
+    22P02 yang tanpa guard ini bocor sebagai HTTP 500.
+    """
+    try:
+        UUID(value)
+    except (ValueError, AttributeError, TypeError):
+        raise HTTPException(status_code=404, detail=detail)
 
 
 @lru_cache

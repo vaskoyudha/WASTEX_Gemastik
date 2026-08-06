@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.deps import get_supabase
+from app.deps import ensure_uuid, get_supabase
 from supabase import Client
 
 router = APIRouter()
@@ -8,11 +8,12 @@ router = APIRouter()
 
 @router.get("/{skill_id}")
 async def get_tutorial(skill_id: str, sb: Client = Depends(get_supabase)):
+    ensure_uuid(skill_id, "Skill not found")
     resp = (
         sb.table("skills")
         .select("id, title, description, steps, additional_materials, tools, difficulty")
         .eq("id", skill_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 

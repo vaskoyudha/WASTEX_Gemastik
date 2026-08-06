@@ -13,11 +13,12 @@ class Settings(BaseSettings):
     supabase_service_key: str
     database_url: str = ""
 
-    # TEMPORARY: chat switched to qd/qmodel_38max; vision kept on mimo (qmodel_38max has
-    # no working vision support). Originals: chat_model=oc/deepseek-v4-flash-free,
-    # chat_fallback_model=oc/mimo-v2.5-free
-    chat_model: str = "qd/qmodel_38max"
-    chat_fallback_model: str = "qd/qmodel_38max"
+    # Chat models MUST return strict JSON (selling kit, skill proposals, RAG all
+    # parse structured output). qd/qmodel_38max was tried but ignores JSON
+    # instructions and always answers Markdown/prose, so it is NOT usable here.
+    # Vision stays on mimo (chat models have no working vision support).
+    chat_model: str = "oc/deepseek-v4-flash-free"
+    chat_fallback_model: str = "oc/mimo-v2.5-free"
     vision_model: str = "oc/mimo-v2.5-free"
     vision_fallback_model: str = "oc/mimo-v2.5-free"
     image_model: str = "google/gemini-2.5-flash-image-preview"

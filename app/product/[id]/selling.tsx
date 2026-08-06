@@ -23,7 +23,15 @@ function inferMaterialFromProduct(productId: string): MaterialType {
 export default function SellingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { product, sellData, loading, error, refetch } = useProductData(id);
+  const {
+    product,
+    sellData,
+    loading,
+    error,
+    refetch,
+    sellingLoading,
+    sellingError,
+  } = useProductData(id);
   const { scanResult, imageUri, resetSession } = useScanStore();
 
   const [sellingTab, setSellingTab] = useState<SellingTab>("deskripsi");
@@ -43,11 +51,28 @@ export default function SellingScreen() {
     );
   }
 
-  if (!product || !sellData) {
+  if (!product) {
     return (
       <View className="flex-1 bg-slate-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Data selling assistant tidak ditemukan.</Text>
-      <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
+        <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
+      </View>
+    );
+  }
+
+  // Selling kit dihasilkan LLM di latar belakang; halaman lain tidak ikut
+  // terblokir, tapi layar ini menunggu hasilnya siap dulu.
+  if (sellingLoading) {
+    return <LoadingSpinner fullScreen message="Menyiapkan materi promosi produk..." />;
+  }
+
+  if (sellingError || !sellData) {
+    return (
+      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <Text className="text-slate-600 text-center mb-4">
+          Materi promosi belum bisa dibuat untuk produk ini.
+        </Text>
+        <Button title="Coba Lagi" onPress={() => refetch()} />
       </View>
     );
   }

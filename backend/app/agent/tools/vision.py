@@ -94,6 +94,42 @@ Jawab HANYA dengan JSON valid:
 
 
 def parse_proxy_json(text: str) -> dict:
+    """Parse respons chat/completions proxy.
+
+    Mendukung dua bentuk:
+    1. JSON biasa: {"choices": [{"message": {"content": ...}}]}
+    2. SSE (server-sent events) — beberapa model (mis. qd/qmodel_38max)
+       SELALU menjawab sebagai stream chunk `data: {...delta...}` walau
+       stream tidak diminta. Delta content diakumulasi jadi satu message.
+    """
+    stripped = text.lstrip()
+    if stripped.startswith("data:"):
+        content_parts: list[str] = []
+        finish_reason = None
+        for line in stripped.splitlines():
+            line = line.strip()
+            if not line.startswith("data:"):
+                continue
+            payload = line[len("data:") :].strip()
+            if payload == "[DONE]":
+                break
+            try:
+                chunk = json.loads(payload)
+            except json.JSONDecodeError:
+                continue
+            for choice in chunk.get("choices") or []:
+                delta = choice.get("delta") or {}
+                content_parts.append(delta.get("content") or "")
+                if choice.get("finish_reason"):
+                    finish_reason = choice["finish_reason"]
+        return {
+            "choices": [
+                {
+                    "message": {"content": "".join(content_parts)},
+                    "finish_reason": finish_reason,
+                }
+            ]
+        }
     cutoff = text.find("data: [DONE]")
     if cutoff != -1:
         text = text[:cutoff].rstrip()

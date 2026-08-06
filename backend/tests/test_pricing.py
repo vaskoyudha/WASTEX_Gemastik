@@ -17,7 +17,7 @@ def fake_sb():
 def test_pricing_prefers_curated_values(fake_sb):
     fake_sb.table("skills").insert(
         {
-            "id": "s1",
+            "id": "11111111-aaaa-4aaa-8aaa-111111111111",
             "title": "Vas Botol",
             "material": "plastik_pet",
             "difficulty": "pemula",
@@ -27,7 +27,7 @@ def test_pricing_prefers_curated_values(fake_sb):
         }
     )
     client = TestClient(app)
-    r = client.get("/pricing/s1")
+    r = client.get("/pricing/11111111-aaaa-4aaa-8aaa-111111111111")
     assert r.status_code == 200
     body = r.json()
     assert body["material_cost"] == 8000
@@ -39,7 +39,7 @@ def test_pricing_prefers_curated_values(fake_sb):
 def test_pricing_heuristic_fallback(fake_sb):
     fake_sb.table("skills").insert(
         {
-            "id": "s2",
+            "id": "22222222-aaaa-4aaa-8aaa-222222222222",
             "title": "Celengan Kaleng",
             "material": "kaleng",
             "difficulty": "menengah",
@@ -49,7 +49,7 @@ def test_pricing_heuristic_fallback(fake_sb):
         }
     )
     client = TestClient(app)
-    r = client.get("/pricing/s2")
+    r = client.get("/pricing/22222222-aaaa-4aaa-8aaa-222222222222")
     assert r.status_code == 200
     body = r.json()
     # heuristic: material 800, labor 2 steps * 0.5h * 25000 = 25000
@@ -69,7 +69,7 @@ def test_pricing_never_returns_negative_margin(fake_sb):
     # est_price rendah (25000) < total_cost (material 8000 + labor 5*0.5*15000=37500 = 45500)
     fake_sb.table("skills").insert(
         {
-            "id": "sneg",
+            "id": "33333333-aaaa-4aaa-8aaa-333333333333",
             "title": "Hidropot",
             "material": "plastik_pet",
             "difficulty": "pemula",
@@ -79,7 +79,7 @@ def test_pricing_never_returns_negative_margin(fake_sb):
         }
     )
     client = TestClient(app)
-    r = client.get("/pricing/sneg")
+    r = client.get("/pricing/33333333-aaaa-4aaa-8aaa-333333333333")
     assert r.status_code == 200
     body = r.json()
     assert body["profit_margin"] >= 0
@@ -89,7 +89,7 @@ def test_pricing_never_returns_negative_margin(fake_sb):
 def test_pricing_includes_additional_materials(fake_sb):
     fake_sb.table("skills").insert(
         {
-            "id": "s3",
+            "id": "44444444-aaaa-4aaa-8aaa-444444444444",
             "title": "Pot Gantung",
             "material": "kaleng",
             "difficulty": "pemula",
@@ -103,7 +103,7 @@ def test_pricing_includes_additional_materials(fake_sb):
         }
     )
     client = TestClient(app)
-    r = client.get("/pricing/s3")
+    r = client.get("/pricing/44444444-aaaa-4aaa-8aaa-444444444444")
     assert r.status_code == 200
     body = r.json()
     assert body["additional_materials_cost"] == 3000
@@ -114,7 +114,7 @@ def test_pricing_includes_additional_materials(fake_sb):
 def test_pricing_falls_back_to_item_sum_when_stored_zero(fake_sb):
     fake_sb.table("skills").insert(
         {
-            "id": "s4",
+            "id": "55555555-aaaa-4aaa-8aaa-555555555555",
             "title": "Pot Gantung Legacy",
             "material": "kaleng",
             "difficulty": "pemula",
@@ -129,7 +129,7 @@ def test_pricing_falls_back_to_item_sum_when_stored_zero(fake_sb):
         }
     )
     client = TestClient(app)
-    r = client.get("/pricing/s4")
+    r = client.get("/pricing/55555555-aaaa-4aaa-8aaa-555555555555")
     assert r.status_code == 200
     body = r.json()
     assert body["additional_materials_cost"] == 5000

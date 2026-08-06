@@ -30,7 +30,12 @@ Sesuaikan nada dengan tingkat kesulitan dan material produk.
 ## Self-Check (sebelum menjawab)
 - Semua klaim jujur dan tidak berlebihan?
 - Nada sesuai tingkat kesulitan dan material produk?
-- Semua 6 bagian lengkap sesuai format?"""
+- Semua 6 bagian lengkap sesuai format?
+
+## Format Output (WAJIB)
+Jawab HANYA dengan JSON valid berformat:
+{"product_name": "...", "description": "...", "captions": ["...", "...", "..."], "photo_tips": ["...", "...", "..."], "packaging_ideas": ["...", "..."], "hashtags": ["...", "..."]}
+Tanpa teks lain, tanpa markdown, tanpa penjelasan di luar JSON."""
 
 
 async def generate_selling_kit(skill: dict) -> SellingKit:

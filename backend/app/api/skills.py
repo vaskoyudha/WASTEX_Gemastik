@@ -12,7 +12,7 @@ from app.agent.tools.skill_proposals import (
 from app.api.visuals import generate_all_visuals
 from app.auth import get_current_user
 from app.config import get_settings
-from app.deps import get_optional_user_id, get_supabase, require_expert_or_service
+from app.deps import ensure_uuid, get_optional_user_id, get_supabase, require_expert_or_service
 from app.rag.ingest import ingest_skill
 from app.schemas import (
     CompletionGalleryItem,
@@ -48,6 +48,7 @@ def flag_skill(
     user: dict = Depends(get_current_user),
     sb: Client = Depends(get_supabase),
 ) -> dict:
+    ensure_uuid(skill_id, "skill not found")
     res = sb.table("skills").select("*").eq("id", skill_id).execute()
     skill = next((row for row in (res.data or []) if str(row.get("id")) == skill_id), None)
     if not skill:
@@ -184,6 +185,7 @@ async def complete_skill(
     user: dict = Depends(get_current_user),
     sb: Client = Depends(get_supabase),
 ) -> SkillCompletion:
+    ensure_uuid(skill_id, "skill not found")
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.content_type}")
     image = await file.read()
@@ -258,6 +260,7 @@ def _display_names(sb: Client, user_ids: list) -> dict:
 def get_skill_completions(
     skill_id: str, sb: Client = Depends(get_supabase)
 ) -> SkillCompletionsSummary:
+    ensure_uuid(skill_id, "skill not found")
     if not sb.table("skills").select("id").eq("id", skill_id).execute().data:
         raise HTTPException(status_code=404, detail="skill not found")
 

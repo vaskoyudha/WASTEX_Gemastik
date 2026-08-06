@@ -75,6 +75,13 @@ class FakeResult:
             self.data = self.data[0] if self.data else None
         return self
 
+    def maybe_single(self):
+        # Same shape as single() in the fake; prod returns None instead of
+        # raising when no row matches.
+        if isinstance(self.data, list):
+            self.data = self.data[0] if self.data else None
+        return self
+
 
 class FakeTable:
     def __init__(self, rows=None):

@@ -25,7 +25,7 @@ def test_get_tutorial_not_found(fake_sb):
 def test_tutorial_returns_additional_materials(fake_sb):
     fake_sb.table("skills").insert(
         {
-            "id": "t1",
+            "id": "99999999-aaaa-4aaa-8aaa-999999999999",
             "title": "Pot Gantung",
             "description": "Pot dari kaleng.",
             "difficulty": "pemula",
@@ -36,7 +36,7 @@ def test_tutorial_returns_additional_materials(fake_sb):
             ],
         }
     )
-    r = client.get("/tutorial/t1")
+    r = client.get("/tutorial/99999999-aaaa-4aaa-8aaa-999999999999")
     assert r.status_code == 200
     body = r.json()
     assert body["additional_materials"][0]["name"] == "tali"

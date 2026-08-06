@@ -7,6 +7,7 @@ bekerja: JSON dipaksa lewat response_format, bukan tool calling.
 """
 
 import json
+import re
 
 import httpx
 from pydantic import BaseModel
@@ -17,6 +18,33 @@ from app.config import get_settings
 
 class ChatJsonUnavailable(Exception):
     pass
+
+
+def extract_json_object(content: str) -> dict:
+    """Ekstrak objek JSON dari konten model.
+
+    Beberapa model (mis. qd/qmodel_38max) mengabaikan response_format
+    json_object dan menjawab dengan prose/markdown. Coba: parse langsung,
+    blok ```json ... ```, lalu substring '{' pertama sampai '}' terakhir.
+    """
+    text = content.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    fence = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
+    if fence:
+        try:
+            return json.loads(fence.group(1))
+        except json.JSONDecodeError:
+            pass
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(text[start : end + 1])
+        except json.JSONDecodeError:
+            pass
+    raise json.JSONDecodeError("no JSON object found in content", text, 0)
 
 
 async def _post(
@@ -36,7 +64,8 @@ async def _post(
         },
     )
     r.raise_for_status()
-    return json.loads(parse_proxy_json(r.text)["choices"][0]["message"]["content"])
+    content = parse_proxy_json(r.text)["choices"][0]["message"]["content"] or ""
+    return extract_json_object(content)
 
 
 async def chat_json[T: BaseModel](

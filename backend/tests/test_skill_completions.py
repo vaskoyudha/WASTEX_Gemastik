@@ -6,7 +6,7 @@ from app.deps import get_supabase
 from app.main import app
 from tests.fakes import FakeSupabase
 
-SKILL = {"id": "s1", "title": "Pot", "material": "plastik_pet", "status": "approved"}
+SKILL = {"id": "77777777-aaaa-4aaa-8aaa-777777777777", "title": "Pot", "material": "plastik_pet", "status": "approved"}
 JPEG = b"\xff\xd8\xff fakejpegdata"
 
 
@@ -23,7 +23,7 @@ def _auth(user="u1"):
 
 
 def _post(
-    client, skill_id="s1", rating="5", comment="bagus", user="u1", ctype="image/jpeg", body=JPEG
+    client, skill_id="77777777-aaaa-4aaa-8aaa-777777777777", rating="5", comment="bagus", user="u1", ctype="image/jpeg", body=JPEG
 ):
     return client.post(
         f"/skills/{skill_id}/complete",
@@ -36,7 +36,7 @@ def _post(
 def test_complete_requires_auth(fake_sb):
     fake_sb.table("skills").insert(SKILL)
     r = TestClient(app).post(
-        "/skills/s1/complete",
+        "/skills/77777777-aaaa-4aaa-8aaa-777777777777/complete",
         files={"file": ("x.jpg", JPEG, "image/jpeg")},
         data={"rating": "5"},
     )
@@ -49,7 +49,7 @@ def test_complete_creates_row_and_uploads(fake_sb):
     assert r.status_code == 201
     body = r.json()
     assert body["rating"] == 5
-    assert body["skill_id"] == "s1"
+    assert body["skill_id"] == "77777777-aaaa-4aaa-8aaa-777777777777"
     assert body["photo_path"].endswith(".jpeg")
     row = fake_sb.table("skill_completions").inserted[0]
     assert row["user_id"] == "u1"
@@ -59,7 +59,7 @@ def test_complete_creates_row_and_uploads(fake_sb):
 def test_complete_duplicate_409(fake_sb):
     fake_sb.table("skills").insert(SKILL)
     fake_sb.table("skill_completions").insert(
-        {"user_id": "u1", "skill_id": "s1", "photo_path": "a.jpeg", "rating": 4}
+        {"user_id": "u1", "skill_id": "77777777-aaaa-4aaa-8aaa-777777777777", "photo_path": "a.jpeg", "rating": 4}
     )
     r = _post(TestClient(app))
     assert r.status_code == 409
@@ -103,7 +103,7 @@ def test_get_completions_summary_and_gallery(fake_sb):
         [
             {
                 "user_id": "u1",
-                "skill_id": "s1",
+                "skill_id": "77777777-aaaa-4aaa-8aaa-777777777777",
                 "photo_path": "a.jpeg",
                 "rating": 5,
                 "comment": "mantap",
@@ -111,7 +111,7 @@ def test_get_completions_summary_and_gallery(fake_sb):
             },
             {
                 "user_id": "u2",
-                "skill_id": "s1",
+                "skill_id": "77777777-aaaa-4aaa-8aaa-777777777777",
                 "photo_path": "b.jpeg",
                 "rating": 3,
                 "comment": None,
@@ -120,7 +120,7 @@ def test_get_completions_summary_and_gallery(fake_sb):
         ]
     )
     fake_sb.table("profiles").insert([{"auth_user_id": "u1", "display_name": "Budi"}])
-    r = TestClient(app).get("/skills/s1/completions")
+    r = TestClient(app).get("/skills/77777777-aaaa-4aaa-8aaa-777777777777/completions")
     assert r.status_code == 200
     body = r.json()
     assert body["count"] == 2
@@ -132,7 +132,7 @@ def test_get_completions_summary_and_gallery(fake_sb):
 
 def test_get_completions_empty(fake_sb):
     fake_sb.table("skills").insert(SKILL)
-    r = TestClient(app).get("/skills/s1/completions")
+    r = TestClient(app).get("/skills/77777777-aaaa-4aaa-8aaa-777777777777/completions")
     assert r.status_code == 200
     assert r.json()["count"] == 0
     assert r.json()["gallery"] == []
