@@ -123,6 +123,12 @@ export default function TutorialScreen() {
           onPress={() => router.push(`/product/${id}/before-after`)}
           variant="primary"
         />
+        <Button
+          title="Saya Sudah Selesai"
+          onPress={() => router.push(`/product/${id}/complete`)}
+          variant="secondary"
+          className="mt-3"
+        />
       </ScrollView>
 
       {/* Safety Warning Modal */}
