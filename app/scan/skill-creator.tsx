@@ -13,7 +13,7 @@ import type {
   SkillVerifyResponse,
 } from '../../src/services/types';
 import { useScanStore } from '../../src/store/useScanStore';
-import { AlertTriangle, Bot, CheckCircle2, Sparkles, XCircle } from 'lucide-react-native';
+import { Bot, CheckCircle2, Sparkles, XCircle } from 'lucide-react-native';
 
 type Stage = 'ideas' | 'verifying' | 'result' | 'done';
 
@@ -307,33 +307,6 @@ export default function SkillCreatorScreen() {
                 <Text className="text-slate-400 text-xl">✕</Text>
               </TouchableOpacity>
             </View>
-
-            {verdict?.verdict === 'perbaiki' && (
-              <View className="flex-row items-start mt-3">
-                <XCircle size={14} color="#dc2626" />
-                <Text className="text-xs text-red-600 ml-2 flex-1">
-                  Perbaiki draft dulu, lalu cek lagi.
-                </Text>
-              </View>
-            )}
-            {verdict?.verdict === 'layak' && (
-              <View className="flex-row items-start mt-3">
-                <CheckCircle2 size={14} color="#16a34a" />
-                <Text className="text-xs text-green-700 ml-2 flex-1">
-                  Draft dinyatakan layak. Tekan tombol kirim untuk mengirim ke verifikasi expert.
-                </Text>
-              </View>
-            )}
-            {verdict?.verdict === 'layak' && (draft?.additional_materials?.length ?? 0) > 0 && (
-              <View className="flex-row items-start mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                <AlertTriangle size={14} color="#d97706" />
-                <Text className="text-xs text-amber-800 ml-2 flex-1">
-                  Butuh bahan tambahan di luar hasil scan:{' '}
-                  {draft!.additional_materials!.map((m) => m.name).join(', ')}. Siapkan bahan
-                  ini sebelum mulai mengerjakan.
-                </Text>
-              </View>
-            )}
           </View>
         </View>
       </Modal>
