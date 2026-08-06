@@ -15,7 +15,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-ALLOWED_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"]
+ALLOWED_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif", "image/webp"]
 
 
 @router.post("", response_model=ScanResponse)

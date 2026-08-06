@@ -49,3 +49,20 @@ def test_scan_valid_png_type(fake_sb, monkeypatch):
     response = client.post("/scan", files=files)
     # Should not be 413 or 415 - validation passed
     assert response.status_code not in [413, 415]
+
+
+def test_scan_valid_webp_type(fake_sb, monkeypatch):
+    """WEBP (common browser format) must pass validation and reach identification."""
+    import app.api.scan as scan_module
+
+    async def fake_scan(image_bytes, content_type="image/webp"):
+        return MaterialIdentification(
+            material=Material.plastik_pet, condition="bersih", confidence=0.95
+        )
+
+    monkeypatch.setattr(scan_module, "scan_material", fake_scan)
+    client = TestClient(app)
+    files = {"file": ("test.webp", b"RIFF\x00\x00\x00\x00WEBP", "image/webp")}
+    response = client.post("/scan", files=files)
+    # Should not be 413 or 415 - webp accepted
+    assert response.status_code not in [413, 415]
