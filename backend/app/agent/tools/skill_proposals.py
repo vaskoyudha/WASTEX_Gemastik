@@ -750,15 +750,19 @@ async def verify_draft(
     chat_history: list[dict],
     client_factory=httpx.AsyncClient,
 ) -> SkillVerifyResponse:
-    first_verdict = await _call_until_success(
+    verdict = await _call_until_success(
         _build_verify_messages(draft, chat_history), _parse_verdict, client_factory
     )
-    if first_verdict.verdict == "layak":
-        return first_verdict.model_copy(update={"draft": draft})
+    if verdict.verdict == "layak":
+        return verdict.model_copy(update={"draft": draft})
 
-    try:
+    current = draft
+    # A verifier can uncover a follow-up issue after the first repair. Keep the
+    # draft inside the review/repair pipeline instead of exposing that feedback
+    # as a user-facing result.
+    for _ in range(3):
         repaired = await _call_until_success(
-            _build_verify_repair_messages(draft, first_verdict),
+            _build_verify_repair_messages(current, verdict),
             _parse_single_proposal,
             client_factory,
         )
@@ -771,10 +775,11 @@ async def verify_draft(
             raise SkillGenUnavailable("repair changed the original skill identity")
         repaired = auto_insert_missing_steps(repaired)
         repaired = auto_add_missing_materials(repaired)
-        final_verdict = await _call_until_success(
+        verdict = await _call_until_success(
             _build_verify_messages(repaired, []), _parse_verdict, client_factory
         )
-        return final_verdict.model_copy(update={"draft": repaired, "auto_repaired": True})
-    except SkillGenUnavailable:
-        # Graceful fallback: preserve the original draft and first verifier result.
-        return first_verdict.model_copy(update={"draft": draft})
+        if verdict.verdict == "layak":
+            return verdict.model_copy(update={"draft": repaired, "auto_repaired": True})
+        current = repaired
+
+    raise SkillGenUnavailable("draft did not pass verification after automatic repairs")

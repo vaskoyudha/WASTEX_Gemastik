@@ -396,7 +396,7 @@ async def test_verify_draft_repairs_once_then_verifies_again():
     assert client.post_calls == 3
 
 
-async def test_verify_draft_falls_back_when_repair_changes_identity():
+async def test_verify_draft_fails_when_repair_changes_identity():
     draft = SkillProposal.model_validate(VALID_PROPOSAL)
     first_verdict = {
         "verdict": "perbaiki",
@@ -406,12 +406,68 @@ async def test_verify_draft_falls_back_when_repair_changes_identity():
     invalid_repair = {"proposal": {**VALID_PROPOSAL, "title": "Ide yang berbeda"}}
     make, client = _factory([first_verdict, invalid_repair])
 
+    with pytest.raises(SkillGenUnavailable, match="changed the original skill identity"):
+        await verify_draft(draft, [], client_factory=make)
+
+    assert client.post_calls == 2
+
+
+async def test_verify_draft_repeats_repair_until_layak():
+    draft = SkillProposal.model_validate(VALID_PROPOSAL)
+    needs_repair = {
+        "verdict": "perbaiki",
+        "feedback": ["Langkah belum aman."],
+        "suggestions": ["Tambahkan warning yang spesifik."],
+    }
+    first_repair = {"proposal": VALID_PROPOSAL}
+    second_repair = {
+        "proposal": {
+            **VALID_PROPOSAL,
+            "steps": [
+                {
+                    "order": 1,
+                    "instruction": "Cuci botol hingga bersih",
+                    "warning": "Gunakan sarung tangan selama proses pembersihan.",
+                }
+            ],
+        }
+    }
+    make, client = _factory(
+        [needs_repair, first_repair, needs_repair, second_repair, VERDICT_PAYLOAD]
+    )
+
     result = await verify_draft(draft, [], client_factory=make)
 
-    assert result.verdict == "perbaiki"
-    assert result.auto_repaired is False
-    assert result.draft == draft
-    assert client.post_calls == 2
+    assert result.verdict == "layak"
+    assert result.auto_repaired is True
+    assert result.draft == SkillProposal.model_validate(second_repair["proposal"])
+    assert client.post_calls == 5
+
+
+async def test_verify_draft_fails_instead_of_returning_perbaiki_after_repair_limit():
+    draft = SkillProposal.model_validate(VALID_PROPOSAL)
+    needs_repair = {
+        "verdict": "perbaiki",
+        "feedback": ["Langkah belum aman."],
+        "suggestions": ["Tambahkan warning yang spesifik."],
+    }
+    unchanged_repair = {"proposal": VALID_PROPOSAL}
+    make, client = _factory(
+        [
+            needs_repair,
+            unchanged_repair,
+            needs_repair,
+            unchanged_repair,
+            needs_repair,
+            unchanged_repair,
+            needs_repair,
+        ]
+    )
+
+    with pytest.raises(SkillGenUnavailable, match="automatic repairs"):
+        await verify_draft(draft, [], client_factory=make)
+
+    assert client.post_calls == 7
 
 
 def _proposal_with_steps(steps):
