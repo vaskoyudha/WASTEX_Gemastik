@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from "react";
-import { Alert, View, Text, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
+import { Alert, View, Text, ScrollView, Image, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { Header, Button } from "../../src/components/ui";
 import { useScanStore } from "../../src/store/useScanStore";
@@ -10,7 +10,7 @@ import { recommendation } from "../../src/services";
 import { safeBack } from "../../src/lib/navigation";
 import { useServiceCall } from "../../src/hooks/useServiceCall";
 import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight, Sparkles, Check, ChevronRight } from "lucide-react-native";
-import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../src/theme";
+import { colors, gradients, gradientStyle, shadows } from "../../src/theme";
 
 const materialTraits: Record<string, string[]> = {
   plastik_pet: ["Ringan", "Tahan Air", "Mudah Dipotong", "Daur Ulang"],
@@ -29,6 +29,7 @@ interface ManualCorrectionPayload {
 
 export default function HasilScreen() {
   const router = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
   const { imageUri, scanResult, updateScanResultMaterial, setRecommendations } = useScanStore();
   const [modalVisible, setModalVisible] = useState(false);
   const [verifiedSkills, setVerifiedSkills] = useState<Skill[]>([]);
@@ -121,19 +122,27 @@ export default function HasilScreen() {
         : "Sedang";
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
-      <Header title="Hasil Analisis AI" onBack={() => safeBack(router)} />
-
+    <View style={{ flex: 1, backgroundColor: "#F8F8F2" }}>
       <ScrollView
+        testID="analysis-results-scroll"
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        style={screenSheetStyle}
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 48, gap: 24 }}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
       >
+        <Image
+          source={require("../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{ position: "absolute", top: -128, left: 0, width: "100%", height: screenHeight }}
+        />
+        <Header title="Hasil Analisis AI" onBack={() => safeBack(router)} transparent contentColor={colors.white} />
+        <View style={{ paddingHorizontal: 24, paddingTop: 48, paddingBottom: 48, gap: 24 }}>
         {/* Full-bleed analysis portrait */}
         <View
           style={{
             height: 384,
+            marginHorizontal: -12,
             borderRadius: 30,
             borderCurve: "continuous",
             overflow: "hidden",
@@ -152,7 +161,7 @@ export default function HasilScreen() {
               position: "absolute",
               inset: 0,
               ...gradientStyle(
-                "linear-gradient(180deg, rgba(10,19,14,0.38) 0%, rgba(10,19,14,0.02) 34%, rgba(10,19,14,0.2) 54%, rgba(10,19,14,0.97) 100%)",
+                "linear-gradient(180deg, rgba(7,16,11,0.36) 0%, rgba(7,16,11,0.02) 32%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0.48) 72%, rgba(0,0,0,0.98) 100%)",
               ),
             }}
           />
@@ -213,39 +222,47 @@ export default function HasilScreen() {
               backgroundColor: colors.surface,
               borderWidth: 1,
               borderColor: "rgba(41,73,54,0.08)",
+              boxShadow: "0 8px 24px rgba(31,63,42,0.09)",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 14,
             }}
           >
-            <View className="flex-row items-center mb-3">
-              <View style={{ width: 34, height: 34, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
-                <MapPin size={16} color={colors.forest700} />
-              </View>
-              <Text className="text-[11px] font-bold ml-2.5" style={{ color: colors.forest600 }}>Kondisi terdeteksi</Text>
+            <View style={{ width: 48, height: 48, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
+              <MapPin size={24} color={colors.forest700} />
             </View>
-            <Text selectable className="text-[15px] leading-[22px] font-semibold" style={{ color: colors.ink900, letterSpacing: -0.16 }}>
-              {scanResult.condition}
-            </Text>
+            <View style={{ flex: 1, gap: 9 }}>
+              <Text className="text-[11px] font-bold" style={{ color: colors.forest600 }}>Kondisi terdeteksi</Text>
+              <Text selectable className="text-[15px] leading-[22px] font-semibold" style={{ color: colors.ink900, letterSpacing: -0.16 }}>
+                {scanResult.condition}
+              </Text>
+            </View>
           </View>
 
           <View className="flex-row" style={{ gap: 10 }}>
-            <View style={{ flex: 1, minHeight: 112, padding: 15, borderRadius: 21, borderCurve: "continuous", justifyContent: "space-between", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}>
-              <BarChart2 size={18} color={colors.forest700} />
-              <View>
+            <View style={{ flex: 1, minHeight: 112, padding: 14, borderRadius: 21, borderCurve: "continuous", flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100, boxShadow: "0 8px 24px rgba(31,63,42,0.09)" }}>
+              <View style={{ width: 48, height: 48, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
+                <BarChart2 size={25} color={colors.forest700} />
+              </View>
+              <View style={{ flex: 1 }}>
                 <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.ink400 }}>Kesulitan</Text>
                 <Text selectable className="text-[18px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.4 }}>{difficultyLabel}</Text>
               </View>
             </View>
-            <View style={{ flex: 1, minHeight: 112, padding: 15, borderRadius: 21, borderCurve: "continuous", justifyContent: "space-between", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}>
-              <TrendingUp size={18} color={colors.forest700} />
-              <View>
+            <View style={{ flex: 1, minHeight: 112, padding: 14, borderRadius: 21, borderCurve: "continuous", flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100, boxShadow: "0 8px 24px rgba(31,63,42,0.09)" }}>
+              <View style={{ width: 48, height: 48, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
+                <TrendingUp size={25} color={colors.forest700} />
+              </View>
+              <View style={{ flex: 1 }}>
                 <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.ink400 }}>Potensi nilai</Text>
                 <Text selectable className="text-[18px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.4 }}>{potentialLabel}</Text>
               </View>
             </View>
           </View>
 
-          <View style={{ minHeight: 64, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 19, borderCurve: "continuous", flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}>
-            <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}>
-              <ShieldCheck size={17} color={scanResult.riskLevel === "aman" ? colors.forest700 : "#A46212"} />
+          <View style={{ minHeight: 64, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 19, borderCurve: "continuous", flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100, boxShadow: "0 8px 24px rgba(31,63,42,0.09)" }}>
+            <View style={{ width: 44, height: 44, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
+              <ShieldCheck size={22} color={scanResult.riskLevel === "aman" ? colors.forest700 : "#A46212"} />
             </View>
             <View className="flex-1 ml-3">
               <Text className="text-[10px] font-semibold" style={{ color: colors.ink600 }}>Risiko pengolahan</Text>
@@ -280,7 +297,7 @@ export default function HasilScreen() {
         <View style={{ gap: 14 }}>
           <TouchableOpacity
             onPress={() => router.push("/scan/skill-creator")}
-            style={{ minHeight: 92, flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 23, borderCurve: "continuous", backgroundColor: colors.forest900, ...gradientStyle(gradients.navigation), boxShadow: shadows.card }}
+            style={{ minHeight: 92, flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 23, borderCurve: "continuous", backgroundColor: "#2B7748", ...gradientStyle(gradients.uploadAnalyze), borderWidth: 1, borderColor: "rgba(190,232,120,0.24)", boxShadow: "0 9px 22px rgba(20,69,39,0.22)" }}
             activeOpacity={0.84}
           >
             <View style={{ width: 44, height: 44, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: colors.lime300 }}>
@@ -316,12 +333,32 @@ export default function HasilScreen() {
           )}
         </View>
 
-        <Button
-          title="Lihat Rekomendasi Produk"
+        <TouchableOpacity
           onPress={() => router.push("/scan/rekomendasi")}
-          icon={<ArrowRight size={20} color="#ffffff" />}
-          variant="primary"
-        />
+          activeOpacity={0.84}
+          accessibilityRole="button"
+          accessibilityLabel="Lihat Rekomendasi Produk"
+          style={{
+            minHeight: 58,
+            borderRadius: 18,
+            borderCurve: "continuous",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            backgroundColor: "#2B7748",
+            ...gradientStyle(gradients.uploadAnalyze),
+            borderWidth: 1,
+            borderColor: "rgba(190,232,120,0.24)",
+            boxShadow: "0 8px 20px rgba(20,69,39,0.22)",
+          }}
+        >
+          <ArrowRight size={20} color={colors.white} />
+          <Text style={{ color: colors.white, fontFamily: "Manrope_600SemiBold", fontSize: 16 }}>
+            Lihat Rekomendasi Produk
+          </Text>
+        </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Manual Selection Modal */}

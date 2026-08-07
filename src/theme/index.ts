@@ -15,13 +15,31 @@ export const gradients = {
     "linear-gradient(180deg, rgba(151,170,145,0.24) 0%, rgba(78,102,77,0.28) 100%)",
   actionIcon:
     "radial-gradient(circle at 50% 18%, rgba(221,232,214,0.26) 0%, rgba(161,181,155,0.18) 48%, rgba(93,120,91,0.12) 100%)",
+  homeActionTile:
+    "radial-gradient(circle at 18% 0%, rgba(210,244,156,0.14) 0%, rgba(210,244,156,0) 42%), linear-gradient(155deg, #264633 0%, #163222 52%, #0A2116 100%)",
+  homeActionIcon:
+    "radial-gradient(circle at 36% 24%, rgba(215,245,169,0.2) 0%, rgba(215,245,169,0.04) 42%, rgba(215,245,169,0) 68%), linear-gradient(155deg, #294A35 0%, #132D1E 100%)",
   contentSheet:
     "radial-gradient(circle at 100% 0%, rgba(201,238,120,0.10) 0%, rgba(201,238,120,0) 28%), linear-gradient(155deg, #FCFDFB 0%, #F4F7F3 58%, #EDF2EE 100%)",
   pageHero:
     "radial-gradient(circle at 88% 4%, rgba(211,232,171,0.2) 0%, rgba(211,232,171,0) 34%), linear-gradient(160deg, #304331 0%, #4B634A 58%, #71876D 100%)",
   navigation:
     "radial-gradient(circle at 88% 10%, rgba(220,247,161,0.18) 0%, rgba(220,247,161,0) 31%), linear-gradient(135deg, #15251B 0%, #294936 58%, #41634D 100%)",
+  tabNavigation:
+    "radial-gradient(circle at 50% -45%, rgba(196,235,154,0.2) 0%, rgba(196,235,154,0.04) 38%, rgba(196,235,154,0) 62%), linear-gradient(105deg, #102A1C 0%, #173A27 46%, #2E5438 100%)",
   cameraMedallion: "linear-gradient(145deg, #71886C 0%, #506A51 100%)",
+  tabCamera:
+    "radial-gradient(circle at 34% 22%, rgba(232,255,202,0.3) 0%, rgba(232,255,202,0) 42%), linear-gradient(150deg, #789976 0%, #416C4A 50%, #1C412A 100%)",
+  uploadHeader:
+    "radial-gradient(circle at 88% 0%, rgba(120,174,82,0.24) 0%, rgba(120,174,82,0) 36%), linear-gradient(118deg, #0A3220 0%, #145232 58%, #1B613A 100%)",
+  uploadPanel:
+    "radial-gradient(circle at 92% 8%, rgba(195,226,123,0.22) 0%, rgba(195,226,123,0) 35%), linear-gradient(145deg, #1E673B 0%, #12502F 56%, #0C3D27 100%)",
+  uploadAnalyze:
+    "radial-gradient(circle at 24% 0%, rgba(190,232,120,0.18) 0%, rgba(190,232,120,0) 42%), linear-gradient(145deg, #3A8A56 0%, #2B7748 52%, #1F633B 100%)",
+  uploadChoice:
+    "radial-gradient(circle at 50% 0%, rgba(220,244,172,0.15) 0%, rgba(220,244,172,0) 48%), linear-gradient(160deg, rgba(82,126,80,0.92) 0%, rgba(30,79,48,0.96) 100%)",
+  uploadTip:
+    "radial-gradient(circle at 98% 20%, rgba(199,231,143,0.14) 0%, rgba(199,231,143,0) 38%), linear-gradient(145deg, #FCFDF8 0%, #F1F6E9 100%)",
   scanButton: "linear-gradient(145deg, #DDF6AA 0%, #BEE878 100%)",
   materialActive: "linear-gradient(145deg, #405B42 0%, #263C2D 100%)",
   productHero:

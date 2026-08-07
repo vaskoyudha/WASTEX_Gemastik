@@ -10,6 +10,8 @@ export interface HeaderProps {
   onBack?: () => void;
   rightElement?: React.ReactNode;
   transparent?: boolean;
+  contentColor?: string;
+  subtitleColor?: string;
   className?: string;
 }
 
@@ -19,9 +21,13 @@ export const Header: React.FC<HeaderProps> = ({
   onBack,
   rightElement,
   transparent = false,
+  contentColor,
+  subtitleColor,
   className = "",
 }) => {
   const insets = useSafeAreaInsets();
+  const resolvedContentColor = contentColor ?? (transparent ? colors.ink900 : colors.white);
+  const resolvedSubtitleColor = subtitleColor ?? (transparent ? colors.ink600 : colors.sage200);
 
   return (
     <View
@@ -57,7 +63,7 @@ export const Header: React.FC<HeaderProps> = ({
             })}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <ChevronLeft size={22} color={colors.cream50} />
+            <ChevronLeft size={22} color={resolvedContentColor} />
           </Pressable>
         )}
       </View>
@@ -65,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
         {title && (
           <Text
             className="text-[17px] font-extrabold text-center"
-            style={{ color: transparent ? colors.ink900 : colors.white, letterSpacing: -0.45 }}
+            style={{ color: resolvedContentColor, letterSpacing: -0.45 }}
             numberOfLines={1}
           >
             {title}
@@ -74,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
         {subtitle && (
           <Text
             className="text-[11px] mt-0.5 text-center"
-            style={{ color: transparent ? colors.ink600 : colors.sage200 }}
+            style={{ color: resolvedSubtitleColor }}
             numberOfLines={1}
           >
             {subtitle}

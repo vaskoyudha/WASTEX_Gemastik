@@ -63,6 +63,8 @@ backend/.venv/
 backend/supabase/.temp/
 *.png
 !assets/images/impact-upcycling-card-bg.png
+!assets/images/upload-screen-bg.png
+!assets/images/upload-screen-bottom-bg.png
 
 # manual image-gen playbooks (local experiments, not in repo)
 visuals/

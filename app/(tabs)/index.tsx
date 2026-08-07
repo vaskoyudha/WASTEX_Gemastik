@@ -64,33 +64,36 @@ export default function HomeScreen() {
         overflow: "hidden",
       }}
     >
-      <Image
-        source={require("../../assets/images/home-hero-bg.png")}
-        resizeMode="cover"
-        accessibilityIgnoresInvertColors
-        style={{
-          position: "absolute",
-          top: -10,
-          left: -10,
-          width: "102%",
-          height: "84%",
-          opacity: 0.7,
-        }}
-      />
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundColor: "rgba(4,22,16,0.2)",
-          ...gradientStyle(gradients.homeImageVeil),
-        }}
-      />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 126 }}
+        contentContainerStyle={{ paddingBottom: 126, position: "relative" }}
       >
+        <Image
+          source={require("../../assets/images/home-hero-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{
+            position: "absolute",
+            top: -50,
+            left: -10,
+            width: "102%",
+            height: Math.round(height * 0.84),
+            opacity: 1,
+          }}
+        />
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: Math.round(height * 0.84),
+            backgroundColor: "rgba(4,22,16,0.2)",
+            ...gradientStyle(gradients.homeImageVeil),
+          }}
+        />
         <View
           style={{
             minHeight: Math.min(Math.max(Math.round(height * 0.5), 390), 470),
@@ -188,7 +191,7 @@ export default function HomeScreen() {
               }}
             >
               Mari ubah sampah jadi{" "}
-              <Text style={{ color: colors.lime300, fontFamily: "Inter_700Bold" }}>peluang.</Text>
+              <Text style={{ color: colors.lime300, fontFamily: "Inter_700Bold" }}>bernilai jual.</Text>
             </Text>
             <Text
               style={{
@@ -208,7 +211,8 @@ export default function HomeScreen() {
               borderCurve: "continuous",
               padding: 1,
               ...gradientStyle(gradients.impactEdge),
-              boxShadow: "-5px -5px 20px rgba(197,240,132,0.1), 0 22px 48px rgba(21,37,27,0.14)",
+              boxShadow:
+                "-5px -5px 20px rgba(197,240,132,0.1), 0 0 18px 4px rgba(0,0,0,0.58)",
             }}
           >
             <View
@@ -335,11 +339,14 @@ export default function HomeScreen() {
                     gap: 8,
                     borderRadius: 17,
                     borderCurve: "continuous",
-                    backgroundColor: "rgba(104,130,101,0.24)",
-                    ...gradientStyle(gradients.actionTile),
+                    backgroundColor: colors.forest900,
+                    ...gradientStyle(gradients.homeActionTile),
                     borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.055)",
-                    boxShadow: "0 6px 16px rgba(31,47,33,0.08)",
+                    borderColor: action.featured
+                      ? "rgba(205,244,148,0.32)"
+                      : "rgba(190,226,159,0.16)",
+                    boxShadow:
+                      "inset 0 1px 0 rgba(236,255,218,0.09), 0 8px 18px rgba(0,12,7,0.32)",
                   }}
                 >
                   <View
@@ -349,15 +356,22 @@ export default function HomeScreen() {
                       borderRadius: 26,
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: "rgba(211,225,204,0.13)",
-                      ...gradientStyle(gradients.actionIcon),
+                      backgroundColor: colors.forest800,
+                      ...gradientStyle(gradients.homeActionIcon),
                       borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.08)",
+                      borderColor: action.featured
+                        ? "rgba(214,249,160,0.34)"
+                        : "rgba(206,239,177,0.16)",
+                      boxShadow: "inset 0 1px 0 rgba(240,255,221,0.1)",
                     }}
                   >
-                    <action.icon size={20} color={colors.cream50} strokeWidth={1.7} />
+                    <action.icon
+                      size={20}
+                      color={action.featured ? colors.lime300 : colors.sage200}
+                      strokeWidth={1.8}
+                    />
                   </View>
-                  <Text style={{ color: colors.cream50, fontSize: 11, fontFamily: "Inter_500Medium" }}>
+                  <Text style={{ color: colors.white, fontSize: 11, fontFamily: "Inter_600SemiBold" }}>
                     {action.label}
                   </Text>
                 </PressableScale>
@@ -419,7 +433,7 @@ export default function HomeScreen() {
                       gap: 12,
                       paddingVertical: 10,
                       borderBottomWidth: index === Math.min(history.length, 3) - 1 ? 0 : 1,
-                      borderBottomColor: colors.mist100,
+                      borderBottomColor: "#CDD4CF",
                     }}
                   >
                     <Image

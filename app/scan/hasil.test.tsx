@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
-import { Pressable as MockPressable, Text as MockText } from 'react-native';
+import { Pressable as MockPressable, StyleSheet, Text as MockText } from 'react-native';
 import HasilScreen from './hasil';
 
 const mockGetSkills = jest.fn();
@@ -88,6 +88,13 @@ describe('HasilScreen skill section', () => {
     const { getByText } = await render(<HasilScreen />);
     fireEvent.press(getByText('Buat skill baru'));
     expect(mockPush).toHaveBeenCalledWith('/scan/skill-creator');
+  });
+
+  it('keeps the result sheet vertically scrollable', async () => {
+    const { getByTestId } = await render(<HasilScreen />);
+    const resultScrollView = getByTestId('analysis-results-scroll');
+
+    expect(StyleSheet.flatten(resultScrollView.props.style).overflow).not.toBe('hidden');
   });
 
   it('renders verified skills for the material', async () => {

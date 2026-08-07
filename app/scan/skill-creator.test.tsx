@@ -1,6 +1,6 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
-import { Pressable as MockPressable, Text as MockText } from 'react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { Alert, Pressable as MockPressable, Text as MockText } from 'react-native';
 import SkillCreatorScreen from './skill-creator';
 
 const mockGetIdeas = jest.fn();
@@ -8,6 +8,7 @@ const mockExpand = jest.fn();
 const mockRouterPush = jest.fn();
 const mockVerify = jest.fn();
 const mockCreate = jest.fn();
+const mockAlert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
 const scanResult = {
   materialType: 'plastik_pet',
@@ -178,7 +179,7 @@ describe('SkillCreatorScreen verify + submit', () => {
     expect(await findByText('Skill Terkirim')).toBeTruthy();
   });
 
-  it('perbaiki verdict shows feedback but still allows submit', async () => {
+  it('does not show a result or feedback card for an unrepaired verdict', async () => {
     mockVerify.mockResolvedValue({
       verdict: 'perbaiki',
       feedback: ['Bahan X tidak terdaftar di additional_materials.'],
@@ -186,22 +187,26 @@ describe('SkillCreatorScreen verify + submit', () => {
     });
     const { findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    expect(await findByText(/Bahan X tidak terdaftar/i)).toBeTruthy();
-    expect(queryByText('Kirim Skill untuk Verifikasi')).toBeTruthy();
-    fireEvent.press(queryByText('Kirim Skill untuk Verifikasi')!);
-    expect(mockCreate).toHaveBeenCalled();
+    await waitFor(() => expect(mockAlert).toHaveBeenCalledWith(
+      'Detail Gagal Dimuat',
+      'AI tidak bisa menyusun detail skill. Coba pilih ide lain.',
+    ));
+    expect(queryByText(/Bahan X tidak terdaftar/i)).toBeNull();
+    expect(queryByText('Perlu perbaikan:')).toBeNull();
+    expect(queryByText('Kirim Skill untuk Verifikasi')).toBeNull();
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it('perbaiki verdict offers Coba Ide Lain which returns to ideas', async () => {
+  it('returns to ideas when automatic repair cannot produce a layak draft', async () => {
     mockVerify.mockResolvedValue({
       verdict: 'perbaiki',
       feedback: ['Bahan X tidak terdaftar di additional_materials.'],
       suggestions: [],
     });
-    const { findByText } = await render(<SkillCreatorScreen />);
+    const { findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    fireEvent.press(await findByText('Coba Ide Lain'));
     expect(await findByText('Generate Ulang')).toBeTruthy();
+    expect(queryByText('Coba Ide Lain')).toBeNull();
   });
 
   it('renders read-only draft with no text inputs', async () => {
@@ -225,19 +230,16 @@ describe('SkillCreatorScreen verify + submit', () => {
     expect(await findByText(/langsung masuk katalog/i)).toBeTruthy();
   });
 
-  it('submit with perbaiki verdict shows expert-review message', async () => {
+  it('does not submit a draft that still has a perbaiki verdict', async () => {
     mockVerify.mockResolvedValue({
       verdict: 'perbaiki',
       feedback: ['Bahan X tidak terdaftar.'],
       suggestions: [],
     });
-    const { findByText } = await render(<SkillCreatorScreen />);
+    const { findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    await findByText('Kirim draft untuk review expert');
-    fireEvent.press(await findByText('Kirim Skill untuk Verifikasi'));
-    expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ ai_verdict: 'perbaiki' }),
-    );
-    expect(await findByText(/menunggu verifikasi expert/i)).toBeTruthy();
+    await waitFor(() => expect(mockAlert).toHaveBeenCalled());
+    expect(queryByText('Kirim Skill untuk Verifikasi')).toBeNull();
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });

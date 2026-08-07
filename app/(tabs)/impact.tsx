@@ -1,209 +1,714 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Award, Gift, Leaf, Plus, Recycle, TrendingUp } from "lucide-react-native";
-import { EmptyState, Header, LoadingSpinner, PressableScale } from "../../src/components/ui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  Award,
+  Bell,
+  Box,
+  ChevronRight,
+  Gift,
+  Leaf,
+  Plus,
+  Recycle,
+  TrendingUp,
+} from "lucide-react-native";
+import { EmptyState, LoadingSpinner, PressableScale } from "../../src/components/ui";
 import { useImpactData } from "../../src/hooks/useImpactData";
-import { colors, gradients, gradientStyle, radii, shadows } from "../../src/theme";
+import { gradientStyle } from "../../src/theme";
+
+const palette = {
+  forest: "#0B3D25",
+  forestDeep: "#07301C",
+  forestSoft: "#245A39",
+  lime: "#9BD420",
+  limePale: "#EAF5D8",
+  sage: "#759379",
+  sageLight: "#DDE8D9",
+  cream: "#FBFCF7",
+  ink: "#12331F",
+  muted: "#69766D",
+  line: "#DDE5DB",
+  white: "#FFFFFF",
+} as const;
+
+const periods = ["Minggu", "Bulan", "Tahun"] as const;
+type Period = (typeof periods)[number];
 
 const achievementLinks = [
-  { id: "green_start", title: "Hijau Awal", icon: Leaf },
-  { id: "products_28", title: "28 Produk", icon: Award },
-  { id: "sell_value", title: "Nilai Jual", icon: Gift },
+  {
+    id: "green_start",
+    title: "Hijau Awal",
+    description: "Memulai perjalanan peduli lingkungan",
+    icon: Leaf,
+  },
+  {
+    id: "products_28",
+    title: "28 Produk",
+    description: "Target produk upcycle berikutnya",
+    icon: Award,
+  },
+  {
+    id: "sell_value",
+    title: "Nilai Jual",
+    description: "Nilai ekonomis yang tercapai",
+    icon: Gift,
+  },
 ];
 
 export default function ImpactScreen() {
   const router = useRouter();
-  const { history, summary, loading, error, refresh } = useImpactData();
+  const insets = useSafeAreaInsets();
+  const [period, setPeriod] = useState<Period>("Bulan");
+  const { summary, loading, error, refresh } = useImpactData();
 
   const chartData = useMemo(
     () => [
-      { label: "Sampah", value: summary.totalWasteProcessed, display: `${summary.totalWasteProcessed} kg`, color: "#536D55" },
-      { label: "Produk", value: summary.totalProductsMade, display: `${summary.totalProductsMade}`, color: "#839A79" },
+      {
+        label: "Sampah",
+        unit: "(kg)",
+        value: summary.totalWasteProcessed,
+        display: `${summary.totalWasteProcessed} kg`,
+        color: "linear-gradient(180deg, #2F6842 0%, #12462A 100%)",
+      },
+      {
+        label: "Produk",
+        unit: "(dibuat)",
+        value: summary.totalProductsMade,
+        display: `${summary.totalProductsMade}`,
+        color: "linear-gradient(180deg, #91C33D 0%, #6E9E23 100%)",
+      },
       {
         label: "Nilai",
-        value: summary.estimatedEconomicValue / 100000,
+        unit: "(Rupiah)",
+        value: summary.estimatedEconomicValue / 10000,
         display: `Rp ${summary.estimatedEconomicValue.toLocaleString("id-ID")}`,
-        color: "#BBD38E",
+        color: "linear-gradient(180deg, #CDE79A 0%, #A8CE5C 100%)",
       },
     ],
     [summary]
   );
 
   const maxValue = Math.max(...chartData.map((item) => item.value), 1);
+  const targetProgress = Math.min(summary.totalWasteProcessed / 10, 1);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat dampak WASTEX..." />;
   }
 
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
-      <Header title="Dampak" subtitle="Jejak baik dari setiap proyekmu" />
+  if (error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: palette.cream }}>
+        <EmptyState
+          title="Dampak Gagal Dimuat"
+          description="Coba muat ulang data dampak yang tersimpan di perangkat ini."
+          actionLabel="Muat Ulang"
+          onAction={refresh}
+        />
+      </View>
+    );
+  }
 
-      {error ? (
-        <View style={{ flex: 1, backgroundColor: colors.cream50, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet }}>
-          <EmptyState
-            title="Dampak Gagal Dimuat"
-            description="Coba muat ulang data dampak yang tersimpan di perangkat ini."
-            actionLabel="Muat Ulang"
-            onAction={refresh}
+  return (
+    <View style={{ flex: 1, backgroundColor: palette.cream }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 108 }}
+      >
+        <View style={{ paddingTop: Math.max(insets.top, 18), paddingBottom: 18 }}>
+          <Image
+            source={require("../../assets/images/impact-header-bg.png")}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: 215,
+              borderBottomLeftRadius: 14,
+              borderBottomRightRadius: 14,
+            }}
           />
-        </View>
-      ) : (
-        <>
-          <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18 }}>
-            <View
-              style={{
-                borderRadius: radii.xl + 1,
-                borderCurve: "continuous",
-                padding: 1,
-                ...gradientStyle(gradients.impactEdge),
-                boxShadow: "-5px -5px 20px rgba(197,240,132,0.1), 0 22px 48px rgba(21,37,27,0.14)",
-              }}
-            >
+
+          <View
+            style={{
+              paddingHorizontal: 22,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <View
                 style={{
-                padding: 19,
-                gap: 16,
-                borderRadius: radii.xl,
-                borderCurve: "continuous",
-                overflow: "hidden",
-                backgroundColor: colors.forest900,
+                  width: 31,
+                  height: 31,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: palette.lime,
+                  transform: [{ rotate: "-10deg" }],
                 }}
               >
+                <Leaf size={20} color={palette.forestDeep} fill={palette.forestDeep} />
+              </View>
+              <Text
+                style={{
+                  color: palette.white,
+                  fontFamily: "Manrope_800ExtraBold",
+                  fontSize: 18,
+                  letterSpacing: 0.6,
+                }}
+              >
+                WASTEX
+              </Text>
+            </View>
+
+            <PressableScale
+              accessibilityLabel="Buka notifikasi"
+              onPress={() => router.push("/notifications")}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 21,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(4,48,26,0.78)",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.12)",
+                boxShadow: "0 8px 22px rgba(1,25,13,0.24)",
+              }}
+            >
+              <Bell size={21} color={palette.white} strokeWidth={2} />
+              <View
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  backgroundColor: palette.lime,
+                  borderWidth: 1,
+                  borderColor: palette.forestDeep,
+                }}
+              />
+            </PressableScale>
+          </View>
+
+          <View style={{ paddingHorizontal: 22, paddingTop: 12, gap: 2 }}>
+            <Text
+              style={{
+                color: palette.white,
+                fontFamily: "serif",
+                fontWeight: "700",
+                fontSize: 43,
+                lineHeight: 48,
+                letterSpacing: -1.2,
+              }}
+            >
+              Dampak
+            </Text>
+            <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, lineHeight: 18 }}>
+              Jejak baik dari setiap proyekmu
+            </Text>
+          </View>
+
+          <View
+            style={{
+              height: 190,
+              marginHorizontal: 16,
+              marginTop: 14,
+              borderRadius: 25,
+              borderCurve: "continuous",
+              overflow: "hidden",
+              backgroundColor: palette.white,
+              borderWidth: 1,
+              borderColor: "rgba(147,170,141,0.5)",
+              boxShadow: "0 15px 34px rgba(25,62,35,0.16)",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: "51%",
+                height: "100%",
+                borderTopLeftRadius: 82,
+                borderBottomLeftRadius: 82,
+                overflow: "hidden",
+              }}
+            >
               <Image
                 source={require("../../assets/images/impact-upcycling-card-bg.png")}
                 resizeMode="cover"
                 accessibilityIgnoresInvertColors
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  width: "100%",
+                  top: 0,
+                  bottom: 0,
+                  left: "-56%",
+                  width: "156%",
                   height: "100%",
-                  opacity: 1,
                 }}
               />
-              <View
-                pointerEvents="none"
+            </View>
+
+            <View style={{ width: "50%", paddingHorizontal: 20, paddingTop: 18 }}>
+              <Text style={{ color: palette.ink, fontFamily: "Manrope_500Medium", fontSize: 11 }}>
+                Total sampah diolah
+              </Text>
+              <Text
+                selectable
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  ...gradientStyle(gradients.impactImageGlow),
+                  color: palette.forest,
+                  fontFamily: "serif",
+                  fontWeight: "700",
+                  fontSize: 39,
+                  lineHeight: 45,
+                  letterSpacing: -1,
+                  fontVariant: ["tabular-nums"],
                 }}
-              />
-              <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
-                <View style={{ gap: 4 }}>
-                  <Text style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Inter_600SemiBold", fontSize: 10 }}>Total sampah diolah</Text>
-                  <Text selectable style={{ color: colors.white, fontFamily: "Inter_700Bold", fontSize: 32, lineHeight: 37, letterSpacing: -1, fontVariant: ["tabular-nums"] }}>
-                    {summary.totalWasteProcessed} kg
+              >
+                {summary.totalWasteProcessed} kg
+              </Text>
+              <Text style={{ color: palette.ink, fontSize: 10, lineHeight: 14 }}>
+                dikonversi menjadi karya baru
+              </Text>
+
+              <View
+                style={{
+                  height: 5,
+                  marginTop: 12,
+                  borderRadius: 3,
+                  overflow: "hidden",
+                  backgroundColor: "#E4EBDD",
+                }}
+              >
+                <View
+                  style={{
+                    width: `${Math.max(targetProgress * 100, 4)}%`,
+                    height: 5,
+                    borderRadius: 3,
+                    backgroundColor: palette.lime,
+                    ...gradientStyle("linear-gradient(90deg, #18502E 0%, #9BD420 100%)"),
+                  }}
+                />
+              </View>
+            </View>
+
+            <View
+              style={{
+                position: "absolute",
+                left: 18,
+                bottom: 15,
+                width: "48%",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 7 }}>
+                <View
+                  style={{
+                    width: 29,
+                    height: 29,
+                    borderRadius: 15,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: palette.limePale,
+                  }}
+                >
+                  <Box size={15} color={palette.forest} strokeWidth={2.2} />
+                </View>
+                <View>
+                  <Text
+                    selectable
+                    style={{ color: palette.ink, fontFamily: "Manrope_700Bold", fontSize: 13 }}
+                  >
+                    {summary.totalProductsMade}
                   </Text>
-                  <Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 11 }}>dikonversi menjadi karya baru</Text>
-                </View>
-                <View style={{ width: 46, height: 46, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: colors.lime300, ...gradientStyle(gradients.scanButton) }}>
-                  <Leaf size={22} color={colors.forest900} fill={colors.forest900} />
+                  <Text style={{ color: palette.muted, fontSize: 8 }}>Produk dibuat</Text>
                 </View>
               </View>
+              <View style={{ width: 1, height: 31, backgroundColor: palette.line }} />
+              <View style={{ flex: 1, paddingLeft: 10 }}>
+                <Text
+                  selectable
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  style={{ color: palette.ink, fontFamily: "Manrope_700Bold", fontSize: 12 }}
+                >
+                  Rp {summary.estimatedEconomicValue.toLocaleString("id-ID")}
+                </Text>
+                <Text style={{ color: palette.muted, fontSize: 8 }}>Nilai ekonomis</Text>
+              </View>
+            </View>
 
-              <View style={{ height: 5, borderRadius: 3, overflow: "hidden", backgroundColor: "rgba(40,59,42,0.34)" }}>
-                <View style={{ width: `${Math.max(Math.min(summary.totalWasteProcessed / 15, 1) * 100, 4)}%`, height: 5, borderRadius: 3, backgroundColor: colors.lime300, ...gradientStyle(gradients.scanButton) }} />
-              </View>
+            <View
+              style={{
+                position: "absolute",
+                right: 17,
+                top: 15,
+                width: 39,
+                height: 39,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(255,255,255,0.94)",
+                boxShadow: "0 7px 16px rgba(3,34,17,0.18)",
+              }}
+            >
+              <Leaf size={20} color={palette.forest} fill={palette.forest} />
+            </View>
+          </View>
+        </View>
 
-              <View style={{ flexDirection: "row" }}>
-                <View style={{ flex: 1 }}>
-                  <Text selectable style={{ color: colors.white, fontFamily: "Inter_700Bold", fontSize: 14 }}>{summary.totalProductsMade}</Text>
-                  <Text style={{ color: "rgba(255,255,255,0.62)", fontSize: 9 }}>Produk dibuat</Text>
+        <View style={{ paddingHorizontal: 16, gap: 18 }}>
+          <View style={{ gap: 9 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Text style={{ color: palette.ink, fontFamily: "serif", fontWeight: "700", fontSize: 20 }}>
+                Ringkasan dampak
+              </Text>
+              <PressableScale
+                onPress={() => router.push("/riwayat")}
+                style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+              >
+                <Text style={{ color: palette.forest, fontFamily: "Manrope_600SemiBold", fontSize: 11 }}>
+                  Lihat detail
+                </Text>
+                <ChevronRight size={14} color={palette.forest} />
+              </PressableScale>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 9 }}>
+              {[
+                { icon: Recycle, value: `${summary.totalWasteProcessed} kg`, label: "Sampah diolah" },
+                { icon: Box, value: `${summary.totalProductsMade}`, label: "Produk dibuat" },
+                {
+                  icon: TrendingUp,
+                  value: `${Math.max(summary.totalProductsMade - 1, 0)}x`,
+                  label: "Siklus upcycle",
+                },
+              ].map((item, index) => (
+                <View
+                  key={item.label}
+                  style={{
+                    flex: 1,
+                    height: 78,
+                    paddingHorizontal: 11,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    borderRadius: 18,
+                    borderCurve: "continuous",
+                    backgroundColor: index === 0 ? palette.forestSoft : palette.white,
+                    borderWidth: 1,
+                    borderColor: index === 0 ? "rgba(155,212,32,0.28)" : palette.line,
+                    boxShadow: "0 8px 20px rgba(29,61,37,0.08)",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 17,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: index === 0 ? "rgba(155,212,32,0.14)" : palette.limePale,
+                      borderWidth: index === 0 ? 1 : 0,
+                      borderColor: "rgba(155,212,32,0.5)",
+                    }}
+                  >
+                    <item.icon size={18} color={index === 0 ? "#C7EA76" : palette.forest} />
+                  </View>
+                  <View style={{ flex: 1, gap: 1 }}>
+                    <Text
+                      selectable
+                      numberOfLines={1}
+                      style={{
+                        color: index === 0 ? palette.white : palette.ink,
+                        fontFamily: "serif",
+                        fontWeight: "700",
+                        fontSize: 18,
+                        fontVariant: ["tabular-nums"],
+                      }}
+                    >
+                      {item.value}
+                    </Text>
+                    <Text
+                      numberOfLines={2}
+                      style={{ color: index === 0 ? "rgba(255,255,255,0.82)" : palette.muted, fontSize: 8 }}
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ width: 1, height: 30, backgroundColor: "rgba(255,255,255,0.2)" }} />
-                <View style={{ flex: 1, paddingLeft: 18 }}>
-                  <Text selectable style={{ color: colors.white, fontFamily: "Inter_700Bold", fontSize: 14 }}>Rp {summary.estimatedEconomicValue.toLocaleString("id-ID")}</Text>
-                  <Text style={{ color: "rgba(255,255,255,0.62)", fontSize: 9 }}>Nilai ekonomi</Text>
-                </View>
+              ))}
+            </View>
+          </View>
+
+          <View
+            style={{
+              padding: 12,
+              gap: 10,
+              borderRadius: 22,
+              borderCurve: "continuous",
+              backgroundColor: "rgba(255,255,255,0.96)",
+              borderWidth: 1,
+              borderColor: palette.line,
+              boxShadow: "0 10px 28px rgba(29,61,37,0.08)",
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <Text
+                numberOfLines={1}
+                style={{ flex: 1, color: palette.ink, fontFamily: "serif", fontWeight: "700", fontSize: 19 }}
+              >
+                Grafik dampak aktual
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  padding: 2,
+                  borderRadius: 16,
+                  backgroundColor: "#F5F6F2",
+                  borderWidth: 1,
+                  borderColor: palette.line,
+                }}
+              >
+                {periods.map((item) => {
+                  const active = item === period;
+                  return (
+                    <PressableScale
+                      key={item}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      onPress={() => setPeriod(item)}
+                      style={{
+                        minWidth: 48,
+                        height: 25,
+                        paddingHorizontal: 8,
+                        borderRadius: 13,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: active ? palette.forest : "transparent",
+                        boxShadow: active ? "0 4px 9px rgba(11,61,37,0.2)" : undefined,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: active ? palette.white : palette.ink,
+                          fontFamily: active ? "Manrope_600SemiBold" : "Manrope_400Regular",
+                          fontSize: 9,
+                        }}
+                      >
+                        {item}
+                      </Text>
+                    </PressableScale>
+                  );
+                })}
               </View>
+            </View>
+
+            <View
+              style={{
+                height: 138,
+                paddingHorizontal: 14,
+                paddingTop: 8,
+                borderRadius: 16,
+                borderCurve: "continuous",
+                borderWidth: 1,
+                borderColor: "#E9EEE6",
+                backgroundColor: "#FEFFFC",
+              }}
+            >
+              {[0, 1, 2].map((line) => (
+                <View
+                  key={line}
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    left: 14,
+                    right: 14,
+                    top: 25 + line * 32,
+                    height: 1,
+                    borderTopWidth: 1,
+                    borderStyle: "dashed",
+                    borderColor: "#E5EAE2",
+                  }}
+                />
+              ))}
+              <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-end", gap: 17 }}>
+                {chartData.map((item) => {
+                  const heightPct = Math.max(Math.round((item.value / maxValue) * 100), 13);
+                  return (
+                    <View key={item.label} style={{ flex: 1, height: "100%", alignItems: "center", justifyContent: "flex-end" }}>
+                      <Text
+                        selectable
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        style={{ color: palette.ink, fontFamily: "Manrope_700Bold", fontSize: 9, paddingBottom: 4 }}
+                      >
+                        {item.display}
+                      </Text>
+                      <View style={{ flex: 1, width: "72%", justifyContent: "flex-end" }}>
+                        <View
+                          testID="impact-bar"
+                          accessibilityLabel={`${item.label} impact bar`}
+                          style={{
+                            width: "100%",
+                            height: `${heightPct}%`,
+                            minHeight: 9,
+                            borderTopLeftRadius: 11,
+                            borderTopRightRadius: 11,
+                            ...gradientStyle(item.color),
+                          }}
+                        />
+                      </View>
+                      <Text style={{ color: palette.ink, fontFamily: "Manrope_500Medium", fontSize: 9, paddingTop: 5 }}>
+                        {item.label}
+                      </Text>
+                      <Text style={{ color: palette.muted, fontSize: 7 }}>{item.unit}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View
+              style={{
+                minHeight: 52,
+                paddingHorizontal: 12,
+                paddingVertical: 9,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                borderRadius: 14,
+                borderCurve: "continuous",
+                backgroundColor: "#F5F9EA",
+                borderWidth: 1,
+                borderColor: "#CADBA9",
+              }}
+            >
+              <View
+                style={{
+                  width: 31,
+                  height: 31,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: palette.lime,
+                  boxShadow: "0 5px 10px rgba(83,126,20,0.2)",
+                }}
+              >
+                <Leaf size={17} color={palette.white} fill={palette.white} />
+              </View>
+              <View style={{ flex: 1, gap: 1 }}>
+                <Text style={{ color: palette.ink, fontFamily: "Manrope_700Bold", fontSize: 10 }}>
+                  Keren! Kamu sudah mengolah {summary.totalWasteProcessed} kg sampah {period.toLowerCase()} ini.
+                </Text>
+                <Text style={{ color: palette.muted, fontSize: 8.5 }}>
+                  Terus pertahankan dan ciptakan dampak yang lebih besar!
+                </Text>
               </View>
             </View>
           </View>
 
-          <View style={{ flex: 1, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, borderCurve: "continuous", overflow: "hidden", backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet), boxShadow: "0 -8px 26px rgba(43,59,44,0.1)" }}>
-            <View style={{ alignSelf: "center", width: 34, height: 6, borderRadius: 3, backgroundColor: "rgba(54,74,55,0.48)" }} />
-            <ScrollView contentInsetAdjustmentBehavior="automatic" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 20, paddingBottom: 120, gap: 28 }}>
-              <View style={{ gap: 14 }}>
-                <Text style={{ color: colors.ink900, fontFamily: "Inter_700Bold", fontSize: 16, letterSpacing: -0.25 }}>Ringkasan dampak</Text>
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  {[
-                    { icon: Recycle, value: `${summary.totalWasteProcessed} kg`, label: "Diolah" },
-                    { icon: Award, value: `${summary.totalProductsMade}`, label: "Produk" },
-                    { icon: TrendingUp, value: `${Math.max(summary.totalProductsMade - 1, 0)}x`, label: "Siklus" },
-                  ].map((item, index) => (
-                    <View key={item.label} style={{ flex: 1, padding: 13, alignItems: "center", gap: 7, borderRadius: 20, borderCurve: "continuous", backgroundColor: index === 0 ? colors.forest800 : "rgba(255,255,255,0.72)", borderWidth: 1, borderColor: index === 0 ? "rgba(255,255,255,0.08)" : colors.mist100, boxShadow: shadows.card }}>
-                      <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: index === 0 ? "rgba(220,245,167,0.17)" : colors.mist100 }}>
-                        <item.icon size={18} color={index === 0 ? colors.lime300 : colors.forest600} />
-                      </View>
-                      <Text selectable style={{ color: index === 0 ? colors.white : colors.ink900, fontFamily: "Inter_700Bold", fontSize: 15 }}>{item.value}</Text>
-                      <Text style={{ color: index === 0 ? colors.sage200 : colors.ink600, fontSize: 9 }}>{item.label}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
+          <View style={{ gap: 9 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Text style={{ color: palette.ink, fontFamily: "serif", fontWeight: "700", fontSize: 20 }}>
+                Pencapaian
+              </Text>
+              <PressableScale
+                onPress={() => router.push("/achievements")}
+                style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+              >
+                <Text style={{ color: palette.forest, fontFamily: "Manrope_600SemiBold", fontSize: 11 }}>
+                  Lihat semua
+                </Text>
+                <ChevronRight size={14} color={palette.forest} />
+              </PressableScale>
+            </View>
 
-              <View style={{ gap: 14 }}>
-                <Text style={{ color: colors.ink900, fontFamily: "Inter_700Bold", fontSize: 16, letterSpacing: -0.25 }}>Grafik dampak aktual</Text>
-                <View style={{ padding: 18, height: 220, borderRadius: 22, borderCurve: "continuous", backgroundColor: "rgba(255,255,255,0.7)", borderWidth: 1, borderColor: colors.mist100, boxShadow: shadows.card }}>
-                  <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-end", gap: 14 }}>
-                    {chartData.map((item) => {
-                      const heightPct = Math.max(Math.round((item.value / maxValue) * 100), 12);
-                      return (
-                        <View key={item.label} style={{ flex: 1, height: "100%", justifyContent: "flex-end", alignItems: "center" }}>
-                          <View style={{ flex: 1, width: "100%", justifyContent: "flex-end" }}>
-                            <View testID="impact-bar" accessibilityLabel={`${item.label} impact bar`} style={{ width: "100%", height: `${heightPct}%`, borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: item.color }} />
-                          </View>
-                          <Text style={{ color: colors.ink700, fontFamily: "Inter_600SemiBold", fontSize: 10, marginTop: 9 }}>{item.label}</Text>
-                          <Text numberOfLines={1} style={{ color: colors.ink400, fontSize: 8, marginTop: 2 }}>{item.display}</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              </View>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {achievementLinks.map((item) => (
+                <PressableScale
+                  key={item.id}
+                  onPress={() => router.push(`/achievements?focus=${item.id}`)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    height: 112,
+                    paddingHorizontal: 6,
+                    paddingVertical: 11,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    borderRadius: 17,
+                    borderCurve: "continuous",
+                    backgroundColor: palette.white,
+                    borderWidth: 1,
+                    borderColor: palette.line,
+                  }}
+                >
+                  <item.icon size={25} color={palette.forestSoft} strokeWidth={2} />
+                  <Text
+                    numberOfLines={1}
+                    style={{ color: palette.ink, fontFamily: "Manrope_700Bold", fontSize: 9, textAlign: "center" }}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    numberOfLines={3}
+                    style={{ color: palette.muted, fontSize: 7, lineHeight: 10, textAlign: "center" }}
+                  >
+                    {item.description}
+                  </Text>
+                </PressableScale>
+              ))}
 
-              <View style={{ gap: 14 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                  <Text style={{ color: colors.ink900, fontFamily: "Inter_700Bold", fontSize: 16 }}>Pencapaian</Text>
-                  <PressableScale onPress={() => router.push("/achievements")} hitSlop={10}>
-                    <Text style={{ color: colors.forest600, fontFamily: "Inter_600SemiBold", fontSize: 11 }}>Lihat semua</Text>
-                  </PressableScale>
+              <PressableScale
+                onPress={() => router.push("/achievements?action=add")}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  height: 112,
+                  paddingHorizontal: 6,
+                  paddingVertical: 11,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  borderRadius: 17,
+                  borderCurve: "continuous",
+                  borderWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: "#96B872",
+                }}
+              >
+                <View
+                  style={{
+                    width: 35,
+                    height: 35,
+                    borderRadius: 18,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: palette.limePale,
+                  }}
+                >
+                  <Plus size={20} color={palette.forestSoft} />
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 18 }}>
-                  {achievementLinks.map((item) => (
-                    <PressableScale key={item.id} onPress={() => router.push(`/achievements?focus=${item.id}`)} style={{ width: 96, height: 94, alignItems: "center", justifyContent: "center", gap: 9, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.72)", borderWidth: 1, borderColor: colors.mist100 }}>
-                      <item.icon size={23} color={colors.forest600} />
-                      <Text style={{ color: colors.ink700, fontFamily: "Inter_600SemiBold", fontSize: 9, textAlign: "center" }}>{item.title}</Text>
-                    </PressableScale>
-                  ))}
-                  <PressableScale onPress={() => router.push("/achievements?action=add")} style={{ width: 96, height: 94, alignItems: "center", justifyContent: "center", gap: 9, borderRadius: 20, borderWidth: 1, borderStyle: "dashed", borderColor: colors.sage300 }}>
-                    <Plus size={22} color={colors.sage500} />
-                    <Text style={{ color: colors.ink600, fontFamily: "Inter_600SemiBold", fontSize: 9 }}>Tambah</Text>
-                  </PressableScale>
-                </ScrollView>
-              </View>
-
-              {history.length > 0 ? (
-                <View style={{ gap: 12 }}>
-                  <Text style={{ color: colors.ink900, fontFamily: "Inter_700Bold", fontSize: 16 }}>Aktivitas terbaru</Text>
-                  {history.slice(0, 3).map((project) => (
-                    <PressableScale key={project.id} onPress={() => router.push(`/product/${project.product.id}`)} style={{ padding: 14, flexDirection: "row", alignItems: "center", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.72)", borderWidth: 1, borderColor: colors.mist100 }}>
-                      <View style={{ flex: 1, gap: 3 }}>
-                        <Text numberOfLines={1} style={{ color: colors.ink900, fontFamily: "Inter_700Bold", fontSize: 13 }}>{project.product.name}</Text>
-                        <Text numberOfLines={1} style={{ color: colors.ink600, fontSize: 10 }}>{project.material.materialLabel} · Rp {project.product.estimatedCost.toLocaleString("id-ID")}</Text>
-                      </View>
-                      <Text style={{ color: colors.forest600, fontFamily: "Inter_600SemiBold", fontSize: 10 }}>Lihat</Text>
-                    </PressableScale>
-                  ))}
-                </View>
-              ) : null}
-            </ScrollView>
+                <Text style={{ color: palette.ink, fontFamily: "Manrope_700Bold", fontSize: 9 }}>Tambah</Text>
+                <Text style={{ color: palette.muted, fontSize: 7, lineHeight: 10, textAlign: "center" }}>
+                  Raih pencapaian berikutnya
+                </Text>
+              </PressableScale>
+            </View>
           </View>
-        </>
-      )}
+        </View>
+      </ScrollView>
     </View>
   );
 }

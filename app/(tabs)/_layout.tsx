@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, View } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import { Camera, History, Home, Leaf, User } from "lucide-react-native";
-import { colors, gradients, gradientStyle, shadows } from "../../src/theme";
+import { colors, gradients, gradientStyle } from "../../src/theme";
 import { useReducedMotion } from "../../src/hooks/useReducedMotion";
 
 function ScanTabButton() {
@@ -28,10 +28,11 @@ function ScanTabButton() {
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: colors.forest700,
-          ...gradientStyle(gradients.cameraMedallion),
-          borderWidth: 4,
-          borderColor: "rgba(232,239,226,0.56)",
-          boxShadow: "0 7px 17px rgba(30, 46, 32, 0.23)",
+          ...gradientStyle(gradients.tabCamera),
+          borderWidth: 2,
+          borderColor: "rgba(224,248,190,0.52)",
+          boxShadow:
+            "inset 0 1px 0 rgba(250,255,241,0.34), 0 5px 4px rgba(0,12,7,0.34), 0 15px 24px rgba(0,8,4,0.52)",
         }}
       >
         <Camera size={24} color={colors.cream50} strokeWidth={2.2} />
@@ -58,13 +59,17 @@ export default function TabLayout() {
           height: 76,
           paddingTop: 8,
           paddingBottom: 9,
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderLeftWidth: 1,
+          borderRightWidth: 1,
+          borderColor: "rgba(210,239,184,0.2)",
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           borderCurve: "continuous",
           backgroundColor: colors.forest950,
-          ...gradientStyle(gradients.navigation),
-          boxShadow: shadows.navigation,
+          ...gradientStyle(gradients.tabNavigation),
+          boxShadow:
+            "inset 0 1px 0 rgba(239,255,224,0.13), 0 -10px 28px rgba(4,20,11,0.18), 0 14px 30px rgba(0,0,0,0.22)",
         },
         tabBarLabelStyle: {
           fontSize: 10,

@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { FlatList, Text, View } from "react-native";
+import { Image, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Header, EmptyState, LoadingSpinner } from "../../src/components/ui";
 import { ProductCard } from "../../src/features";
@@ -9,10 +9,11 @@ import { useScanStore } from "../../src/store/useScanStore";
 import type { ProductRecommendation, ScanResult } from "../../src/services/types";
 import { safeBack } from "../../src/lib/navigation";
 import { Leaf, Sparkles } from "lucide-react-native";
-import { colors, gradients, gradientStyle, screenSheetStyle } from "../../src/theme";
+import { colors, gradients, gradientStyle } from "../../src/theme";
 
 export default function RekomendasiScreen(): React.JSX.Element {
   const router = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
   const scanResult = useScanStore((state) => state.scanResult);
   const setSelectedProduct = useScanStore((state) => state.setSelectedProduct);
 
@@ -36,7 +37,11 @@ export default function RekomendasiScreen(): React.JSX.Element {
 
   const renderContent = (): React.JSX.Element => {
     if (recommendationsCall.loading) {
-      return <LoadingSpinner fullScreen message="Memuat rekomendasi..." />;
+      return (
+        <View style={{ minHeight: Math.max(screenHeight - 100, 620) }}>
+          <LoadingSpinner fullScreen message="Memuat rekomendasi..." />
+        </View>
+      );
     }
 
     if (recommendationsCall.error) {
@@ -63,58 +68,69 @@ export default function RekomendasiScreen(): React.JSX.Element {
     }
 
     return (
-      <FlatList
-        data={recommendations}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 44 }}
-        ListHeaderComponent={
-          <View
-            style={{
-              minHeight: 156,
-              padding: 20,
-              marginBottom: 20,
-              borderRadius: 26,
-              borderCurve: "continuous",
-              overflow: "hidden",
-              ...gradientStyle(gradients.limeWash),
-            }}
-          >
-            <View className="w-10 h-10 rounded-2xl items-center justify-center mb-5" style={{ backgroundColor: colors.forest900 }}>
-              <Sparkles size={18} color={colors.lime300} />
-            </View>
-            <Text className="text-[22px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.7 }}>
-              Pilihan terbaik untuk materialmu
-            </Text>
-            <View className="flex-row items-center mt-2">
-              <Leaf size={14} color={colors.forest600} />
-              <Text className="ml-2 text-xs leading-5 flex-1" style={{ color: colors.ink700 }}>
-                {recommendations.length} ide terpilih berdasarkan biaya, waktu, dan potensi hasil.
-              </Text>
-            </View>
+      <View style={{ paddingHorizontal: 18, paddingTop: 30, paddingBottom: 44 }}>
+        <View
+          style={{
+            minHeight: 156,
+            padding: 20,
+            marginBottom: 20,
+            borderRadius: 26,
+            borderCurve: "continuous",
+            overflow: "hidden",
+            ...gradientStyle(gradients.limeWash),
+          }}
+        >
+          <View className="w-10 h-10 rounded-2xl items-center justify-center mb-5" style={{ backgroundColor: colors.forest900 }}>
+            <Sparkles size={18} color={colors.lime300} />
           </View>
-        }
-        renderItem={({ item }) => (
-          <ProductCard product={item} onPress={() => handleSelectProduct(item)} />
-        )}
-      />
+          <Text className="text-[22px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.7 }}>
+            Pilihan terbaik untuk materialmu
+          </Text>
+          <View className="flex-row items-center mt-2">
+            <Leaf size={14} color={colors.forest600} />
+            <Text className="ml-2 text-xs leading-5 flex-1" style={{ color: colors.ink700 }}>
+              {recommendations.length} ide terpilih berdasarkan biaya, waktu, dan potensi hasil.
+            </Text>
+          </View>
+        </View>
+        {recommendations.map((item) => (
+          <ProductCard key={item.id} product={item} onPress={() => handleSelectProduct(item)} />
+        ))}
+      </View>
     );
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
-      <Header title="Rekomendasi Produk" onBack={() => safeBack(router)} />
-      <View style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}>
+    <View style={{ flex: 1, backgroundColor: "#F8F8F2" }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
+      >
+        <Image
+          source={require("../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{ position: "absolute", top: -128, left: 0, width: "100%", height: screenHeight }}
+        />
+        <Header
+          title="Rekomendasi Produk"
+          onBack={() => safeBack(router)}
+          transparent
+          contentColor={colors.white}
+        />
         {scanResult ? renderContent() : (
-          <EmptyState
-            title="Belum Ada Hasil Scan"
-            description="Scan material terlebih dahulu untuk mendapatkan rekomendasi."
-            actionLabel="Mulai Scan"
-            onAction={() => router.push("../upload")}
-          />
+          <View style={{ minHeight: Math.max(screenHeight - 100, 620) }}>
+            <EmptyState
+              title="Belum Ada Hasil Scan"
+              description="Scan material terlebih dahulu untuk mendapatkan rekomendasi."
+              actionLabel="Mulai Scan"
+              onAction={() => router.push("../upload")}
+            />
+          </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }

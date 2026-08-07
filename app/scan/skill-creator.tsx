@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, EmptyState, Header, LoadingSpinner } from '../../src/components/ui';
 import { useServiceCall } from '../../src/hooks/useServiceCall';
@@ -14,6 +14,7 @@ type Stage = 'ideas' | 'verifying' | 'result' | 'done';
 
 export default function SkillCreatorScreen() {
   const router = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
   const scanResult = useScanStore((s) => s.scanResult);
   const [stage, setStage] = useState<Stage>('ideas');
   const [selected, setSelected] = useState<SkillProposal | null>(null);
@@ -76,6 +77,9 @@ export default function SkillCreatorScreen() {
         draft: full,
         chat_history: [userMsg],
       });
+      if (result.verdict !== 'layak') {
+        throw new Error('Draft belum lolos verifikasi otomatis');
+      }
       const verifiedDraft = result.draft ?? full;
       setSelected(verifiedDraft);
       setDraft({ ...verifiedDraft, steps: verifiedDraft.steps.map((s) => ({ ...s })) });
@@ -90,7 +94,7 @@ export default function SkillCreatorScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!draft || submitting) return;
+    if (!draft || verdict?.verdict !== 'layak' || submitting) return;
     setSubmitting(true);
     try {
       await apiClient.createSkill({
@@ -142,8 +146,8 @@ export default function SkillCreatorScreen() {
           >
             <Card className="p-4 rounded-[22px] border-0" style={{ backgroundColor: 'rgba(255,255,255,0.72)', boxShadow: shadows.card }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: index === 0 ? colors.forest800 : colors.mist100 }}>
-                  <Text style={{ color: index === 0 ? colors.lime300 : colors.forest600, fontFamily: 'Inter_700Bold', fontSize: 11 }}>{String(index + 1).padStart(2, '0')}</Text>
+                <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.mist100 }}>
+                  <Text style={{ color: colors.forest600, fontFamily: 'Inter_700Bold', fontSize: 11 }}>{String(index + 1).padStart(2, '0')}</Text>
                 </View>
                 <View style={{ flex: 1, gap: 5 }}>
                   <Text className="text-sm font-bold" style={{ color: colors.ink900 }}>{idea.title}</Text>
@@ -223,14 +227,6 @@ export default function SkillCreatorScreen() {
             </Text>
           </View>
         )}
-        {verdict?.verdict === 'perbaiki' && (
-          <View className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
-            <Text className="text-xs font-bold text-red-700 mb-1">Perlu perbaikan:</Text>
-            {verdict.feedback.map((f, i) => (
-              <Text key={i} className="text-xs text-red-700 mb-1 leading-5">• {f}</Text>
-            ))}
-          </View>
-        )}
         {verdict?.auto_repaired && verdict.verdict === 'layak' && (
           <View className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 mb-4">
             <Text className="text-xs text-emerald-700 leading-5">
@@ -240,9 +236,7 @@ export default function SkillCreatorScreen() {
         )}
         <View className="mb-4">
           <Text className="text-sm font-bold mb-3" style={{ color: colors.ink900 }}>
-            {verdict?.verdict === 'layak'
-              ? 'Skill layak dikirim'
-              : 'Kirim draft untuk review expert'}
+            Skill layak dikirim
           </Text>
           <Button title="Kirim Skill untuk Verifikasi" onPress={handleSubmit} disabled={submitting} />
           <Button title="Coba Ide Lain" onPress={handlePickAnother} variant="secondary" />
@@ -252,18 +246,28 @@ export default function SkillCreatorScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
-      <Header
-        title="Buat Skill Baru"
-        subtitle={scanResult.materialLabel}
-        onBack={() => safeBack(router)}
-      />
+    <View style={{ flex: 1, backgroundColor: '#F8F8F2' }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 44 }}
+        style={{ flex: 1, backgroundColor: 'transparent' }}
+        contentContainerStyle={{ minHeight: screenHeight }}
       >
+        <Image
+          source={require('../../assets/images/upload-screen-bg.png')}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{ position: 'absolute', top: -128, left: 0, width: '100%', height: screenHeight }}
+        />
+        <Header
+          title="Buat Skill Baru"
+          subtitle={scanResult.materialLabel}
+          onBack={() => safeBack(router)}
+          transparent
+          contentColor={colors.white}
+          subtitleColor="rgba(255,255,255,0.68)"
+        />
+        <View style={{ paddingHorizontal: 18, paddingTop: 32, paddingBottom: 44 }}>
         {stage === 'ideas' && (
           <View style={{ gap: 16 }}>
             <View style={{ padding: 17, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: colors.forest900, ...gradientStyle(gradients.navigation), borderWidth: 1, borderColor: 'rgba(255,255,255,0.11)', boxShadow: shadows.floating }}>
@@ -290,14 +294,13 @@ export default function SkillCreatorScreen() {
           <EmptyState
             title="Skill Terkirim"
             description={
-              verdict?.verdict === 'layak'
-                ? 'Skill kamu langsung masuk katalog dan bisa dikerjakan semua orang.'
-                : 'Skill kamu sekarang menunggu verifikasi expert.'
+              'Skill kamu langsung masuk katalog dan bisa dikerjakan semua orang.'
             }
             actionLabel="Lihat Hasil Scan"
             onAction={() => router.replace('/scan/hasil')}
           />
         )}
+        </View>
       </ScrollView>
     </View>
   );

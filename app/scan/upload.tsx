@@ -1,8 +1,10 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, Image, Alert, ScrollView } from "react-native";
+import { View, Text, Image, Alert, ScrollView, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { Header, Card, LoadingSpinner, PressableScale } from "../../src/components/ui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PressableScale } from "../../src/components/ui";
+import { AnalysisLoadingView } from "../../src/features/scan/analysis-loading-view";
 import { scanner, recommendation } from "../../src/services";
 import { useScanStore } from "../../src/store/useScanStore";
 import { safeBack } from "../../src/lib/navigation";
@@ -15,18 +17,19 @@ import {
   Sparkles,
   RefreshCw,
   Lightbulb,
-  Box,
-  Package,
-  GlassWater,
+  SprayCan,
+  Cylinder,
+  BottleWine,
   Layers,
   MoreHorizontal,
+  ChevronLeft,
 } from "lucide-react-native";
 import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../src/theme";
 
 const supportedMaterials = [
-  { label: "Plastik", icon: Box },
-  { label: "Kaleng", icon: Package },
-  { label: "Kaca", icon: GlassWater },
+  { label: "Plastik", icon: SprayCan },
+  { label: "Kaleng", icon: Cylinder },
+  { label: "Kaca", icon: BottleWine },
   { label: "Sachet", icon: Layers },
   { label: "Dll", icon: MoreHorizontal },
 ];
@@ -40,6 +43,8 @@ interface AnalyzePayload {
 export default function UploadScreen() {
   const [image, setImage] = useState<string | null>(null);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const { setImageUri, setScanResult, setRecommendations } = useScanStore();
 
@@ -105,36 +110,108 @@ export default function UploadScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
-      <Header title="Upload Sampah" onBack={() => safeBack(router)} />
-
-      {analyzeCall.loading ? (
-        <View style={screenSheetStyle}>
-          <LoadingSpinner fullScreen message="AI Upcycling Agent sedang menganalisis material & risiko keamanan..." />
-        </View>
-      ) : (
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          showsVerticalScrollIndicator={false}
-          style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
-          contentContainerStyle={{ padding: 20, paddingTop: 24, paddingBottom: 48, gap: 24 }}
+    <View style={{ flex: 1, backgroundColor: "#F8F8F2" }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
+      >
+        <Image
+          source={require("../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{ position: "absolute", top: -128, left: 0, width: "100%", height: screenHeight }}
+        />
+        {!image ? (
+          <Image
+            source={require("../../assets/images/upload-screen-bottom-bg.png")}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+            style={{ position: "absolute", left: 0, bottom: 0, width: "100%", height: screenWidth * (2 / 3) }}
+          />
+        ) : null}
+        <View
+          style={{
+            paddingTop: Math.max(insets.top, 14),
+            paddingHorizontal: 20,
+            paddingBottom: 28,
+            backgroundColor: "transparent",
+            zIndex: 2,
+          }}
         >
-          <View style={{ alignItems: "center", paddingHorizontal: 16, gap: 5 }}>
-            <Text style={{ color: colors.ink900, fontFamily: "Inter_700Bold", fontSize: 17, letterSpacing: -0.25 }}>
-              Mulai dari satu foto
+          <View style={{ height: 48, flexDirection: "row", alignItems: "center" }}>
+            <PressableScale
+              onPress={() => safeBack(router)}
+              accessibilityLabel="Kembali"
+              hitSlop={10}
+              style={{
+                width: 40,
+                height: 40,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "transparent",
+              }}
+            >
+              <ChevronLeft size={24} color={colors.white} strokeWidth={2} />
+            </PressableScale>
+            <Text
+              style={{
+                flex: 1,
+                color: colors.white,
+                fontFamily: "Manrope_700Bold",
+                fontSize: 17,
+                textAlign: "center",
+                letterSpacing: -0.35,
+              }}
+            >
+              Upload Sampah
             </Text>
-            <Text className="text-xs text-center leading-5" style={{ color: colors.ink600 }}>
-              Pastikan material terlihat jelas agar hasil analisis lebih akurat.
+            <View style={{ width: 40 }} />
+          </View>
+        </View>
+
+        {analyzeCall.loading ? (
+          <View style={[screenSheetStyle, { minHeight: Math.max(screenHeight - 100, 620), backgroundColor: "#F8F8F2" }]}>
+          <AnalysisLoadingView photoUri={image} />
+          </View>
+        ) : (
+          <View style={{ marginTop: -12, paddingHorizontal: 20, paddingTop: 30, paddingBottom: 54, gap: 20 }}>
+          <View style={{ alignItems: "center", paddingHorizontal: 22, gap: 7 }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text
+                selectable
+                style={{
+                  color: "#153B29",
+                  fontFamily: "serif",
+                  fontWeight: "700",
+                  fontSize: 24,
+                  lineHeight: 29,
+                  letterSpacing: -0.45,
+                }}
+              >
+                Mulai dari satu foto
+              </Text>
+            </View>
+            <Text style={{ color: colors.ink600, fontFamily: "Manrope_400Regular", fontSize: 12, lineHeight: 18, textAlign: "center" }}>
+              Pastikan material terlihat jelas agar
+              {"\n"}hasil analisis lebih akurat.
             </Text>
           </View>
 
-          {/* Upload Box */}
           {image ? (
-            <Card
-              className="w-full rounded-[26px] overflow-hidden p-0 border-0 bg-mist-100"
-              style={{ boxShadow: shadows.floating }}
+            <View
+              style={{
+                width: "100%",
+                height: 280,
+                borderRadius: 25,
+                borderCurve: "continuous",
+                overflow: "hidden",
+                backgroundColor: colors.mist100,
+                boxShadow: shadows.floating,
+              }}
             >
-              <Image source={{ uri: image }} className="w-full h-72" resizeMode="cover" />
+              <Image source={{ uri: image }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
               <PressableScale
                 onPress={() => setImage(null)}
                 accessibilityLabel="Ganti foto"
@@ -149,216 +226,197 @@ export default function UploadScreen() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 7,
-                  backgroundColor: "rgba(38,54,42,0.78)",
+                  backgroundColor: "rgba(17,55,34,0.86)",
                   borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.16)",
+                  borderColor: "rgba(255,255,255,0.18)",
                 }}
               >
-                <RefreshCw size={16} color="#ffffff" />
-                <Text style={{ color: colors.white, fontFamily: "Inter_600SemiBold", fontSize: 11 }}>Ganti foto</Text>
+                <RefreshCw size={16} color={colors.white} />
+                <Text style={{ color: colors.white, fontFamily: "Manrope_600SemiBold", fontSize: 11 }}>Ganti foto</Text>
               </PressableScale>
-            </Card>
+            </View>
           ) : (
             <View
               style={{
                 width: "100%",
-                borderRadius: 26,
+                padding: 16,
+                gap: 18,
+                borderRadius: 25,
                 borderCurve: "continuous",
                 overflow: "hidden",
+                backgroundColor: "#13522F",
+                ...gradientStyle(gradients.uploadPanel),
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.11)",
-                backgroundColor: colors.forest900,
-                ...gradientStyle(gradients.navigation),
-                padding: 18,
-                gap: 18,
-                boxShadow: shadows.floating,
+                borderColor: "rgba(202,235,139,0.48)",
+                boxShadow: "0 8px 22px rgba(15,62,34,0.28)",
               }}
             >
-              <View
-                pointerEvents="none"
-                style={{
-                  position: "absolute",
-                  width: 154,
-                  height: 154,
-                  borderRadius: 77,
-                  right: -54,
-                  top: -65,
-                  backgroundColor: "rgba(220,245,167,0.12)",
-                }}
-              />
-
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <View
                   style={{
-                    width: 48,
-                    height: 48,
+                    width: 52,
+                    height: 52,
                     borderRadius: 17,
                     alignItems: "center",
                     justifyContent: "center",
                     backgroundColor: colors.lime300,
                     ...gradientStyle(gradients.scanButton),
-                    boxShadow: "0 5px 13px rgba(42,63,43,0.16)",
+                    boxShadow: "0 5px 12px rgba(9,38,20,0.24)",
                   }}
                 >
-                  <Upload size={22} color={colors.forest900} strokeWidth={2} />
+                  <Upload size={24} color="#12452A" strokeWidth={2.1} />
                 </View>
                 <View style={{ flex: 1, gap: 3 }}>
-                  <Text style={{ color: colors.white, fontFamily: "Inter_700Bold", fontSize: 17, letterSpacing: -0.25 }}>
+                  <Text style={{ color: colors.white, fontFamily: "serif", fontWeight: "700", fontSize: 18, letterSpacing: -0.2 }}>
                     Tambahkan foto sampah
                   </Text>
-                  <Text style={{ color: "rgba(255,255,255,0.68)", fontSize: 11 }}>
+                  <Text style={{ color: "rgba(255,255,255,0.76)", fontFamily: "Manrope_400Regular", fontSize: 11 }}>
                     Pilih sumber foto untuk mulai memindai
                   </Text>
                 </View>
               </View>
 
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <PressableScale
-                  onPress={() => pickImage("camera")}
-                  accessibilityLabel="Ambil foto dengan kamera"
-                  style={{
-                    flex: 1,
-                    height: 92,
-                    borderRadius: 19,
-                    borderCurve: "continuous",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 9,
-                    backgroundColor: "rgba(211,225,204,0.14)",
-                    ...gradientStyle(gradients.actionTile),
-                    borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.1)",
-                  }}
-                >
-                  <View
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                {[
+                  { mode: "camera" as const, label: "Kamera", caption: "Ambil foto sekarang", icon: Camera },
+                  { mode: "gallery" as const, label: "Galeri", caption: "Pilih dari galeri", icon: ImageIcon },
+                ].map((option) => (
+                  <PressableScale
+                    key={option.mode}
+                    onPress={() => pickImage(option.mode)}
+                    accessibilityLabel={option.mode === "camera" ? "Ambil foto dengan kamera" : "Pilih foto dari galeri"}
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
+                      flex: 1,
+                      height: 136,
+                      borderRadius: 22,
+                      borderCurve: "continuous",
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: "rgba(222,235,215,0.14)",
-                      ...gradientStyle(gradients.actionIcon),
+                      gap: 8,
+                      backgroundColor: "rgba(42,94,55,0.92)",
+                      ...gradientStyle(gradients.uploadChoice),
                       borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.1)",
+                      borderColor: "rgba(205,239,146,0.43)",
+                      boxShadow: "inset 0 1px 0 rgba(243,255,221,0.12), 0 7px 15px rgba(7,39,21,0.2)",
                     }}
                   >
-                    <Camera size={18} color={colors.cream50} strokeWidth={1.8} />
-                  </View>
-                  <Text style={{ color: colors.cream50, fontFamily: "Inter_600SemiBold", fontSize: 11 }}>Kamera</Text>
-                </PressableScale>
-
-                <PressableScale
-                  onPress={() => pickImage("gallery")}
-                  accessibilityLabel="Pilih foto dari galeri"
-                  style={{
-                    flex: 1,
-                    height: 92,
-                    borderRadius: 19,
-                    borderCurve: "continuous",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 9,
-                    backgroundColor: "rgba(211,225,204,0.14)",
-                    ...gradientStyle(gradients.actionTile),
-                    borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.1)",
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: "rgba(222,235,215,0.14)",
-                      ...gradientStyle(gradients.actionIcon),
-                      borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.1)",
-                    }}
-                  >
-                    <ImageIcon size={18} color={colors.cream50} strokeWidth={1.8} />
-                  </View>
-                  <Text style={{ color: colors.cream50, fontFamily: "Inter_600SemiBold", fontSize: 11 }}>Galeri</Text>
-                </PressableScale>
+                    <View
+                      style={{
+                        width: 58,
+                        height: 58,
+                        borderRadius: 29,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "rgba(91,148,80,0.5)",
+                        borderWidth: 1,
+                        borderColor: "rgba(217,245,166,0.34)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                      }}
+                    >
+                      <option.icon size={25} color={colors.white} strokeWidth={1.9} />
+                    </View>
+                    <Text style={{ color: colors.white, fontFamily: "Manrope_700Bold", fontSize: 13 }}>{option.label}</Text>
+                    <Text style={{ color: "rgba(255,255,255,0.66)", fontFamily: "Manrope_400Regular", fontSize: 9.5 }}>
+                      {option.caption}
+                    </Text>
+                  </PressableScale>
+                ))}
               </View>
             </View>
           )}
 
-          {/* Supported Materials */}
           <View style={{ gap: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Text className="text-sm font-bold" style={{ color: colors.ink900 }}>Material yang didukung</Text>
-              <Text style={{ color: colors.ink400, fontSize: 10 }}>5 kategori</Text>
+              <Text style={{ color: "#173B2A", fontFamily: "Manrope_700Bold", fontSize: 14 }}>Material yang didukung</Text>
+              <Text style={{ color: colors.forest600, fontFamily: "Manrope_500Medium", fontSize: 10 }}>5 kategori</Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 16 }}>
-              {supportedMaterials.map((m) => (
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {supportedMaterials.map((material) => (
                 <View
-                  key={m.label}
+                  key={material.label}
                   style={{
-                    width: 66,
-                    height: 78,
-                    borderRadius: 19,
+                    flex: 1,
+                    minWidth: 0,
+                    height: 82,
+                    borderRadius: 18,
                     borderCurve: "continuous",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 7,
-                    backgroundColor: "rgba(255,255,255,0.66)",
+                    backgroundColor: "rgba(255,255,255,0.82)",
                     borderWidth: 1,
-                    borderColor: colors.mist100,
+                    borderColor: "#E5EADD",
+                    boxShadow: "0 5px 14px rgba(30,57,37,0.08)",
                   }}
                 >
-                  <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
-                    <m.icon size={17} color={colors.forest600} strokeWidth={1.8} />
+                  <View style={{ width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "#EAF2E5" }}>
+                    <material.icon size={18} color="#3F734C" strokeWidth={1.8} />
                   </View>
-                  <Text className="text-[10px] text-center" style={{ color: colors.ink600 }} numberOfLines={1}>{m.label}</Text>
+                  <Text numberOfLines={1} style={{ color: colors.ink600, fontFamily: "Manrope_500Medium", fontSize: 9.5, textAlign: "center" }}>
+                    {material.label}
+                  </Text>
                 </View>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
-          {/* Tip Card */}
-          <Card
-            className="p-4 flex-row items-start rounded-[22px] border-0"
-            style={{ backgroundColor: "rgba(255,255,255,0.68)", boxShadow: shadows.card }}
+          <View
+            style={{
+              minHeight: 88,
+              paddingHorizontal: 14,
+              paddingVertical: 13,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              borderRadius: 21,
+              borderCurve: "continuous",
+              overflow: "hidden",
+              backgroundColor: "#F5F8EE",
+              ...gradientStyle(gradients.uploadTip),
+              borderWidth: 1,
+              borderColor: "#DCE7CE",
+              boxShadow: "0 6px 16px rgba(31,62,38,0.1)",
+            }}
           >
-            <View style={{ width: 38, height: 38, borderRadius: 15, alignItems: "center", justifyContent: "center", marginRight: 12, backgroundColor: colors.sage200 }}>
-              <Lightbulb size={18} color={colors.forest600} strokeWidth={1.8} />
+            <View style={{ width: 46, height: 46, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#DDEBCD" }}>
+              <Lightbulb size={23} color="#4B824D" fill="#78A958" strokeWidth={1.6} />
             </View>
-            <View className="flex-1" style={{ gap: 3 }}>
-              <Text className="text-xs font-bold" style={{ color: colors.forest800 }}>Tips foto terbaik</Text>
-              <Text className="text-[11px] leading-4" style={{ color: colors.ink600 }}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ color: "#285A38", fontFamily: "Manrope_700Bold", fontSize: 12 }}>Tips foto terbaik</Text>
+              <Text style={{ color: colors.ink600, fontFamily: "Manrope_400Regular", fontSize: 10.5, lineHeight: 15 }}>
                 Pastikan objek terlihat jelas, tidak blur, dan pencahayaan cukup.
               </Text>
             </View>
-          </Card>
+          </View>
 
-          {image && (
+          {image ? (
             <PressableScale
-                onPress={handleAnalyze}
-                accessibilityLabel="Analisis sampah sekarang"
-                style={{
-                  height: 54,
-                  borderRadius: 18,
-                  borderCurve: "continuous",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 9,
-                  backgroundColor: colors.forest700,
-                  ...gradientStyle(gradients.cameraMedallion),
-                  boxShadow: shadows.card,
-                }}
-              >
-                <Sparkles size={18} color={colors.white} />
-                <Text style={{ color: colors.white, fontFamily: "Inter_600SemiBold", fontSize: 14 }}>
-                  Analisis Sampah Sekarang
-                </Text>
-              </PressableScale>
-          )}
-        </ScrollView>
-      )}
+              onPress={handleAnalyze}
+              accessibilityLabel="Analisis sampah sekarang"
+              style={{
+                height: 56,
+                borderRadius: 19,
+                borderCurve: "continuous",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 9,
+                backgroundColor: "#2B7748",
+                ...gradientStyle(gradients.uploadAnalyze),
+                borderWidth: 1,
+                borderColor: "rgba(190,232,120,0.28)",
+                boxShadow: "0 8px 18px rgba(20,69,39,0.24)",
+              }}
+            >
+              <Sparkles size={18} color={colors.white} />
+              <Text style={{ color: colors.white, fontFamily: "Manrope_700Bold", fontSize: 14 }}>
+                Analisis Sampah Sekarang
+              </Text>
+            </PressableScale>
+          ) : null}
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
