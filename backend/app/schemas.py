@@ -289,6 +289,7 @@ class ContinuityCritiqueBatch(BaseModel):
 
 class SkillCreateRequest(SkillProposal):
     reference_scan_id: UUID | None = None
+    ai_verdict: Literal["layak", "perbaiki"] | None = None
 
 
 class SkillCompletionCreate(BaseModel):

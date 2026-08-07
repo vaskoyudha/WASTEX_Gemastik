@@ -1,23 +1,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, EmptyState, Header, LoadingSpinner } from '../../src/components/ui';
 import { useServiceCall } from '../../src/hooks/useServiceCall';
 import { safeBack } from '../../src/lib/navigation';
 import { apiClient } from '../../src/services/api';
-import type {
-  BackendDifficulty,
-  ChatMessage,
-  SkillIdea,
-  SkillProposal,
-  SkillVerifyResponse,
-} from '../../src/services/types';
+import type { ChatMessage, SkillIdea, SkillProposal, SkillVerifyResponse } from '../../src/services/types';
 import { useScanStore } from '../../src/store/useScanStore';
-import { AlertTriangle, Bot, CheckCircle2, Sparkles, XCircle } from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 
-type Stage = 'ideas' | 'edit' | 'verify' | 'done';
-
-const DIFFICULTIES: BackendDifficulty[] = ['pemula', 'menengah', 'mahir'];
+type Stage = 'ideas' | 'verifying' | 'result' | 'done';
 
 export default function SkillCreatorScreen() {
   const router = useRouter();
@@ -26,10 +18,7 @@ export default function SkillCreatorScreen() {
   const [selected, setSelected] = useState<SkillProposal | null>(null);
   const [draft, setDraft] = useState<SkillProposal | null>(null);
   const [expanding, setExpanding] = useState(false);
-  const [verifyVisible, setVerifyVisible] = useState(false);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [verdict, setVerdict] = useState<SkillVerifyResponse | null>(null);
-  const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const generateArgs = useMemo<[string, string] | undefined>(
@@ -71,63 +60,26 @@ export default function SkillCreatorScreen() {
   const handleSelect = async (idea: SkillIdea) => {
     if (!scanResult || expanding) return;
     setExpanding(true);
+    setStage('verifying');
     try {
       const full = await expandSkill(scanResult.materialType, scanResult.condition, idea);
       setSelected(full);
       setDraft({ ...full, steps: full.steps.map((s) => ({ ...s })) });
-      setStage('edit');
-    } catch {
-      Alert.alert('Detail Gagal Dimuat', 'AI tidak bisa menyusun detail skill. Coba pilih ide lain.');
-    } finally {
-      setExpanding(false);
-    }
-  };
-
-  const updateStep = (index: number, field: 'instruction' | 'warning', value: string) => {
-    if (!draft) return;
-    setDraft({
-      ...draft,
-      steps: draft.steps.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
-    });
-  };
-
-  const openVerify = () => {
-    setChatHistory([]);
-    setVerdict(null);
-    setVerifyVisible(true);
-    runCheck([]);
-  };
-
-  const runCheck = async (history: ChatMessage[] = []) => {
-    if (!draft || checking) return;
-    setChecking(true);
-    const userMsg: ChatMessage = {
-      role: 'user',
-      content: `Draft skill: ${draft.title}\n${draft.description}`,
-    };
-    try {
-      // Hanya kirim ronde saat ini — riwayat lama membuat LLM meng-echo
-      // feedback yang sudah diperbaiki (stale feedback bias).
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: `Draft skill: ${full.title}\n${full.description}`,
+      };
       const result = await apiClient.verifySkill({
-        draft,
-        chat_history: [...history, userMsg],
+        draft: full,
+        chat_history: [userMsg],
       });
       setVerdict(result);
-      setChatHistory((h) => [
-        ...h,
-        userMsg,
-        {
-          role: 'assistant',
-          content:
-            result.verdict === 'layak'
-              ? 'Skill layak dikirim'
-              : `Perlu perbaikan:\n${result.feedback.join('\n')}`,
-        },
-      ]);
+      setStage('result');
     } catch {
-      Alert.alert('Verifikasi Gagal', 'AI tidak bisa memverifikasi saat ini. Coba lagi.');
+      Alert.alert('Detail Gagal Dimuat', 'AI tidak bisa menyusun detail skill. Coba pilih ide lain.');
+      setStage('ideas');
     } finally {
-      setChecking(false);
+      setExpanding(false);
     }
   };
 
@@ -135,8 +87,11 @@ export default function SkillCreatorScreen() {
     if (!draft || submitting) return;
     setSubmitting(true);
     try {
-      await apiClient.createSkill({ ...draft, reference_scan_id: scanResult?.scan_id });
-      setVerifyVisible(false);
+      await apiClient.createSkill({
+        ...draft,
+        reference_scan_id: scanResult?.scan_id,
+        ai_verdict: verdict?.verdict ?? null,
+      });
       setStage('done');
     } catch {
       Alert.alert('Gagal Kirim', 'Skill belum bisa dikirim. Coba lagi.');
@@ -206,56 +161,63 @@ export default function SkillCreatorScreen() {
     );
   };
 
-  const renderEdit = () => {
+  const handlePickAnother = () => {
+    setStage('ideas');
+    setDraft(null);
+    setVerdict(null);
+    generateCall.refetch();
+  };
+
+  const renderResult = () => {
     if (!draft) return null;
     return (
       <View>
-        <Text className="text-sm font-bold text-slate-900 mb-2">Judul</Text>
-        <TextInput
-          value={draft.title}
-          onChangeText={(t) => setDraft({ ...draft, title: t })}
-          className="border border-slate-200 rounded-xl px-4 py-3 mb-4 text-sm"
-        />
-        <Text className="text-sm font-bold text-slate-900 mb-2">Deskripsi</Text>
-        <TextInput
-          value={draft.description}
-          onChangeText={(t) => setDraft({ ...draft, description: t })}
-          multiline
-          className="border border-slate-200 rounded-xl px-4 py-3 mb-4 text-sm min-h-[80px]"
-        />
-        <Text className="text-sm font-bold text-slate-900 mb-2">Tingkat Kesulitan</Text>
+        <Text className="text-sm font-bold text-slate-900 mb-1">{draft.title}</Text>
+        <Text className="text-xs text-slate-500 mb-3 leading-5">{draft.description}</Text>
         <View className="flex-row gap-2 mb-4">
-          {DIFFICULTIES.map((d) => {
-            const active = draft.difficulty === d;
-            return (
-              <TouchableOpacity
-                key={d}
-                onPress={() => setDraft({ ...draft, difficulty: d })}
-                className={`px-4 py-2 rounded-full border ${active ? 'bg-brand border-brand' : 'border-slate-200'}`}
-              >
-                <Text className={`text-xs font-semibold ${active ? 'text-white' : 'text-slate-600'}`}>{d}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          <Text className="text-[10px] font-semibold text-brand-dark bg-emerald-50 px-2 py-0.5 rounded-full">
+            {draft.difficulty}
+          </Text>
+          {draft.est_cost_idr !== null && (
+            <Text className="text-[10px] text-slate-500 px-2 py-0.5">
+              Est. biaya Rp{draft.est_cost_idr ?? 0}
+            </Text>
+          )}
         </View>
         <Text className="text-sm font-bold text-slate-900 mb-2">Langkah Pembuatan</Text>
-        {draft.steps.map((step, i) => (
-          <Card key={i} className="p-3 border border-slate-100 mb-3">
+        {draft.steps.map((step) => (
+          <Card key={step.order} className="p-3 border border-slate-100 mb-3">
             <Text className="text-xs font-bold text-slate-500 mb-1">Langkah {step.order}</Text>
-            <TextInput
-              value={step.instruction}
-              onChangeText={(v) => updateStep(i, 'instruction', v)}
-              className="border border-slate-200 rounded-lg px-3 py-2 mb-2 text-sm"
-            />
-            <TextInput
-              value={step.warning ?? ''}
-              onChangeText={(v) => updateStep(i, 'warning', v)}
-              placeholder="Peringatan keamanan (opsional)"
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm"
-            />
+            <Text className="text-sm text-slate-800 mb-2 leading-5">{step.instruction}</Text>
+            {step.warning ? (
+              <Text className="text-xs text-amber-700 leading-5">⚠️ {step.warning}</Text>
+            ) : null}
           </Card>
         ))}
-        <Button title="Verifikasi dengan AI" onPress={openVerify} />
+        {(draft.additional_materials?.length ?? 0) > 0 && (
+          <View className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
+            <Text className="text-xs text-amber-800 ml-1">
+              Butuh bahan tambahan: {draft.additional_materials!.map((m) => m.name).join(', ')}.
+            </Text>
+          </View>
+        )}
+        {verdict?.verdict === 'perbaiki' && (
+          <View className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
+            <Text className="text-xs font-bold text-red-700 mb-1">Perlu perbaikan:</Text>
+            {verdict.feedback.map((f, i) => (
+              <Text key={i} className="text-xs text-red-700 mb-1 leading-5">• {f}</Text>
+            ))}
+          </View>
+        )}
+        <View className="mb-4">
+          <Text className="text-sm font-bold text-slate-900 mb-3">
+            {verdict?.verdict === 'layak'
+              ? 'Skill layak dikirim'
+              : 'Kirim draft untuk review expert'}
+          </Text>
+          <Button title="Kirim Skill untuk Verifikasi" onPress={handleSubmit} disabled={submitting} />
+          <Button title="Coba Ide Lain" onPress={handlePickAnother} variant="secondary" />
+        </View>
       </View>
     );
   };
@@ -275,97 +237,30 @@ export default function SkillCreatorScreen() {
               <Text className="text-sm font-bold text-slate-900 ml-2">Ide Skill dari AI</Text>
             </View>
             <Text className="text-xs text-slate-500 mb-4 leading-5">
-              Pilih salah satu ide untuk material {scanResult.materialLabel}, lalu sesuaikan sebelum dikirim.
+              Pilih salah satu ide untuk material {scanResult.materialLabel}, lalu AI akan menyusun dan meninjau detailnya.
             </Text>
             {renderIdeas()}
           </View>
         )}
-        {stage === 'edit' && (
-          <View>
-            <Text className="text-sm font-bold text-slate-900 mb-3">Edit Draft Skill</Text>
-            {renderEdit()}
+        {stage === 'verifying' && (
+          <View className="pt-8">
+            <LoadingSpinner fullScreen message="AI sedang meninjau draft..." />
           </View>
         )}
+        {stage === 'result' && renderResult()}
         {stage === 'done' && (
           <EmptyState
             title="Skill Terkirim"
-            description="Skill kamu sekarang menunggu verifikasi expert."
+            description={
+              verdict?.verdict === 'layak'
+                ? 'Skill kamu langsung masuk katalog dan bisa dikerjakan semua orang.'
+                : 'Skill kamu sekarang menunggu verifikasi expert.'
+            }
             actionLabel="Lihat Hasil Scan"
             onAction={() => router.replace('/scan/hasil')}
           />
         )}
       </ScrollView>
-      <Modal
-        visible={verifyVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setVerifyVisible(false)}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-[32px] p-6 max-h-[75%]">
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-row items-center">
-                <Bot size={18} color="#16a34a" />
-                <Text className="text-lg font-bold text-slate-900 ml-2">Verifikasi AI</Text>
-              </View>
-              <TouchableOpacity onPress={() => setVerifyVisible(false)} className="p-1">
-                <Text className="text-slate-400 text-xl">✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView className="flex-1 mb-4" showsVerticalScrollIndicator={false}>
-              {chatHistory.map((msg, i) => (
-                <View
-                  key={i}
-                  className={`mb-2 max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                    msg.role === 'user' ? 'self-end bg-emerald-100' : 'self-start bg-slate-100'
-                  }`}
-                >
-                  <Text className="text-xs leading-5 text-slate-800">{msg.content}</Text>
-                </View>
-              ))}
-              {checking && <Text className="text-xs text-slate-500 mb-2">AI sedang memeriksa...</Text>}
-            </ScrollView>
-
-            <View className="flex-row gap-3">
-              <Button title="Cek Lagi" onPress={() => runCheck()} variant="secondary" fullWidth={false} disabled={checking} />
-              <View className="flex-1">
-                <Button
-                  title="Kirim Skill untuk Verifikasi"
-                  onPress={handleSubmit}
-                  disabled={verdict?.verdict !== 'layak' || submitting}
-                />
-              </View>
-            </View>
-            {verdict?.verdict === 'perbaiki' && (
-              <View className="flex-row items-start mt-3">
-                <XCircle size={14} color="#dc2626" />
-                <Text className="text-xs text-red-600 ml-2 flex-1">
-                  Perbaiki draft dulu, lalu cek lagi.
-                </Text>
-              </View>
-            )}
-            {verdict?.verdict === 'layak' && (
-              <View className="flex-row items-start mt-3">
-                <CheckCircle2 size={14} color="#16a34a" />
-                <Text className="text-xs text-green-700 ml-2 flex-1">
-                  Draft dinyatakan layak. Tekan tombol kirim untuk mengirim ke verifikasi expert.
-                </Text>
-              </View>
-            )}
-            {verdict?.verdict === 'layak' && (draft?.additional_materials?.length ?? 0) > 0 && (
-              <View className="flex-row items-start mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                <AlertTriangle size={14} color="#d97706" />
-                <Text className="text-xs text-amber-800 ml-2 flex-1">
-                  Butuh bahan tambahan di luar hasil scan:{' '}
-                  {draft!.additional_materials!.map((m) => m.name).join(', ')}. Siapkan bahan
-                  ini sebelum mulai mengerjakan.
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

@@ -44,7 +44,12 @@ jest.mock('../../src/components/ui', () => ({
     <MockPressable onPress={onPress}><MockText>{title}</MockText></MockPressable>
   ),
   LoadingSpinner: ({ message }: { message: string }) => <MockText>{message}</MockText>,
-  EmptyState: ({ title }: { title: string }) => <MockText>{title}</MockText>,
+  EmptyState: ({ title, description }: { title: string; description?: string }) => (
+    <>
+      <MockText>{title}</MockText>
+      {description ? <MockText>{description}</MockText> : null}
+    </>
+  ),
 }));
 
 jest.mock('lucide-react-native', () => ({
@@ -97,17 +102,6 @@ describe('SkillCreatorScreen ideas stage', () => {
     });
   });
 
-  it('selecting an idea expands it to full draft and moves to edit stage', async () => {
-    const { findByText } = await render(<SkillCreatorScreen />);
-    fireEvent.press(await findByText('Pot Gantung PET'));
-    expect(await findByText('Edit Draft Skill')).toBeTruthy();
-    expect(mockExpand).toHaveBeenCalledWith({
-      material: 'plastik_pet',
-      condition: 'Bersih',
-      idea: ideas[0],
-    });
-  });
-
   it('regenerate refetches ideas', async () => {
     const { findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Generate Ulang'));
@@ -124,44 +118,103 @@ describe('SkillCreatorScreen verify + submit', () => {
     mockCreate.mockResolvedValue({ id: 'new-skill' });
   });
 
-  it('opens verify popup and shows verdict', async () => {
-    const { findByText } = await render(<SkillCreatorScreen />);
+  it('selecting an idea expands then auto-verifies in background', async () => {
+    const { findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    fireEvent.press(await findByText('Verifikasi dengan AI'));
     expect(await findByText('Skill layak dikirim')).toBeTruthy();
+    expect(mockExpand).toHaveBeenCalledWith({
+      material: 'plastik_pet',
+      condition: 'Bersih',
+      idea: ideas[0],
+    });
     expect(mockVerify).toHaveBeenCalledWith(
       expect.objectContaining({ chat_history: expect.any(Array) }),
     );
+    expect(queryByText('Edit Draft Skill')).toBeNull();
+    expect(queryByText('Verifikasi dengan AI')).toBeNull();
   });
 
-  it('cek lagi sends only current round history to avoid stale feedback echo', async () => {
-    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+  it('shows verifying progress while review runs', async () => {
+    let resolveVerify: (v: unknown) => void;
+    mockVerify.mockReturnValue(
+      new Promise((resolve) => { resolveVerify = resolve; }),
+    );
+    const { findByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    fireEvent.press(await findByText('Verifikasi dengan AI'));
-    await findByText('Skill layak dikirim');
-    fireEvent.press(getByText('Cek Lagi'));
-    await findByText('Skill layak dikirim');
-    expect(mockVerify).toHaveBeenCalledTimes(2);
-    const lastCall = mockVerify.mock.calls[1][0];
-    expect(lastCall.chat_history).toHaveLength(1);
+    expect(await findByText('AI sedang meninjau draft...')).toBeTruthy();
+    resolveVerify!({ verdict: 'layak', feedback: [], suggestions: [] });
+    expect(await findByText('Skill layak dikirim')).toBeTruthy();
   });
 
   it('submit disabled until layak verdict', async () => {
-    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+    const { getByText, findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    fireEvent.press(await findByText('Verifikasi dengan AI'));
     await findByText('Skill layak dikirim');
     fireEvent.press(getByText('Kirim Skill untuk Verifikasi'));
     expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pot Gantung PET' }));
     expect(await findByText('Skill Terkirim')).toBeTruthy();
   });
 
-  it('shows warning in verify popup when laidak with additional materials', async () => {
-    const { getByText, findByText } = await render(<SkillCreatorScreen />);
+  it('perbaiki verdict shows feedback but still allows submit', async () => {
+    mockVerify.mockResolvedValue({
+      verdict: 'perbaiki',
+      feedback: ['Bahan X tidak terdaftar di additional_materials.'],
+      suggestions: [],
+    });
+    const { findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
-    fireEvent.press(await findByText('Verifikasi dengan AI'));
-    expect(
-      await findByText(/Butuh bahan tambahan di luar hasil scan: tali, cat/i),
-    ).toBeTruthy();
+    expect(await findByText(/Bahan X tidak terdaftar/i)).toBeTruthy();
+    expect(queryByText('Kirim Skill untuk Verifikasi')).toBeTruthy();
+    fireEvent.press(queryByText('Kirim Skill untuk Verifikasi')!);
+    expect(mockCreate).toHaveBeenCalled();
+  });
+
+  it('perbaiki verdict offers Coba Ide Lain which returns to ideas', async () => {
+    mockVerify.mockResolvedValue({
+      verdict: 'perbaiki',
+      feedback: ['Bahan X tidak terdaftar di additional_materials.'],
+      suggestions: [],
+    });
+    const { findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    fireEvent.press(await findByText('Coba Ide Lain'));
+    expect(await findByText('Generate Ulang')).toBeTruthy();
+  });
+
+  it('renders read-only draft with no text inputs', async () => {
+    const { findByText, queryAllByPlaceholderText, queryByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    await findByText('Skill layak dikirim');
+    expect(queryByText('Judul')).toBeNull();
+    expect(queryByText('Langkah Pembuatan')).toBeTruthy();
+    expect(queryAllByPlaceholderText('Peringatan keamanan (opsional)')).toHaveLength(0);
+    expect(queryByText('Cuci botol')).toBeTruthy();
+  });
+
+  it('submit sends ai_verdict layak and shows instant-catalog message', async () => {
+    const { findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    await findByText('Skill layak dikirim');
+    fireEvent.press(await findByText('Kirim Skill untuk Verifikasi'));
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ ai_verdict: 'layak' }),
+    );
+    expect(await findByText(/langsung masuk katalog/i)).toBeTruthy();
+  });
+
+  it('submit with perbaiki verdict shows expert-review message', async () => {
+    mockVerify.mockResolvedValue({
+      verdict: 'perbaiki',
+      feedback: ['Bahan X tidak terdaftar.'],
+      suggestions: [],
+    });
+    const { findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+    await findByText('Kirim draft untuk review expert');
+    fireEvent.press(await findByText('Kirim Skill untuk Verifikasi'));
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ ai_verdict: 'perbaiki' }),
+    );
+    expect(await findByText(/menunggu verifikasi expert/i)).toBeTruthy();
   });
 });
