@@ -21,7 +21,7 @@ import {
   Layers,
   MoreHorizontal,
 } from "lucide-react-native";
-import { colors, gradients, gradientStyle, radii, shadows } from "../../src/theme";
+import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../src/theme";
 
 const supportedMaterials = [
   { label: "Plastik", icon: Box },
@@ -109,12 +109,14 @@ export default function UploadScreen() {
       <Header title="Upload Sampah" onBack={() => safeBack(router)} />
 
       {analyzeCall.loading ? (
-        <LoadingSpinner fullScreen message="AI Upcycling Agent sedang menganalisis material & risiko keamanan..." />
+        <View style={screenSheetStyle}>
+          <LoadingSpinner fullScreen message="AI Upcycling Agent sedang menganalisis material & risiko keamanan..." />
+        </View>
       ) : (
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
-          style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet), borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet }}
+          style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
           contentContainerStyle={{ padding: 20, paddingTop: 24, paddingBottom: 48, gap: 24 }}
         >
           <View style={{ alignItems: "center", paddingHorizontal: 16, gap: 5 }}>
@@ -165,8 +167,8 @@ export default function UploadScreen() {
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: "rgba(255,255,255,0.11)",
-                backgroundColor: colors.forest700,
-                ...gradientStyle(gradients.impact),
+                backgroundColor: colors.forest900,
+                ...gradientStyle(gradients.navigation),
                 padding: 18,
                 gap: 18,
                 boxShadow: shadows.floating,

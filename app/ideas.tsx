@@ -6,6 +6,7 @@ import { Header, Card, Badge, LoadingSpinner } from "../src/components/ui";
 import { recommendation } from "../src/services";
 import { ProductRecommendation } from "../src/services/types";
 import { safeBack } from "../src/lib/navigation";
+import { colors, screenSheetStyle } from "../src/theme";
 
 export default function IdeasScreen() {
   const router = useRouter();
@@ -24,9 +25,10 @@ export default function IdeasScreen() {
   }
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Semua Ide Produk" subtitle={`${ideas.length} ide upcycling siap dijelajahi`} onBack={() => safeBack(router)} />
       <FlatList
+        style={screenSheetStyle}
         data={ideas}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 20, paddingBottom: 32 }}

@@ -5,6 +5,7 @@ import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui
 import { useProductData } from "../../../src/hooks/useProductData";
 import { TrendingUp } from "lucide-react-native";
 import { safeBack } from "../../../src/lib/navigation";
+import { colors, screenSheetStyle } from "../../../src/theme";
 
 export default function PricingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,10 +39,10 @@ export default function PricingScreen() {
     : 0;
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Estimasi Harga" onBack={() => safeBack(router)} />
 
-      <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="p-0 border border-slate-100 mb-5 overflow-hidden">
           {[
             { label: "Biaya Material", value: priceData.materialCost },

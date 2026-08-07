@@ -7,6 +7,7 @@ import { apiClient } from "../src/services/api";
 import type { Skill, SkillStatus } from "../src/services/types";
 import { safeBack } from "../src/lib/navigation";
 import { CheckCircle2, XCircle, Eye, ThumbsDown } from "lucide-react-native";
+import { colors, screenSheetStyle } from "../src/theme";
 
 type TabKey = "pending" | "approved" | "rejected";
 
@@ -80,10 +81,10 @@ export default function ExpertDashboardScreen() {
   const filtered = items[activeTab];
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Validasi Skill Baru" subtitle="Expert Dashboard" onBack={() => safeBack(router)} />
 
-      <View className="px-6 pt-6">
+      <View style={screenSheetStyle} className="px-6 pt-6">
         <View className="flex-row bg-white rounded-2xl p-1 border border-slate-100 mb-5">
           {TABS.map((t) => {
             const active = activeTab === t.key;

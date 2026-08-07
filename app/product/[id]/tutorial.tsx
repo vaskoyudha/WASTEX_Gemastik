@@ -5,7 +5,7 @@ import { Header, Button, Card, LoadingSpinner, FitImage } from "../../../src/com
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
 import { ArrowRight, Check, PackageOpen, ShieldAlert, Wrench } from "lucide-react-native";
-import { colors, gradients, gradientStyle, shadows } from "../../../src/theme";
+import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../../src/theme";
 
 export default function TutorialScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -51,12 +51,13 @@ export default function TutorialScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
+    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
       <Header title={`Tutorial: ${product.name}`} onBack={() => safeBack(router)} />
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
+        style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 46 }}
       >
         <View style={{ padding: 18, borderRadius: 24, borderCurve: "continuous", marginBottom: 18, ...gradientStyle(gradients.navigation), boxShadow: shadows.card }}>

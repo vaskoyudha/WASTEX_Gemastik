@@ -7,6 +7,7 @@ import { impact } from "../src/services";
 import { ImpactSummary } from "../src/services/types";
 import { CustomAchievement, customAchievements } from "../src/services/localState";
 import { safeBack } from "../src/lib/navigation";
+import { colors, screenSheetStyle } from "../src/theme";
 
 const defaultSummary: ImpactSummary = {
   totalWasteProcessed: 0,
@@ -73,9 +74,9 @@ export default function AchievementsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Semua Pencapaian" subtitle="Riwayat impact dan badge WASTEX" onBack={() => safeBack(router)} />
-      <ScrollView className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 36 }}>
+      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 36 }}>
         <Card className="p-5 mb-5 bg-emerald-50 border-emerald-100">
           <Text className="text-base font-black text-slate-900 mb-4">Ringkasan Saat Ini</Text>
           <View className="flex-row justify-between">

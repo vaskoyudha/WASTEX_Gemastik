@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Bell, CheckCircle2, Leaf, Sparkles } from "lucide-react-native";
 import { Header, Card, Badge } from "../src/components/ui";
 import { safeBack } from "../src/lib/navigation";
+import { colors, screenSheetStyle } from "../src/theme";
 
 const notifications = [
   {
@@ -33,9 +34,9 @@ export default function NotificationsScreen() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Notifikasi" subtitle="Kabar terbaru dari WASTEX" onBack={() => safeBack(router)} />
-      <ScrollView className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 32 }}>
         <Card className="bg-emerald-50 border-emerald-100 p-5 mb-5">
           <View className="flex-row items-center">
             <View className="w-12 h-12 rounded-full bg-brand items-center justify-center mr-4">

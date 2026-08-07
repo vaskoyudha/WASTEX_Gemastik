@@ -1,6 +1,7 @@
 import { Platform, type ViewStyle } from "react-native";
+import { colors } from "./colors";
 
-export { colors } from "./colors";
+export { colors };
 
 export const gradients = {
   home: "linear-gradient(180deg, #15251B 0%, #294936 48%, #789080 100%)",
@@ -42,6 +43,15 @@ export const radii = {
   sheet: 28,
   capsule: 999,
 } as const;
+
+export const screenSheetStyle: ViewStyle = {
+  flex: 1,
+  backgroundColor: colors.cream50,
+  borderTopLeftRadius: radii.sheet,
+  borderTopRightRadius: radii.sheet,
+  borderCurve: "continuous",
+  overflow: "hidden",
+};
 
 export const spacing = {
   xs: 4,

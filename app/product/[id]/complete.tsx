@@ -6,7 +6,7 @@ import { Button, Card, Header, StarRating } from "../../../src/components/ui";
 import { apiClient } from "../../../src/services/api";
 import { safeBack } from "../../../src/lib/navigation";
 import { Camera, CheckCircle2, Sparkles } from "lucide-react-native";
-import { colors, gradients, gradientStyle, shadows } from "../../../src/theme";
+import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../../src/theme";
 
 export default function CompleteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,11 +58,12 @@ export default function CompleteScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
+    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
       <Header title="Tandai Selesai" onBack={() => safeBack(router)} />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
+        style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 46 }}
       >
         <View style={{ padding: 20, marginBottom: 22, borderRadius: 26, borderCurve: "continuous", ...gradientStyle(gradients.navigation), boxShadow: shadows.card }}>

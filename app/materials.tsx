@@ -5,6 +5,7 @@ import { Box, GlassWater, Layers, Package, Recycle } from "lucide-react-native";
 import { Header, Card, Badge } from "../src/components/ui";
 import { MaterialType, RiskLevel, Difficulty } from "../src/services/types";
 import { safeBack } from "../src/lib/navigation";
+import { colors, screenSheetStyle } from "../src/theme";
 
 const materialOrder: MaterialType[] = ["plastik_pet", "plastik_hdpe", "kardus", "kaleng", "kaca", "sachet"];
 
@@ -36,9 +37,9 @@ export default function MaterialsScreen() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Material Didukung" subtitle="Jenis sampah yang bisa dianalisis" onBack={() => safeBack(router)} />
-      <ScrollView className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 32 }}>
         {materialOrder.map((key) => {
           const material = MATERIAL_INFO[key];
           const Icon = materialIcons[key];

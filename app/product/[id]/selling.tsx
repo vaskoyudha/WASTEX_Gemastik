@@ -19,6 +19,7 @@ import {
 import { MaterialType } from "../../../src/services/types";
 import { safeBack } from "../../../src/lib/navigation";
 import { Copy, Share2, Check, BookmarkCheck } from "lucide-react-native";
+import { colors, screenSheetStyle } from "../../../src/theme";
 
 type SellingTab = "deskripsi" | "caption" | "hashtag" | "tips";
 type ShareTarget = "story" | "feed" | "other";
@@ -295,10 +296,10 @@ export default function SellingScreen() {
   };
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="AI Selling Assistant" onBack={handleBack} />
 
-      <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <View className="flex-row bg-white rounded-2xl p-1 border border-slate-100 mb-5">
           {(
             [

@@ -8,7 +8,7 @@ import { apiClient } from '../../src/services/api';
 import type { ChatMessage, SkillIdea, SkillProposal, SkillVerifyResponse } from '../../src/services/types';
 import { useScanStore } from '../../src/store/useScanStore';
 import { Sparkles } from 'lucide-react-native';
-import { colors, gradients, gradientStyle, radii, shadows } from '../../src/theme';
+import { colors, gradients, gradientStyle, radii, screenSheetStyle, shadows } from '../../src/theme';
 
 type Stage = 'ideas' | 'verifying' | 'result' | 'done';
 
@@ -46,14 +46,16 @@ export default function SkillCreatorScreen() {
 
   if (!scanResult) {
     return (
-      <View className="flex-1 bg-cream-50">
+      <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
         <Header title="Buat Skill Baru" onBack={() => safeBack(router)} />
-        <EmptyState
-          title="Belum Ada Hasil Scan"
-          description="Scan material terlebih dahulu untuk membuat skill baru."
-          actionLabel="Mulai Scan"
-          onAction={() => router.push('../scan/upload')}
-        />
+        <View style={screenSheetStyle}>
+          <EmptyState
+            title="Belum Ada Hasil Scan"
+            description="Scan material terlebih dahulu untuk membuat skill baru."
+            actionLabel="Mulai Scan"
+            onAction={() => router.push('../scan/upload')}
+          />
+        </View>
       </View>
     );
   }
@@ -259,12 +261,12 @@ export default function SkillCreatorScreen() {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}
+        style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 44 }}
       >
         {stage === 'ideas' && (
           <View style={{ gap: 16 }}>
-            <View style={{ padding: 17, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: colors.forest700, ...gradientStyle(gradients.impact), borderWidth: 1, borderColor: 'rgba(255,255,255,0.11)', boxShadow: shadows.floating }}>
+            <View style={{ padding: 17, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: colors.forest900, ...gradientStyle(gradients.navigation), borderWidth: 1, borderColor: 'rgba(255,255,255,0.11)', boxShadow: shadows.floating }}>
               <View style={{ width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.lime300, ...gradientStyle(gradients.scanButton) }}>
                 <Sparkles size={20} color={colors.forest900} />
               </View>

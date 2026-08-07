@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Header, Button, Card } from "../../src/components/ui";
 import { auth } from "../../src/services/auth";
 import { Input } from "../../src/components/ui/Input";
+import { colors, screenSheetStyle } from "../../src/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -32,10 +33,16 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-cream-50">
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ flex: 1, backgroundColor: colors.forest900 }}
+    >
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
+      >
         <Header title="Masuk" subtitle="Masukkan kredensial untuk WASTEX" />
-        <View className="px-6 pt-6">
+        <View style={screenSheetStyle} className="px-6 pt-6">
           <Card className="p-6">
             <Input
               label="Email"

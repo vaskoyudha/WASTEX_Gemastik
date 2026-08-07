@@ -5,6 +5,7 @@ import { Header, Button, Card, LoadingSpinner, FitImage } from "../../../src/com
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
 import { ArrowRight } from "lucide-react-native";
+import { colors, screenSheetStyle } from "../../../src/theme";
 
 export default function BeforeAfterScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,10 +35,10 @@ export default function BeforeAfterScreen() {
   }
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Sebelum & Sesudah" onBack={() => safeBack(router)} />
 
-      <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="p-4 border border-slate-100 mb-4 items-center">
           <Text className="text-xs font-semibold text-slate-500 mb-3">Sebelum & Sesudah</Text>
           <FitImage

@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
+import { colors, screenSheetStyle } from "../../../src/theme";
 
 export default function MockupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,10 +34,10 @@ export default function MockupScreen() {
   }
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
       <Header title="Mockup Produk" onBack={() => safeBack(router)} />
 
-      <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="rounded-3xl overflow-hidden p-0 border-0 mb-5">
           <Image source={{ uri: tutData.mockupImageUri }} className="w-full h-64" resizeMode="cover" />
         </Card>

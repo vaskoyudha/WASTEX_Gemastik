@@ -9,7 +9,7 @@ import { useScanStore } from "../../src/store/useScanStore";
 import type { ProductRecommendation, ScanResult } from "../../src/services/types";
 import { safeBack } from "../../src/lib/navigation";
 import { Leaf, Sparkles } from "lucide-react-native";
-import { colors, gradients, gradientStyle } from "../../src/theme";
+import { colors, gradients, gradientStyle, screenSheetStyle } from "../../src/theme";
 
 export default function RekomendasiScreen(): React.JSX.Element {
   const router = useRouter();
@@ -103,16 +103,18 @@ export default function RekomendasiScreen(): React.JSX.Element {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
+    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
       <Header title="Rekomendasi Produk" onBack={() => safeBack(router)} />
-      {scanResult ? renderContent() : (
-        <EmptyState
-          title="Belum Ada Hasil Scan"
-          description="Scan material terlebih dahulu untuk mendapatkan rekomendasi."
-          actionLabel="Mulai Scan"
-          onAction={() => router.push("../upload")}
-        />
-      )}
+      <View style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}>
+        {scanResult ? renderContent() : (
+          <EmptyState
+            title="Belum Ada Hasil Scan"
+            description="Scan material terlebih dahulu untuk mendapatkan rekomendasi."
+            actionLabel="Mulai Scan"
+            onAction={() => router.push("../upload")}
+          />
+        )}
+      </View>
     </View>
   );
 }

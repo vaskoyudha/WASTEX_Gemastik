@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState } from "react";
 import { Alert, View, Text, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
 import { useRouter } from "expo-router";
-import { Header, Button, Card, Badge } from "../../src/components/ui";
+import { Header, Button } from "../../src/components/ui";
 import { useScanStore } from "../../src/store/useScanStore";
 import { MaterialType } from "../../src/services/types";
 import type { Skill } from "../../src/services/types";
@@ -10,7 +10,7 @@ import { recommendation } from "../../src/services";
 import { safeBack } from "../../src/lib/navigation";
 import { useServiceCall } from "../../src/hooks/useServiceCall";
 import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight, Sparkles, Check, ChevronRight } from "lucide-react-native";
-import { colors, gradients, gradientStyle, shadows } from "../../src/theme";
+import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../src/theme";
 
 const materialTraits: Record<string, string[]> = {
   plastik_pet: ["Ringan", "Tahan Air", "Mudah Dipotong", "Daur Ulang"],
@@ -107,21 +107,18 @@ export default function HasilScreen() {
     scanResult.riskLevel === "aman" ? "Aman" : scanResult.riskLevel === "hati_hati" ? "Hati-hati" : "Berisiko";
   const traits = materialTraits[scanResult.materialType] || materialTraits.plastik_pet;
 
-  const detailRows = [
-    { icon: MapPin, label: "Kondisi", value: scanResult.condition },
-    { icon: BarChart2, label: "Tingkat Kesulitan", value: scanResult.difficulty || "Mudah" },
-    {
-      icon: TrendingUp,
-      label: "Potensi Nilai",
-      value:
-        scanResult.potentialValue === "rendah"
-          ? "Rendah"
-          : scanResult.potentialValue === "tinggi"
-          ? "Tinggi"
-          : "Sedang",
-    },
-    { icon: ShieldCheck, label: "Risiko Pengolahan", value: riskLabel, badge: scanResult.riskLevel },
-  ];
+  const difficultyLabel =
+    scanResult.difficulty === "sulit"
+      ? "Sulit"
+      : scanResult.difficulty === "sedang"
+        ? "Sedang"
+        : "Mudah";
+  const potentialLabel =
+    scanResult.potentialValue === "rendah"
+      ? "Rendah"
+      : scanResult.potentialValue === "tinggi"
+        ? "Tinggi"
+        : "Sedang";
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
@@ -130,50 +127,70 @@ export default function HasilScreen() {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 44, gap: 20 }}
+        style={screenSheetStyle}
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 48, gap: 24 }}
       >
-        {/* Analysis hero */}
-        <Card
-          className="p-0 rounded-[28px] overflow-hidden bg-mist-100 border-0"
-          style={{ boxShadow: shadows.floating }}
+        {/* Full-bleed analysis portrait */}
+        <View
+          style={{
+            height: 384,
+            borderRadius: 30,
+            borderCurve: "continuous",
+            overflow: "hidden",
+            backgroundColor: colors.forest900,
+            boxShadow: shadows.floating,
+          }}
         >
-          <View style={{ position: "relative" }}>
-            {imageUri && <Image source={{ uri: imageUri }} className="w-full h-[244px]" resizeMode="cover" />}
-            <View style={{ position: "absolute", left: 14, top: 14, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(21,37,27,0.78)", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" }}>
-              <Text className="text-[10px] font-bold" style={{ color: colors.white, letterSpacing: 0.4 }}>ANALISIS SELESAI</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push("/scan/upload")}
-              className="absolute bottom-3 right-3 px-3 py-2 rounded-full flex-row items-center"
-              style={{ backgroundColor: "rgba(21,37,27,0.84)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }}
-            >
-              <Edit3 size={12} color={colors.white} />
-              <Text className="text-[11px] font-bold ml-1.5" style={{ color: colors.white }}>Ganti foto</Text>
-            </TouchableOpacity>
-          </View>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+          ) : (
+            <View style={{ flex: 1, ...gradientStyle(gradients.navigation) }} />
+          )}
           <View
+            pointerEvents="none"
             style={{
-              flexDirection: "row",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              paddingHorizontal: 18,
-              paddingTop: 18,
-              paddingBottom: 20,
-              backgroundColor: colors.forest900,
-              ...gradientStyle(gradients.navigation),
+              position: "absolute",
+              inset: 0,
+              ...gradientStyle(
+                "linear-gradient(180deg, rgba(10,19,14,0.38) 0%, rgba(10,19,14,0.02) 34%, rgba(10,19,14,0.2) 54%, rgba(10,19,14,0.97) 100%)",
+              ),
             }}
-          >
-            <View style={{ flex: 1, paddingRight: 14 }}>
-              <Text className="text-[11px] mb-1.5" style={{ color: "rgba(255,255,255,0.62)" }}>Material terdeteksi</Text>
-              <Text className="text-[24px] font-extrabold" style={{ color: colors.white, letterSpacing: -0.8 }}>{scanResult.materialLabel}</Text>
-            </View>
-            <View className="items-end">
-              <Text selectable className="text-[34px] font-extrabold" style={{ color: colors.lime300, fontVariant: ["tabular-nums"], letterSpacing: -1.4 }}>{confidencePct}%</Text>
-              <Text className="text-[9px]" style={{ color: "rgba(255,255,255,0.58)" }}>tingkat keyakinan</Text>
+          />
+
+          <View style={{ position: "absolute", left: 16, top: 16, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: "rgba(21,37,27,0.72)", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }}>
+            <View className="flex-row items-center">
+              <Check size={12} color={colors.lime300} />
+              <Text className="text-[10px] font-bold ml-1.5" style={{ color: colors.white, letterSpacing: 0.25 }}>Analisis selesai</Text>
             </View>
           </View>
-        </Card>
+
+          <TouchableOpacity
+            onPress={() => router.push("/scan/upload")}
+            className="absolute top-4 right-4 px-3 py-2 rounded-full flex-row items-center"
+            style={{ backgroundColor: "rgba(21,37,27,0.72)", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }}
+            activeOpacity={0.82}
+          >
+            <Edit3 size={12} color={colors.white} />
+            <Text className="text-[11px] font-bold ml-1.5" style={{ color: colors.white }}>Ganti foto</Text>
+          </TouchableOpacity>
+
+          <View style={{ position: "absolute", left: 20, right: 20, bottom: 20 }}>
+            <Text className="text-[11px] font-semibold mb-2" style={{ color: "rgba(255,255,255,0.64)", letterSpacing: 0.2 }}>Material terdeteksi</Text>
+            <View className="flex-row items-end justify-between">
+              <Text
+                selectable
+                className="text-[27px] leading-[32px] font-extrabold"
+                style={{ color: colors.white, letterSpacing: -1, flex: 1, paddingRight: 18 }}
+              >
+                {scanResult.materialLabel}
+              </Text>
+              <View className="items-end" style={{ paddingBottom: 2 }}>
+                <Text selectable className="text-[42px] leading-[44px] font-extrabold" style={{ color: colors.lime300, fontVariant: ["tabular-nums"], letterSpacing: -2 }}>{confidencePct}%</Text>
+                <Text className="text-[9px] font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>keyakinan AI</Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
         {/* Low-confidence verification banner */}
         {scanResult.needsVerification && (
@@ -185,93 +202,117 @@ export default function HasilScreen() {
           </View>
         )}
 
-        {/* Detail Rows */}
-        <View>
-          <Text className="text-[16px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.35 }}>Ringkasan material</Text>
-          <Card className="p-0 border-0 overflow-hidden rounded-[24px]" style={{ backgroundColor: colors.surface, boxShadow: shadows.card }}>
-          {detailRows.map((row, idx) => (
-            <View
-              key={idx}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingHorizontal: 15,
-                paddingVertical: 14,
-                borderBottomWidth: idx !== detailRows.length - 1 ? 1 : 0,
-                borderBottomColor: colors.mist100,
-              }}
-            >
-              <View className="flex-row items-center" style={{ flex: 1 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
-                  <row.icon size={17} color={colors.forest600} />
-                </View>
-                <Text className="text-sm ml-3" style={{ color: colors.ink600 }}>{row.label}</Text>
+        {/* Editorial material summary */}
+        <View style={{ gap: 12 }}>
+          <Text className="text-[19px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Tentang material ini</Text>
+          <View
+            style={{
+              padding: 18,
+              borderRadius: 22,
+              borderCurve: "continuous",
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: "rgba(41,73,54,0.08)",
+            }}
+          >
+            <View className="flex-row items-center mb-3">
+              <View style={{ width: 34, height: 34, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
+                <MapPin size={16} color={colors.forest700} />
               </View>
-              {row.badge ? (
-                <Badge variant={scanResult.riskLevel} size="sm" className="ml-2" />
-              ) : (
-                <Text className="text-sm font-semibold ml-2" style={{ color: colors.ink900, maxWidth: "52%", textAlign: "right" }}>{row.value}</Text>
-              )}
+              <Text className="text-[11px] font-bold ml-2.5" style={{ color: colors.forest600 }}>Kondisi terdeteksi</Text>
             </View>
-          ))}
-          </Card>
+            <Text selectable className="text-[15px] leading-[22px] font-semibold" style={{ color: colors.ink900, letterSpacing: -0.16 }}>
+              {scanResult.condition}
+            </Text>
+          </View>
+
+          <View className="flex-row" style={{ gap: 10 }}>
+            <View style={{ flex: 1, minHeight: 112, padding: 15, borderRadius: 21, borderCurve: "continuous", justifyContent: "space-between", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}>
+              <BarChart2 size={18} color={colors.forest700} />
+              <View>
+                <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.ink400 }}>Kesulitan</Text>
+                <Text selectable className="text-[18px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.4 }}>{difficultyLabel}</Text>
+              </View>
+            </View>
+            <View style={{ flex: 1, minHeight: 112, padding: 15, borderRadius: 21, borderCurve: "continuous", justifyContent: "space-between", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}>
+              <TrendingUp size={18} color={colors.forest700} />
+              <View>
+                <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.ink400 }}>Potensi nilai</Text>
+                <Text selectable className="text-[18px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.4 }}>{potentialLabel}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={{ minHeight: 64, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 19, borderCurve: "continuous", flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}>
+              <ShieldCheck size={17} color={scanResult.riskLevel === "aman" ? colors.forest700 : "#A46212"} />
+            </View>
+            <View className="flex-1 ml-3">
+              <Text className="text-[10px] font-semibold" style={{ color: colors.ink600 }}>Risiko pengolahan</Text>
+              <Text selectable className="text-sm font-extrabold mt-0.5" style={{ color: scanResult.riskLevel === "aman" ? colors.forest900 : "#8A4E0B" }}>{riskLabel}</Text>
+            </View>
+            <Text className="text-[10px] font-semibold" style={{ color: colors.ink400 }}>Ikuti panduan</Text>
+          </View>
         </View>
 
         {/* Material Traits */}
         <View>
-          <Text className="text-[16px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.35 }}>Sifat material</Text>
+          <Text className="text-[19px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Karakter material</Text>
           <View className="flex-row flex-wrap gap-2">
             {traits.map((t, idx) => (
-              <View key={idx} style={{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.sage200 }}>
-                <Text className="text-xs font-semibold" style={{ color: colors.forest600 }}>{t}</Text>
+              <View key={idx} style={{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: "transparent", borderWidth: 1, borderColor: colors.sage300 }}>
+                <Text className="text-xs font-bold" style={{ color: colors.forest700 }}>{t}</Text>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Re-scan / Manual Correction */}
+        {/* Correction is intentionally quiet so it does not compete with the next action. */}
         <TouchableOpacity
           onPress={() => setModalVisible(true)}
-          className="flex-row items-center justify-center py-3 px-4 rounded-2xl"
-          style={{ backgroundColor: "rgba(255,255,255,0.66)", borderWidth: 1, borderColor: colors.sage200 }}
-          activeOpacity={0.7}
+          className="flex-row items-center justify-center py-2 px-4"
+          activeOpacity={0.72}
         >
-          <Edit3 size={16} color={colors.forest600} />
-          <Text className="font-semibold text-sm ml-2" style={{ color: colors.forest800 }}>Bukan material ini? Pilih manual</Text>
+          <Edit3 size={15} color={colors.forest600} />
+          <Text className="font-bold text-xs ml-2" style={{ color: colors.forest700 }}>Bukan material ini? Koreksi hasil</Text>
         </TouchableOpacity>
 
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 14 }}>
           <TouchableOpacity
             onPress={() => router.push("/scan/skill-creator")}
-            className="flex-row items-center justify-center py-3 px-4 rounded-2xl"
-            style={{ backgroundColor: colors.forest700, ...gradientStyle(gradients.cameraMedallion), boxShadow: shadows.card }}
-            activeOpacity={0.7}
+            style={{ minHeight: 92, flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 23, borderCurve: "continuous", backgroundColor: colors.forest900, ...gradientStyle(gradients.navigation), boxShadow: shadows.card }}
+            activeOpacity={0.84}
           >
-            <Sparkles size={16} color="#ffffff" />
-            <Text className="text-white font-semibold text-sm ml-2">Buat Skill Baru dari Material Ini</Text>
+            <View style={{ width: 44, height: 44, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: colors.lime300 }}>
+              <Sparkles size={19} color={colors.forest900} />
+            </View>
+            <View className="flex-1 ml-3.5">
+              <Text className="font-extrabold text-[15px]" style={{ color: colors.white, letterSpacing: -0.25 }}>Buat skill baru</Text>
+              <Text className="text-[11px] leading-4 mt-1" style={{ color: "rgba(255,255,255,0.6)" }}>Kembangkan ide lain bersama AI</Text>
+            </View>
+            <ChevronRight size={20} color={colors.lime300} />
           </TouchableOpacity>
 
-          <Text className="text-[16px] font-extrabold mt-1" style={{ color: colors.ink900, letterSpacing: -0.35 }}>Skill terverifikasi</Text>
+          <Text className="text-[19px] font-extrabold mt-2" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Skill terverifikasi</Text>
           {verifiedSkills.length === 0 ? (
             <Text className="text-xs" style={{ color: colors.ink600 }}>
               Belum ada skill terverifikasi untuk material ini.
             </Text>
           ) : (
-            verifiedSkills.map((skill) => (
-              <Card key={skill.id} className="p-4 mb-2 rounded-[20px] border-0" style={{ backgroundColor: colors.surface }}>
-                <View className="flex-row items-center">
+            <View style={{ borderRadius: 23, borderCurve: "continuous", overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}>
+              {verifiedSkills.map((skill, index) => (
+                <View key={skill.id} className="flex-row items-center px-4 py-3.5" style={{ borderTopWidth: index === 0 ? 0 : 1, borderTopColor: colors.mist100 }}>
                   <View className="w-9 h-9 rounded-[14px] items-center justify-center mr-3" style={{ backgroundColor: colors.mist100 }}>
-                    <Check size={16} color={colors.forest700} />
+                    <Check size={15} color={colors.forest700} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-sm font-extrabold mb-1" style={{ color: colors.ink900 }}>{skill.title}</Text>
-                    <Text className="text-[10px] font-semibold" style={{ color: colors.forest600 }}>{skill.difficulty}</Text>
+                    <Text className="text-[13px] font-extrabold" style={{ color: colors.ink900 }}>{skill.title}</Text>
+                    <Text className="text-[10px] font-semibold mt-0.5" style={{ color: colors.forest600 }}>{skill.difficulty}</Text>
                   </View>
                   <ChevronRight size={18} color={colors.ink400} />
                 </View>
-              </Card>
-            ))
+              ))}
+            </View>
           )}
         </View>
 

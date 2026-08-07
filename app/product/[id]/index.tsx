@@ -20,7 +20,7 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react-native";
-import { colors, gradients, gradientStyle, shadows } from "../../../src/theme";
+import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../../src/theme";
 
 const toolIcons: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
   botol: Package,
@@ -101,12 +101,13 @@ export default function ProductDetailScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
+    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
       <Header title="Detail Produk" onBack={() => safeBack(router)} rightElement={headerRight} />
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
+        style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 46 }}
       >
         <Card className="rounded-[28px] overflow-hidden p-0 border-0 mb-6" style={{ boxShadow: shadows.floating }}>

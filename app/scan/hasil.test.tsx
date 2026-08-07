@@ -86,7 +86,7 @@ describe('HasilScreen skill section', () => {
 
   it('navigates to skill creator', async () => {
     const { getByText } = await render(<HasilScreen />);
-    fireEvent.press(getByText('Buat Skill Baru dari Material Ini'));
+    fireEvent.press(getByText('Buat skill baru'));
     expect(mockPush).toHaveBeenCalledWith('/scan/skill-creator');
   });
 
