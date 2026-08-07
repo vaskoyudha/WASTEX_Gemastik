@@ -109,9 +109,9 @@ function skillToProduct(skill: Skill): ProductRecommendation {
   };
 }
 
-/** Ambil URL visual untuk produk; fallback mockup -> before_after -> "" (tanpa gambar). */
+/** Ambil URL visual untuk produk; fallback before_after -> mockup -> "" (tanpa gambar). */
 async function productThumbnailUri(skillId: string): Promise<string> {
-  for (const kind of ["mockup", "before_after"] as const) {
+  for (const kind of ["before_after", "mockup"] as const) {
     try {
       const v = await apiClient.getVisual(skillId, kind);
       if (v?.image_path) return visualUrl(v.image_path);
