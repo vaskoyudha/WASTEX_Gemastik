@@ -8,6 +8,10 @@ export const gradients = {
     "radial-gradient(circle at 92% 18%, rgba(217,241,166,0.42) 0%, rgba(217,241,166,0) 34%), linear-gradient(135deg, #536B50 0%, #71886A 58%, #A8B991 100%)",
   actionRail:
     "linear-gradient(135deg, rgba(116,139,109,0.82) 0%, rgba(80,104,78,0.9) 50%, rgba(57,77,58,0.94) 100%)",
+  actionTile:
+    "linear-gradient(180deg, rgba(151,170,145,0.24) 0%, rgba(78,102,77,0.28) 100%)",
+  actionIcon:
+    "radial-gradient(circle at 50% 18%, rgba(221,232,214,0.26) 0%, rgba(161,181,155,0.18) 48%, rgba(93,120,91,0.12) 100%)",
   contentSheet: "linear-gradient(155deg, #FCFCF9 0%, #F4F7F2 58%, #EDF2EB 100%)",
   pageHero:
     "radial-gradient(circle at 88% 4%, rgba(211,232,171,0.2) 0%, rgba(211,232,171,0) 34%), linear-gradient(160deg, #304331 0%, #4B634A 58%, #71876D 100%)",

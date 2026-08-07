@@ -239,40 +239,44 @@ export default function HomeScreen() {
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "space-between",
-              paddingHorizontal: 6,
-              paddingVertical: 11,
-              borderRadius: 22,
-              borderCurve: "continuous",
-              backgroundColor: "rgba(56,78,57,0.88)",
-              ...gradientStyle(gradients.actionRail),
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-              boxShadow: "0 8px 20px rgba(31,47,33,0.11)",
+              gap: compact ? 7 : 9,
             }}
           >
-            {actions.map((action, index) => (
-              <View key={action.label}>
+            {actions.map((action) => (
+              <View key={action.label} style={{ flex: 1 }}>
                 <PressableScale
                   accessibilityLabel={action.label}
                   onPress={() => router.push(action.route)}
-                  style={{ alignItems: "center", gap: 6, width: compact ? 66 : 76 }}
+                  style={{
+                    height: compact ? 94 : 100,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    borderRadius: 17,
+                    borderCurve: "continuous",
+                    backgroundColor: "rgba(104,130,101,0.24)",
+                    ...gradientStyle(gradients.actionTile),
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,0.055)",
+                    boxShadow: "0 6px 16px rgba(31,47,33,0.08)",
+                  }}
                 >
                   <View
                     style={{
-                      width: compact ? 42 : 44,
-                      height: compact ? 42 : 44,
-                      borderRadius: 22,
+                      width: compact ? 48 : 52,
+                      height: compact ? 48 : 52,
+                      borderRadius: 26,
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: action.featured ? "rgba(220,245,167,0.26)" : "rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(211,225,204,0.13)",
+                      ...gradientStyle(gradients.actionIcon),
                       borderWidth: 1,
-                      borderColor: action.featured ? "rgba(220,245,167,0.2)" : "rgba(255,255,255,0.09)",
+                      borderColor: "rgba(255,255,255,0.08)",
                     }}
                   >
-                    <action.icon size={19} color={action.featured ? colors.lime300 : colors.cream50} strokeWidth={1.9} />
+                    <action.icon size={20} color={colors.cream50} strokeWidth={1.7} />
                   </View>
-                  <Text style={{ color: colors.cream50, fontSize: 10, fontFamily: "Inter_500Medium" }}>
+                  <Text style={{ color: colors.cream50, fontSize: 11, fontFamily: "Inter_500Medium" }}>
                     {action.label}
                   </Text>
                 </PressableScale>
