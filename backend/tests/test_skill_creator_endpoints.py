@@ -126,6 +126,37 @@ def test_verify_returns_verdict(monkeypatch):
     assert r.json()["verdict"] == "layak"
 
 
+def test_verify_returns_auto_repaired_draft(monkeypatch):
+    async def fake_verify(draft, chat_history, client_factory=None):
+        from app.schemas import SkillProposal
+
+        repaired = SkillProposal.model_validate(
+            {
+                **draft.model_dump(mode="json"),
+                "steps": [
+                    *draft.model_dump(mode="json")["steps"],
+                    {"order": 2, "instruction": "Keringkan botol", "warning": None},
+                ],
+            }
+        )
+        return {
+            "verdict": "layak",
+            "feedback": [],
+            "suggestions": [],
+            "draft": repaired,
+            "auto_repaired": True,
+        }
+
+    monkeypatch.setattr("app.api.skills.verify_draft", fake_verify)
+    r = TestClient(app).post(
+        "/skills/verify", json={"draft": PROPOSAL, "chat_history": []}, headers=_auth()
+    )
+
+    assert r.status_code == 200
+    assert r.json()["auto_repaired"] is True
+    assert len(r.json()["draft"]["steps"]) == 2
+
+
 def test_verify_rejects_invalid_draft(fake_sb):
     r = TestClient(app).post(
         "/skills/verify", json={"draft": {**PROPOSAL, "material": "baja"}}, headers=_auth()

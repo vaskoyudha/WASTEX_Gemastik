@@ -268,6 +268,8 @@ class SkillVerifyResponse(BaseModel):
     verdict: Literal["layak", "perbaiki"]
     feedback: list[str] = []
     suggestions: list[str] = []
+    draft: SkillProposal | None = None
+    auto_repaired: bool = False
 
 
 class ContinuityStepIssue(BaseModel):

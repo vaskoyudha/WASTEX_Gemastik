@@ -46,6 +46,8 @@ def test_skill_verify_response_defaults_empty_lists():
     r = SkillVerifyResponse.model_validate({"verdict": "layak"})
     assert r.feedback == []
     assert r.suggestions == []
+    assert r.draft is None
+    assert r.auto_repaired is False
 
 
 def test_skill_verify_request_holds_draft_and_history():

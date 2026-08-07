@@ -350,9 +350,68 @@ def test_repair_prompt_has_contract_sections():
 
 async def test_verify_draft_returns_verdict():
     draft = SkillProposal.model_validate(VALID_PROPOSAL)
-    make, _ = _factory([VERDICT_PAYLOAD])
+    make, client = _factory([VERDICT_PAYLOAD])
     result = await verify_draft(draft, [], client_factory=make)
     assert result.verdict == "layak"
+    assert result.draft == draft
+    assert result.auto_repaired is False
+    assert client.post_calls == 1
+
+
+async def test_verify_draft_repairs_once_then_verifies_again():
+    draft = SkillProposal.model_validate(VALID_PROPOSAL)
+    first_verdict = {
+        "verdict": "perbaiki",
+        "feedback": ["Peringatan pada langkah memotong belum cukup spesifik."],
+        "suggestions": ["Tambahkan peringatan penggunaan sarung tangan."],
+    }
+    repaired = {
+        "proposal": {
+            **VALID_PROPOSAL,
+            "steps": [
+                {
+                    "order": 1,
+                    "instruction": "Cuci dan keringkan botol hingga bersih",
+                    "warning": None,
+                    "visual_description": "Botol tampak bersih dan kering. Tangan memegang botol di atas meja kerja.",
+                },
+                {
+                    "order": 2,
+                    "instruction": "Potong sisi botol menggunakan cutter",
+                    "warning": "Gunakan sarung tangan dan arahkan cutter menjauh dari tubuh.",
+                    "visual_description": "Tangan bersarung memotong sisi botol. Mata cutter mengarah menjauh dari tubuh.",
+                },
+            ],
+        }
+    }
+    make, client = _factory([first_verdict, repaired, VERDICT_PAYLOAD])
+
+    result = await verify_draft(draft, [], client_factory=make)
+
+    assert result.verdict == "layak"
+    assert result.auto_repaired is True
+    assert result.draft is not None
+    assert len(result.draft.steps) == 2
+    assert "sarung tangan" in (result.draft.steps[1].warning or "")
+    assert client.post_calls == 3
+
+
+async def test_verify_draft_falls_back_when_repair_changes_identity():
+    draft = SkillProposal.model_validate(VALID_PROPOSAL)
+    first_verdict = {
+        "verdict": "perbaiki",
+        "feedback": ["Langkah belum aman."],
+        "suggestions": ["Tambahkan warning."],
+    }
+    invalid_repair = {"proposal": {**VALID_PROPOSAL, "title": "Ide yang berbeda"}}
+    make, client = _factory([first_verdict, invalid_repair])
+
+    result = await verify_draft(draft, [], client_factory=make)
+
+    assert result.verdict == "perbaiki"
+    assert result.auto_repaired is False
+    assert result.draft == draft
+    assert client.post_calls == 2
 
 
 def _proposal_with_steps(steps):
@@ -486,7 +545,11 @@ async def test_expand_proposal_auto_inserts_missing_prerequisite_steps():
             "material": "kaleng",
             "steps": [
                 {"order": 1, "instruction": "Cuci kaleng hingga bersih", "warning": None},
-                {"order": 2, "instruction": "Isi kaleng dengan tanah dan tanam bibit", "warning": None},
+                {
+                    "order": 2,
+                    "instruction": "Isi kaleng dengan tanah dan tanam bibit",
+                    "warning": None,
+                },
             ],
         }
     }

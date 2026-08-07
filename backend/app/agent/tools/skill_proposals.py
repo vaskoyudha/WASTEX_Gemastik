@@ -281,6 +281,43 @@ Jawab HANYA dengan JSON valid berformat:
  "suggestions": ["<saran perbaikan spesifik>", "..."]}
 Jika semua aspek lolos, verdict = "layak" dan feedback kosong."""
 
+SKILL_VERIFY_REPAIR_PROMPT = """# Tugas
+Kamu adalah perajin ulung yang harus memperbaiki draft skill berdasarkan hasil verifier.
+
+## Draft asli
+{draft_json}
+
+## Feedback verifier
+{verdict_json}
+
+## Iron Law
+- Pertahankan ide, title, description, material, dan difficulty draft asli.
+- Perbaiki SEMUA masalah yang disebutkan dalam feedback dan suggestions.
+- Jangan menambah bahan utama selain material draft.
+
+## Aturan
+- Boleh mengubah, menambah, memecah, atau mengurutkan ulang steps.
+- Boleh melengkapi tools dan additional_materials bila dibutuhkan oleh langkah.
+- Semua bahan pelengkap yang disebut dalam langkah wajib terdaftar di
+  additional_materials dengan category, est_cost_idr, dan purpose yang jelas.
+- Setiap langkah berbahaya wajib memiliki warning yang spesifik.
+- Setiap langkah wajib punya satu aksi utama dan visual_description 2-4 kalimat.
+- Urutan langkah harus kontinu dari persiapan hingga produk selesai.
+
+## Self-Check
+- Semua feedback verifier sudah diperbaiki?
+- Title, description, material, difficulty, dan ide tetap sama?
+- JSON valid sesuai format?
+
+Jawab HANYA dengan JSON valid berformat:
+{{"proposal": {{"title": "...", "description": "...",
+  "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
+  "difficulty": "pemula|menengah|mahir",
+  "steps": [{{"order": 1, "instruction": "...", "warning": "...", "visual_description": "..."}}],
+  "tools": [{{"name": "...", "optional": false}}],
+  "additional_materials": [{{"name": "...", "category": "tali|cat|lem|tanah_tanaman|pengait|alat|lainnya", "est_cost_idr": 2000, "purpose": "..."}}],
+  "est_cost_idr": 5000, "est_price_idr": 25000}}}}"""
+
 
 def _parse_proposals(payload: dict, expected_material: str) -> list[SkillProposal]:
     proposals = payload.get("proposals") or []
@@ -331,7 +368,7 @@ _PREREQ_RULES = [
         "lubang drainase di bagian bawah wadah belum dibuat",
     ),
     (
-        re.compile(r"tanah|tanam|bibit|sukulen|kaktus|isi|tuang"),
+        re.compile(r"tanah|tanam|bibit|sukulen|kaktus|\bisi\b|mengisi|tuang"),
         re.compile(r"buka|potong|sayat|iris|pembuka"),
         "bagian atas wadah tertutup belum dibuka/dipotong",
     ),
@@ -496,9 +533,7 @@ def auto_insert_missing_steps(proposal: SkillProposal) -> SkillProposal:
         template = _PREREQ_INSERTIONS.get(issue.missing_prerequisite)
         if template is None:
             continue
-        insert_idx = next(
-            (i for i, s in enumerate(steps) if s.order >= issue.order), len(steps)
-        )
+        insert_idx = next((i for i, s in enumerate(steps) if s.order >= issue.order), len(steps))
         new_step = template.model_copy(update={"order": 0})
         steps.insert(insert_idx, new_step)
 
@@ -564,6 +599,14 @@ def _build_repair_messages(proposal: SkillProposal, critique: ContinuityCritique
 def _build_verify_messages(draft: SkillProposal, chat_history: list[dict]) -> list[dict]:
     content = SKILL_VERIFY_PROMPT + "\n\nDraft skill:\n" + draft.model_dump_json(indent=2)
     return [{"role": "user", "content": content}, *chat_history]
+
+
+def _build_verify_repair_messages(draft: SkillProposal, verdict: SkillVerifyResponse) -> list[dict]:
+    content = SKILL_VERIFY_REPAIR_PROMPT.format(
+        draft_json=draft.model_dump_json(indent=2),
+        verdict_json=verdict.model_dump_json(indent=2, exclude={"draft", "auto_repaired"}),
+    )
+    return [{"role": "user", "content": content}]
 
 
 async def _post_json(
@@ -697,5 +740,31 @@ async def verify_draft(
     chat_history: list[dict],
     client_factory=httpx.AsyncClient,
 ) -> SkillVerifyResponse:
-    messages = _build_verify_messages(draft, chat_history)
-    return await _call_until_success(messages, _parse_verdict, client_factory)
+    first_verdict = await _call_until_success(
+        _build_verify_messages(draft, chat_history), _parse_verdict, client_factory
+    )
+    if first_verdict.verdict == "layak":
+        return first_verdict.model_copy(update={"draft": draft})
+
+    try:
+        repaired = await _call_until_success(
+            _build_verify_repair_messages(draft, first_verdict),
+            _parse_single_proposal,
+            client_factory,
+        )
+        if (
+            repaired.title != draft.title
+            or repaired.description != draft.description
+            or repaired.material != draft.material
+            or repaired.difficulty != draft.difficulty
+        ):
+            raise SkillGenUnavailable("repair changed the original skill identity")
+        repaired = auto_insert_missing_steps(repaired)
+        repaired = auto_add_missing_materials(repaired)
+        final_verdict = await _call_until_success(
+            _build_verify_messages(repaired, []), _parse_verdict, client_factory
+        )
+        return final_verdict.model_copy(update={"draft": repaired, "auto_repaired": True})
+    except SkillGenUnavailable:
+        # Graceful fallback: preserve the original draft and first verifier result.
+        return first_verdict.model_copy(update={"draft": draft})

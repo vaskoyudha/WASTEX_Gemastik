@@ -250,6 +250,8 @@ export interface SkillVerifyResponse {
   verdict: 'layak' | 'perbaiki';
   feedback: string[];
   suggestions: string[];
+  draft?: SkillProposal | null;
+  auto_repaired?: boolean;
 }
 
 // ---- Impact / History (local) ----

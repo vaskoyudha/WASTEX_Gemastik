@@ -73,6 +73,9 @@ export default function SkillCreatorScreen() {
         draft: full,
         chat_history: [userMsg],
       });
+      const verifiedDraft = result.draft ?? full;
+      setSelected(verifiedDraft);
+      setDraft({ ...verifiedDraft, steps: verifiedDraft.steps.map((s) => ({ ...s })) });
       setVerdict(result);
       setStage('result');
     } catch {
@@ -207,6 +210,13 @@ export default function SkillCreatorScreen() {
             {verdict.feedback.map((f, i) => (
               <Text key={i} className="text-xs text-red-700 mb-1 leading-5">• {f}</Text>
             ))}
+          </View>
+        )}
+        {verdict?.auto_repaired && verdict.verdict === 'layak' && (
+          <View className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 mb-4">
+            <Text className="text-xs text-emerald-700 leading-5">
+              AI sudah memperbaiki draft secara otomatis dan memverifikasinya kembali.
+            </Text>
           </View>
         )}
         <View className="mb-4">

@@ -146,6 +146,29 @@ describe('SkillCreatorScreen verify + submit', () => {
     expect(await findByText('Skill layak dikirim')).toBeTruthy();
   });
 
+  it('uses and displays the automatically repaired draft', async () => {
+    const repairedProposal = {
+      ...fullProposal,
+      steps: [
+        ...fullProposal.steps,
+        { order: 2, instruction: 'Keringkan botol sepenuhnya', warning: null },
+      ],
+    };
+    mockVerify.mockResolvedValue({
+      verdict: 'layak',
+      feedback: [],
+      suggestions: [],
+      draft: repairedProposal,
+      auto_repaired: true,
+    });
+
+    const { findByText } = await render(<SkillCreatorScreen />);
+    fireEvent.press(await findByText('Pot Gantung PET'));
+
+    expect(await findByText('Keringkan botol sepenuhnya')).toBeTruthy();
+    expect(await findByText(/sudah memperbaiki draft secara otomatis/i)).toBeTruthy();
+  });
+
   it('submit disabled until layak verdict', async () => {
     const { getByText, findByText, queryByText } = await render(<SkillCreatorScreen />);
     fireEvent.press(await findByText('Pot Gantung PET'));
