@@ -315,6 +315,38 @@ Jangan tampilkan sampah mentah, alat kerja, tangan, manusia, kemasan palsu, atau
 {_STYLE_SALES_MOCKUP}"""
 
 
+def build_story_mockup_prompt(skill: dict) -> str:
+    material = _MATERIAL_ID.get(skill.get("material", ""), "bahan daur ulang rumah tangga")
+    title = str(skill.get("title") or "Produk Upcycle").strip()
+    price = _format_idr(skill.get("est_price_idr"))
+    return f"""[FOTO PRODUK STORY]
+
+[ASET INSTAGRAM STORY SIAP UNGGAH]
+Buat SATU poster penjualan digital vertikal 9:16 untuk Instagram Story dari foto produk
+jadi pengguna. Produk utama adalah "{title}", kerajinan upcycle dari {material}.
+
+[KOMPOSISI VERTIKAL]
+- Kanvas vertikal 9:16; produk utuh menjadi fokus di tengah dan memenuhi sekitar 55–65% area.
+- Sisakan safe area 14% di atas dan 20% di bawah agar UI Instagram tidak menutup informasi.
+- Rapikan pencahayaan dan latar, tetapi pertahankan wujud produk pada referensi dengan setia.
+- Palet krem, hijau daun, dan aksen oranye hangat dengan kontras tinggi.
+
+[TEKS PROMOSI WAJIB — SALIN PERSIS]
+Render HANYA empat elemen teks berikut sebagai overlay grafis:
+1. "{title}" sebagai judul utama di safe area atas.
+2. "{price}" sebagai label harga yang jelas.
+3. "HANDMADE • UPCYCLE" sebagai selling point.
+4. "PESAN SEKARANG" sebagai ajakan bertindak di atas safe area bawah.
+Semua teks harus tajam, terbaca, tidak terpotong, dan tidak tertutup produk.
+
+[BATASAN KEJUJURAN]
+Jangan membuat diskon, rating, ulasan, sertifikasi, nomor telepon, akun media sosial,
+QR code, logo merek, watermark, atau klaim yang tidak diberikan.
+
+[GAYA FOTO DAN DESAIN]
+{_STYLE_SALES_MOCKUP}"""
+
+
 class ImageGenUnavailable(Exception):
     pass
 
@@ -405,14 +437,21 @@ def build_completion_mockup_master_prompt(mockup_prompt: str) -> str:
     return f"{_MOCKUP_MASTER_PROMPT}{policy}\n\n{mockup_prompt}"
 
 
-async def generate_image(prompt: str, reference_images: list[bytes] | None = None) -> bytes:
+async def generate_image(
+    prompt: str,
+    reference_images: list[bytes] | None = None,
+    size: str = "1024x1024",
+    aspect_ratio: str | None = None,
+) -> bytes:
     s = get_settings()
 
     payload: dict = {
         "model": s.image_model,
         "prompt": prompt,
-        "size": "1024x1024",
+        "size": size,
     }
+    if aspect_ratio:
+        payload["aspect_ratio"] = aspect_ratio
     primary = reference_images[0] if reference_images else None
     if primary is not None:
         field = _REFERENCE_FIELD_NAMES.get(s.image_model.split("/")[0], "image")

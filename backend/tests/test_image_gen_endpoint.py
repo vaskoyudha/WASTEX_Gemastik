@@ -62,6 +62,28 @@ def test_generate_image_sends_reference_image():
             assert captured["image"] == base64.b64encode(b"\x89PNG-prev").decode()
 
 
+def test_generate_image_accepts_vertical_aspect_ratio():
+    captured = {}
+
+    async def fake_post(url, headers=None, json=None):
+        captured.update(json or {})
+        response = AsyncMock()
+        response.raise_for_status = lambda: None
+        response.content = b"raw-png-bytes"
+        return response
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_client.return_value.__aenter__.return_value.post = fake_post
+        with patch("app.agent.tools.image_gen.get_settings") as mock_settings:
+            mock_settings.return_value.openrouter_base_url = "http://proxy/v1"
+            mock_settings.return_value.openrouter_api_key = "key"
+            mock_settings.return_value.image_model = "oc/test-image-model"
+
+            asyncio_run(generate_image("story poster", size="1K", aspect_ratio="9:16"))
+            assert captured["size"] == "1K"
+            assert captured["aspect_ratio"] == "9:16"
+
+
 def test_generate_image_raises_unavailable_on_provider_error():
     import httpx
 

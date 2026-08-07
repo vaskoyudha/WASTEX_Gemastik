@@ -148,6 +148,11 @@ class CompletionSellingKit(SellingKit):
     promo_image_url: str | None = None
 
 
+class CompletionStoryAsset(BaseModel):
+    completion_id: str
+    story_image_url: str
+
+
 class UserProfileCreate(BaseModel):
     auth_user_id: UUID = Field(..., description="UUID from auth.users")
     display_name: str = Field(..., min_length=1, max_length=64)

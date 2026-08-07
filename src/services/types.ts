@@ -148,6 +148,11 @@ export interface BackendCompletionSellingKit extends BackendSellingKit {
   promo_image_url?: string | null;
 }
 
+export interface BackendCompletionStoryAsset {
+  completion_id: string;
+  story_image_url: string;
+}
+
 // ---- Tutorial ----
 export interface TutorialStep {
   order: number;

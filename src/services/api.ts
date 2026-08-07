@@ -1,4 +1,4 @@
-import type { ChatMessage, SkillCompletion, SkillCompletionsSummary, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
+import type { BackendCompletionStoryAsset, ChatMessage, SkillCompletion, SkillCompletionsSummary, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
@@ -193,6 +193,16 @@ export const apiClient = {
 
   async getCompletionSellingKit(skillId: string, completionId: string) {
     return request(`/selling/${skillId}/completions/${completionId}`, {
+      headers: await authHeaders(),
+    });
+  },
+
+  async getCompletionStoryAsset(
+    skillId: string,
+    completionId: string,
+  ): Promise<BackendCompletionStoryAsset> {
+    return request(`/selling/${skillId}/completions/${completionId}/story`, {
+      method: 'POST',
       headers: await authHeaders(),
     });
   },

@@ -1,15 +1,29 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Share, Platform, Modal } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Modal } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, FitImage, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { useScanStore } from "../../../src/store/useScanStore";
 import { impact, scanner } from "../../../src/services";
+import { apiClient } from "../../../src/services/api";
+import {
+  buildSocialCaption,
+  InstagramShareConfigurationError,
+  isShareCancellation,
+  NativeInstagramShareUnavailableError,
+  shareToInstagramFeed,
+  shareToInstagramStory,
+  shareToOtherApps,
+} from "../../../src/services/socialSharing";
 import { MaterialType } from "../../../src/services/types";
 import { safeBack } from "../../../src/lib/navigation";
 import { Copy, Share2, Check, BookmarkCheck } from "lucide-react-native";
 
 type SellingTab = "deskripsi" | "caption" | "hashtag" | "tips";
+type ShareTarget = "story" | "feed" | "other";
+
+const META_APP_ID = process.env.EXPO_PUBLIC_META_APP_ID;
 
 function inferMaterialFromProduct(productId: string): MaterialType {
   if (productId.includes("hdpe")) return "plastik_hdpe";
@@ -38,6 +52,7 @@ export default function SellingScreen() {
   const [sellingTab, setSellingTab] = useState<SellingTab>("deskripsi");
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sharingTarget, setSharingTarget] = useState<ShareTarget | null>(null);
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat AI Selling Assistant..." />;
@@ -131,18 +146,6 @@ export default function SellingScreen() {
     ].join("\n\n");
   };
 
-  const shareSellingText = async (
-    message: string,
-    title = "AI Selling Assistant",
-    imageUrl?: string,
-  ) => {
-    try {
-      await Share.share({ title, message, ...(imageUrl ? { url: imageUrl } : {}) });
-    } catch {
-      Alert.alert("Gagal", "Konten tidak bisa dibagikan saat ini.");
-    }
-  };
-
   const copySellingText = async (message: string, title = "Konten") => {
     if (!message.trim()) {
       Alert.alert("Tidak Ada Konten", "Tidak ada teks yang bisa disalin.");
@@ -150,16 +153,76 @@ export default function SellingScreen() {
     }
 
     try {
-      const clipboard = (globalThis as any).navigator?.clipboard;
-      if (Platform.OS === "web" && clipboard?.writeText) {
-        await clipboard.writeText(message);
-        Alert.alert("Tersalin", `${title} berhasil disalin ke clipboard.`);
-        return;
-      }
-
-      await Share.share({ title, message });
+      await Clipboard.setStringAsync(message);
+      Alert.alert("Tersalin", `${title} berhasil disalin ke clipboard.`);
     } catch {
       Alert.alert("Gagal", "Konten tidak bisa disalin saat ini.");
+    }
+  };
+
+  const posterImageUri = sellData.promoImageUri || tutData?.mockupImageUri;
+  const socialCaption = buildSocialCaption(sellData);
+
+  const showShareError = (error: unknown, target: ShareTarget) => {
+    if (isShareCancellation(error)) return;
+    if (error instanceof InstagramShareConfigurationError) {
+      Alert.alert(
+        "Meta App ID Belum Diatur",
+        "Tambahkan EXPO_PUBLIC_META_APP_ID lalu rebuild aplikasi. Sementara gunakan Aplikasi Lain.",
+      );
+      return;
+    }
+    if (error instanceof NativeInstagramShareUnavailableError) {
+      Alert.alert(
+        "Build Native Diperlukan",
+        "Bagikan langsung ke Instagram tersedia pada development/production build, bukan Expo Go.",
+      );
+      return;
+    }
+    Alert.alert(
+      "Tidak Dapat Membuka Instagram",
+      target === "story"
+        ? "Template Story belum dapat dibagikan. Pastikan Instagram terpasang lalu coba lagi."
+        : "Poster belum dapat dibagikan. Pastikan aplikasi tujuan terpasang lalu coba lagi.",
+    );
+  };
+
+  const handleInstagramStory = async () => {
+    if (!posterImageUri) return;
+    setSharingTarget("story");
+    try {
+      const storyImageUri = completionId
+        ? (await apiClient.getCompletionStoryAsset(id, completionId)).story_image_url
+        : posterImageUri;
+      await shareToInstagramStory(storyImageUri, socialCaption, META_APP_ID);
+    } catch (error) {
+      showShareError(error, "story");
+    } finally {
+      setSharingTarget(null);
+    }
+  };
+
+  const handleInstagramFeed = async () => {
+    if (!posterImageUri) return;
+    setSharingTarget("feed");
+    try {
+      await shareToInstagramFeed(posterImageUri, socialCaption);
+    } catch (error) {
+      showShareError(error, "feed");
+    } finally {
+      setSharingTarget(null);
+    }
+  };
+
+  const handleOtherApps = async () => {
+    if (!posterImageUri) return;
+    setSharingTarget("other");
+    try {
+      await shareToOtherApps(posterImageUri, socialCaption);
+    } catch (error) {
+      showShareError(error, "other");
+    } finally {
+      setSharingTarget(null);
     }
   };
 
@@ -290,26 +353,49 @@ export default function SellingScreen() {
 
         {renderContent()}
 
-        <View className="flex-row gap-3 mt-2 mb-4">
+        <View className="mt-2 mb-4">
           <Button
             title="Salin Semua"
             variant="secondary"
-            className="flex-1"
+            className="mb-3"
             onPress={() => copySellingText(getAllSellingText(), "Semua konten")}
           />
-          <Button
-            title="Bagikan Semua"
-            variant="primary"
-            className="flex-1"
-            icon={<Share2 size={18} color="#ffffff" />}
-            onPress={() =>
-              shareSellingText(
-                getAllSellingText(),
-                "AI Selling Assistant",
-                sellData.promoImageUri || tutData?.mockupImageUri,
-              )
-            }
-          />
+          {posterImageUri ? (
+            <Card className="p-4 border border-emerald-100 bg-emerald-50">
+              <View className="flex-row items-center mb-2">
+                <Share2 size={18} color="#166534" />
+                <Text className="text-sm font-bold text-slate-900 ml-2">Bagikan Poster</Text>
+              </View>
+              <Text className="text-xs text-slate-600 leading-5 mb-4">
+                Caption dan hashtag otomatis disalin. Di Instagram kamu tinggal menempelkan
+                caption dan menekan Bagikan.
+              </Text>
+              <Button
+                title="Instagram Story"
+                variant="primary"
+                className="mb-2"
+                onPress={handleInstagramStory}
+                loading={sharingTarget === "story"}
+                disabled={sharingTarget !== null}
+              />
+              <Button
+                title="Instagram Feed"
+                variant="secondary"
+                className="mb-2"
+                onPress={handleInstagramFeed}
+                loading={sharingTarget === "feed"}
+                disabled={sharingTarget !== null}
+              />
+              <Button
+                title="Aplikasi Lain"
+                variant="outline"
+                icon={<Share2 size={18} color="#166534" />}
+                onPress={handleOtherApps}
+                loading={sharingTarget === "other"}
+                disabled={sharingTarget !== null}
+              />
+            </Card>
+          ) : null}
         </View>
 
         <Button

@@ -8,7 +8,11 @@
     "userInterfaceStyle": "light",
     "scheme": "wastex",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "WASTEX memerlukan akses foto untuk membagikan poster produk ke Instagram.",
+        "NSPhotoLibraryAddUsageDescription": "WASTEX memerlukan izin menyimpan poster produk sebelum dibagikan ke Instagram."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +33,19 @@
     "plugins": [
       "expo-router",
       "expo-image-picker",
-      "expo-font"
+      "expo-font",
+      [
+        "react-native-share",
+        {
+          "ios": [
+            "instagram"
+          ],
+          "android": [
+            "com.instagram.android"
+          ]
+        }
+      ],
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true

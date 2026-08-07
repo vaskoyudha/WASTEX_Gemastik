@@ -1,7 +1,12 @@
 import React from "react";
 import { fireEvent, render } from "@testing-library/react-native";
-import { Pressable as MockPressable, Share, Text as MockText } from "react-native";
+import { Pressable as MockPressable, Text as MockText } from "react-native";
 import SellingScreen from "./selling";
+
+const mockShareStory = jest.fn();
+const mockShareFeed = jest.fn();
+const mockShareOther = jest.fn();
+const mockGetStoryAsset = jest.fn();
 
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "s1", completionId: "c1" }),
@@ -40,6 +45,24 @@ jest.mock("../../../src/services", () => ({
   scanner: { getMaterialInfo: jest.fn() },
 }));
 
+jest.mock("../../../src/services/api", () => ({
+  apiClient: {
+    getCompletionStoryAsset: (...args: unknown[]) => mockGetStoryAsset(...args),
+  },
+}));
+
+jest.mock("../../../src/services/socialSharing", () => ({
+  buildSocialCaption: () => "Vas Botol Estetik\n\nPesan sekarang!\n\n#WASTEX",
+  InstagramShareConfigurationError: class extends Error {},
+  NativeInstagramShareUnavailableError: class extends Error {},
+  isShareCancellation: () => false,
+  shareToInstagramStory: (...args: unknown[]) => mockShareStory(...args),
+  shareToInstagramFeed: (...args: unknown[]) => mockShareFeed(...args),
+  shareToOtherApps: (...args: unknown[]) => mockShareOther(...args),
+}));
+
+jest.mock("expo-clipboard", () => ({ setStringAsync: jest.fn() }));
+
 jest.mock("../../../src/components/ui", () => ({
   Header: ({ title }: { title: string }) => <MockText>{title}</MockText>,
   Button: ({ title, onPress }: { title: string; onPress?: () => void }) => (
@@ -60,19 +83,39 @@ jest.mock("lucide-react-native", () => ({
 }));
 
 describe("SellingScreen", () => {
-  it("shows and shares the personalized AI poster with selling copy", async () => {
-    const share = jest.spyOn(Share, "share").mockResolvedValue({ action: Share.sharedAction });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetStoryAsset.mockResolvedValue({
+      completion_id: "c1",
+      story_image_url: "https://example.test/completions/promos/c1-story.png",
+    });
+  });
+
+  it("opens Instagram Story with the generated vertical asset", async () => {
     const { getByText } = await render(<SellingScreen />);
 
     expect(getByText("Poster Promosi AI")).toBeTruthy();
     expect(getByText("poster-image")).toBeTruthy();
 
-    await fireEvent.press(getByText("Bagikan Semua"));
-    expect(share).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.stringContaining("Vas upcycle siap dijual."),
-        url: "https://example.test/completions/promos/c1.png",
-      }),
+    await fireEvent.press(getByText("Instagram Story"));
+    expect(mockGetStoryAsset).toHaveBeenCalledWith("s1", "c1");
+    expect(mockShareStory).toHaveBeenCalledWith(
+      "https://example.test/completions/promos/c1-story.png",
+      expect.stringContaining("#WASTEX"),
+      undefined,
     );
+  });
+
+  it("offers direct Feed and other-app sharing", async () => {
+    const { getByText } = await render(<SellingScreen />);
+
+    await fireEvent.press(getByText("Instagram Feed"));
+    expect(mockShareFeed).toHaveBeenCalledWith(
+      "https://example.test/completions/promos/c1.png",
+      expect.stringContaining("Pesan sekarang!"),
+    );
+
+    await fireEvent.press(getByText("Aplikasi Lain"));
+    expect(mockShareOther).toHaveBeenCalled();
   });
 });

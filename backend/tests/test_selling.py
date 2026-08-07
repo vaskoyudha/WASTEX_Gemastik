@@ -121,6 +121,81 @@ def test_completion_selling_kit_hides_another_users_completion(fake_sb, stub_age
     assert r.status_code == 404
 
 
+def test_completion_story_asset_is_vertical_and_uses_finished_photo(
+    fake_sb, stub_agent, monkeypatch
+):
+    fake_sb.table("skills").insert(
+        {
+            "id": "s1",
+            "title": "Vas Botol",
+            "material": "plastik_pet",
+            "status": "approved",
+            "est_price_idr": 25000,
+        }
+    )
+    fake_sb.table("skill_completions").insert(
+        {
+            "id": "c1",
+            "user_id": "u1",
+            "skill_id": "s1",
+            "photo_path": "c1.jpeg",
+        }
+    )
+    fake_sb.storage.from_("completions").upload("c1.jpeg", b"finished-product")
+    captured = {}
+
+    async def fake_image(prompt, references=None, size="1024x1024", aspect_ratio=None):
+        captured.update(
+            prompt=prompt,
+            references=references,
+            size=size,
+            aspect_ratio=aspect_ratio,
+        )
+        return b"story-png"
+
+    monkeypatch.setattr(selling_api, "generate_image", fake_image)
+    token = create_test_token({"sub": "u1"})
+    r = TestClient(app).post(
+        "/selling/s1/completions/c1/story",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert r.status_code == 200
+    assert r.json()["story_image_url"].endswith("/completions/promos/c1-story.png")
+    assert captured["references"] == [b"finished-product"]
+    assert captured["size"] == "1K"
+    assert captured["aspect_ratio"] == "9:16"
+    assert "vertikal 9:16" in captured["prompt"]
+    assert fake_sb.table("skill_completions").updated[0]["story_image_path"].endswith("-story.png")
+
+
+def test_completion_story_asset_uses_cache(fake_sb, stub_agent, monkeypatch):
+    fake_sb.table("skills").insert(
+        {"id": "s1", "title": "Vas", "material": "kaca", "status": "approved"}
+    )
+    fake_sb.table("skill_completions").insert(
+        {
+            "id": "c1",
+            "user_id": "u1",
+            "skill_id": "s1",
+            "photo_path": "c1.jpeg",
+            "story_image_path": "promos/c1-story.png",
+        }
+    )
+
+    async def boom(*args, **kwargs):
+        raise AssertionError("cached story must not regenerate")
+
+    monkeypatch.setattr(selling_api, "generate_image", boom)
+    token = create_test_token({"sub": "u1"})
+    r = TestClient(app).post(
+        "/selling/s1/completions/c1/story",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200
+    assert r.json()["story_image_url"].endswith("/completions/promos/c1-story.png")
+
+
 async def test_generate_selling_kit_uses_chat_json(monkeypatch):
     import app.agent.selling as selling_module
 

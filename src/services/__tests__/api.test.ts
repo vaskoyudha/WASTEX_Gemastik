@@ -152,4 +152,12 @@ describe('apiClient skill methods', () => {
     expect(url).toContain('/selling/s1/completions/c1');
     expect(init.headers.Authorization).toBe('Bearer tok-123');
   });
+
+  it('getCompletionStoryAsset posts to the on-demand Story endpoint', async () => {
+    await apiClient.getCompletionStoryAsset('s1', 'c1');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain('/selling/s1/completions/c1/story');
+    expect(init.method).toBe('POST');
+    expect(init.headers.Authorization).toBe('Bearer tok-123');
+  });
 });
