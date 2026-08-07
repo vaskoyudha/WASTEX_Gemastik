@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
+import { colors, gradients, gradientStyle } from "../../theme";
 
 export interface HeaderProps {
   title?: string;
@@ -22,29 +23,41 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <View
       className={`flex-row items-center justify-between px-4 pt-12 pb-3.5 ${
-        transparent ? "bg-transparent" : "bg-white border-b border-slate-100"
+        transparent ? "bg-transparent" : ""
       } ${className}`}
+      style={transparent ? undefined : gradientStyle(gradients.pageHero)}
     >
       <View className="w-16 flex-row items-center">
         {onBack && (
-          <TouchableOpacity
-            activeOpacity={0.7}
+          <Pressable
             onPress={onBack}
-            className="w-10 h-10 -ml-2 rounded-full items-center justify-center active:bg-slate-100"
+            className="w-10 h-10 -ml-2 rounded-full items-center justify-center"
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.08)",
+              transform: [{ scale: pressed ? 0.96 : 1 }],
+            })}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <ChevronLeft size={24} color="#1e293b" />
-          </TouchableOpacity>
+            <ChevronLeft size={22} color={colors.cream50} />
+          </Pressable>
         )}
       </View>
       <View className="flex-1 items-center px-2">
         {title && (
-          <Text className="text-[17px] font-bold text-slate-900 text-center" numberOfLines={1}>
+          <Text
+            className="text-[17px] font-bold text-center"
+            style={{ color: transparent ? colors.ink900 : colors.white, letterSpacing: -0.25 }}
+            numberOfLines={1}
+          >
             {title}
           </Text>
         )}
         {subtitle && (
-          <Text className="text-[11px] text-slate-500 mt-0.5 text-center" numberOfLines={1}>
+          <Text
+            className="text-[11px] mt-0.5 text-center"
+            style={{ color: transparent ? colors.ink600 : colors.sage200 }}
+            numberOfLines={1}
+          >
             {subtitle}
           </Text>
         )}

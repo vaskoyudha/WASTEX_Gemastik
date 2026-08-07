@@ -90,7 +90,7 @@ export default function HasilScreen() {
 
   if (!scanResult) {
     return (
-      <View className="flex-1 bg-white items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Belum ada hasil scan.</Text>
         <Button title="Kembali ke Upload" onPress={() => router.replace("/scan/upload")} fullWidth={false} />
       </View>
@@ -123,7 +123,7 @@ export default function HasilScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Hasil Analisis AI" onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 32 }}>

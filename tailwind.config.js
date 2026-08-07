@@ -6,7 +6,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#16a34a", dark: "#15803d", light: "#dcfce7" },
+        brand: { DEFAULT: "#667F63", dark: "#304331", light: "#D8E0D5" },
+        forest: { 950: "#26362A", 900: "#304331", 800: "#3E5640", 700: "#5D7458", 600: "#667F63" },
+        sage: { 500: "#849880", 300: "#C2CDC0", 200: "#D8E0D5" },
+        mist: { 100: "#E9EEE7", 50: "#F2F5F0" },
+        cream: { 50: "#FAFBF7" },
+        lime: { 400: "#CAEE82", 300: "#DCF5A7" },
         risk: { aman: "#16a34a", hati: "#d97706", bahaya: "#dc2626" },
       },
       fontFamily: {

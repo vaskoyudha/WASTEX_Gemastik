@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, Image, TouchableOpacity, Alert, ScrollView } from "react-native";
+import { View, Text, Image, Alert, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { Header, Button, Card, LoadingSpinner } from "../../src/components/ui";
+import { Header, Button, Card, LoadingSpinner, PressableScale } from "../../src/components/ui";
 import { scanner, recommendation } from "../../src/services";
 import { useScanStore } from "../../src/store/useScanStore";
 import { safeBack } from "../../src/lib/navigation";
@@ -21,6 +21,7 @@ import {
   Layers,
   MoreHorizontal,
 } from "lucide-react-native";
+import { colors, gradients, gradientStyle, radii, shadows } from "../../src/theme";
 
 const supportedMaterials = [
   { label: "Plastik", icon: Box },
@@ -104,35 +105,55 @@ export default function UploadScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
       <Header title="Upload Sampah" onBack={() => safeBack(router)} />
 
       {analyzeCall.loading ? (
         <LoadingSpinner fullScreen message="AI Upcycling Agent sedang menganalisis material & risiko keamanan..." />
       ) : (
-        <ScrollView className="flex-1" contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
-          <Text className="text-sm text-slate-500 text-center mb-6 leading-5">
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet), borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet }}
+          contentContainerStyle={{ padding: 20, paddingTop: 24, paddingBottom: 48 }}
+        >
+          <Text className="text-sm text-center mb-6 leading-5" style={{ color: colors.ink600 }}>
             Ambil atau unggah foto sampah anorganik yang ingin kamu olah.
           </Text>
 
           {/* Upload Box */}
           {image ? (
-            <Card className="w-full rounded-[28px] overflow-hidden p-0 border-0 bg-slate-200 mb-6">
+            <Card className="w-full rounded-[24px] overflow-hidden p-0 border-0 bg-mist-100 mb-6">
               <Image source={{ uri: image }} className="w-full h-72" resizeMode="cover" />
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => setImage(null)}
-                className="absolute top-4 right-4 bg-black/60 p-2.5 rounded-full"
+                style={{ position: "absolute", top: 14, right: 14, width: 42, height: 42, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(38,54,42,0.78)" }}
               >
                 <RefreshCw size={18} color="#ffffff" />
-              </TouchableOpacity>
+              </PressableScale>
             </Card>
           ) : (
-            <View className="w-full rounded-[28px] border-2 border-dashed border-slate-300 bg-white px-6 py-10 items-center mb-6">
-              <View className="w-16 h-16 rounded-full bg-emerald-50 items-center justify-center mb-4">
-                <Upload size={32} color="#16a34a" />
+            <View
+              style={{
+                width: "100%",
+                borderRadius: 26,
+                borderCurve: "continuous",
+                borderWidth: 1.5,
+                borderStyle: "dashed",
+                borderColor: colors.sage300,
+                backgroundColor: "rgba(255,255,255,0.72)",
+                paddingHorizontal: 24,
+                paddingVertical: 32,
+                alignItems: "center",
+                marginBottom: 24,
+                boxShadow: shadows.card,
+              }}
+            >
+              <View style={{ width: 62, height: 62, borderRadius: 22, alignItems: "center", justifyContent: "center", marginBottom: 15, backgroundColor: colors.forest700, ...gradientStyle(gradients.cameraMedallion) }}>
+                <Upload size={28} color={colors.cream50} />
               </View>
-              <Text className="text-base font-bold text-slate-900 mb-1">Drag & Drop foto di sini</Text>
-              <Text className="text-xs text-slate-400 mb-5">atau</Text>
+              <Text className="text-base font-bold mb-1" style={{ color: colors.ink900 }}>Tambahkan foto sampah</Text>
+              <Text className="text-xs mb-5" style={{ color: colors.ink400 }}>gunakan kamera atau galeri</Text>
               <Button
                 title="Ambil Foto"
                 onPress={() => pickImage("camera")}
@@ -151,27 +172,27 @@ export default function UploadScreen() {
 
           {/* Supported Materials */}
           <View className="mb-6">
-            <Text className="text-sm font-bold text-slate-800 mb-3">Material yang didukung:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <Text className="text-sm font-bold mb-3" style={{ color: colors.ink900 }}>Material yang didukung</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 16 }}>
               {supportedMaterials.map((m) => (
-                <View key={m.label} className="items-center mr-3 w-20">
-                  <View className="w-12 h-12 rounded-2xl bg-slate-100 items-center justify-center mb-2">
-                    <m.icon size={22} color="#16a34a" />
+                <View key={m.label} className="items-center w-16">
+                  <View style={{ width: 50, height: 50, borderRadius: 18, alignItems: "center", justifyContent: "center", marginBottom: 7, backgroundColor: colors.mist100 }}>
+                    <m.icon size={20} color={colors.forest600} />
                   </View>
-                  <Text className="text-[11px] text-slate-600 text-center" numberOfLines={2}>{m.label}</Text>
+                  <Text className="text-[10px] text-center" style={{ color: colors.ink600 }} numberOfLines={2}>{m.label}</Text>
                 </View>
               ))}
             </ScrollView>
           </View>
 
           {/* Tip Card */}
-          <Card className="bg-emerald-50/60 border-emerald-100 p-4 flex-row items-start rounded-[22px]">
-            <View className="p-2 bg-emerald-100 rounded-full mr-3">
-              <Lightbulb size={18} color="#15803d" />
+          <Card className="p-4 flex-row items-start rounded-[22px]" style={{ backgroundColor: colors.mist50 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: "center", justifyContent: "center", marginRight: 12, backgroundColor: colors.sage200 }}>
+              <Lightbulb size={18} color={colors.forest600} />
             </View>
             <View className="flex-1">
-              <Text className="text-xs font-bold text-brand-dark mb-1">Tips foto terbaik</Text>
-              <Text className="text-xs text-slate-600 leading-4">
+              <Text className="text-xs font-bold mb-1" style={{ color: colors.forest800 }}>Tips foto terbaik</Text>
+              <Text className="text-xs leading-4" style={{ color: colors.ink600 }}>
                 Pastikan objek terlihat jelas, tidak blur, dan pencahayaan cukup.
               </Text>
             </View>

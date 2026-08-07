@@ -45,7 +45,7 @@ export default function SkillCreatorScreen() {
 
   if (!scanResult) {
     return (
-      <View className="flex-1 bg-slate-50">
+      <View className="flex-1 bg-cream-50">
         <Header title="Buat Skill Baru" onBack={() => safeBack(router)} />
         <EmptyState
           title="Belum Ada Hasil Scan"
@@ -233,7 +233,7 @@ export default function SkillCreatorScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header
         title="Buat Skill Baru"
         subtitle={scanResult.materialLabel}

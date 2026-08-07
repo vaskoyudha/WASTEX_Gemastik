@@ -78,7 +78,7 @@ export default function RekomendasiScreen(): React.JSX.Element {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Rekomendasi Produk" onBack={() => safeBack(router)} />
       {scanResult ? renderContent() : (
         <EmptyState

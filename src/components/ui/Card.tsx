@@ -15,6 +15,7 @@ export const Card: React.FC<CardProps> = ({
   variant = "default",
   padding = "md",
   className = "",
+  style,
   ...props
 }) => {
   const paddingStyles = {
@@ -25,9 +26,9 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const variantStyles = {
-    default: "bg-white border border-slate-100 shadow-sm",
-    outlined: "bg-white border border-slate-200",
-    elevated: "bg-white shadow-md border-0",
+    default: "bg-cream-50 border border-mist-100",
+    outlined: "bg-cream-50 border border-sage-200",
+    elevated: "bg-cream-50 border-0",
   };
 
   const containerClasses = `rounded-2xl ${variantStyles[variant]} ${paddingStyles[padding]} ${className}`;
@@ -38,6 +39,7 @@ export const Card: React.FC<CardProps> = ({
         activeOpacity={0.7}
         onPress={onPress}
         className={containerClasses}
+        style={[{ borderCurve: "continuous", boxShadow: "0 4px 14px rgba(37,52,39,0.07)" }, style]}
         {...props}
       >
         {children}
@@ -46,7 +48,11 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <View className={containerClasses} {...props}>
+    <View
+      className={containerClasses}
+      style={[{ borderCurve: "continuous", boxShadow: "0 4px 14px rgba(37,52,39,0.07)" }, style]}
+      {...props}
+    >
       {children}
     </View>
   );

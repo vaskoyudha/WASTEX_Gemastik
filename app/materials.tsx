@@ -36,7 +36,7 @@ export default function MaterialsScreen() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Material Didukung" subtitle="Jenis sampah yang bisa dianalisis" onBack={() => safeBack(router)} />
       <ScrollView className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 32 }}>
         {materialOrder.map((key) => {

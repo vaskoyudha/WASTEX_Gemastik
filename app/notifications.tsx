@@ -33,7 +33,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Notifikasi" subtitle="Kabar terbaru dari WASTEX" onBack={() => safeBack(router)} />
       <ScrollView className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 32 }}>
         <Card className="bg-emerald-50 border-emerald-100 p-5 mb-5">

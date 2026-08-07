@@ -1,253 +1,412 @@
 import React from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
-import { Card } from "../../src/components/ui";
-import { useImpactData } from "../../src/hooks/useImpactData";
 import {
   Bell,
   Camera,
   ChevronRight,
   Leaf,
+  Lightbulb,
+  PackageCheck,
   Recycle,
-  Sparkles,
   Store,
-  TrendingUp,
   Upload,
 } from "lucide-react-native";
+import { PressableScale } from "../../src/components/ui";
+import { useImpactData } from "../../src/hooks/useImpactData";
+import { colors, gradients, gradientStyle, radii, shadows } from "../../src/theme";
 
-const steps = [
-  {
-    icon: Upload,
-    label: "Upload Sampah",
-    description: "Ambil foto dari kamera atau pilih dari galeri.",
-  },
-  {
-    icon: Sparkles,
-    label: "AI Analisis & Rekomendasi",
-    description: "Identifikasi material, risiko, dan ide produk yang cocok.",
-  },
-  {
-    icon: Store,
-    label: "Buat & Jual Produk",
-    description: "Ikuti tutorial, lihat estimasi harga, lalu siapkan konten jualan.",
-  },
-];
+const actions = [
+  { label: "Scan", icon: Camera, route: "/scan/upload", featured: true },
+  { label: "Upload", icon: Upload, route: "/scan/upload", featured: false },
+  { label: "Ide", icon: Lightbulb, route: "/ideas", featured: false },
+  { label: "Jual", icon: Store, route: "/riwayat", featured: false },
+] as const;
 
-const categories = ["Plastik PET", "Plastik HDPE", "Kardus", "Kaleng", "Kaca", "Sachet"];
+const materials = ["PET", "HDPE", "Kardus", "Kaleng", "Kaca"];
 
-function HeroIllustration() {
+function SectionHeader({ title, onPress }: { title: string; onPress?: () => void }) {
   return (
-    <View className="w-[112px] h-[136px] shrink-0 rounded-[28px] bg-emerald-50 border border-emerald-100 shadow-sm p-4 justify-between">
-      <View className="flex-1 items-center justify-center">
-        <View className="w-16 h-16 rounded-[24px] bg-white border border-emerald-100 items-center justify-center shadow-sm">
-          <Recycle size={30} color="#16a34a" strokeWidth={2.4} />
-        </View>
-      </View>
-      <View className="bg-white/80 border border-emerald-100 rounded-2xl px-3 py-2">
-        <View className="h-2 rounded-full bg-emerald-200 w-full mb-2" />
-        <View className="h-2 rounded-full bg-emerald-100 w-2/3" />
-      </View>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <Text style={{ color: colors.ink900, fontFamily: "Inter_700Bold", fontSize: 16 }}>
+        {title}
+      </Text>
+      {onPress ? (
+        <PressableScale
+          onPress={onPress}
+          hitSlop={10}
+          style={{ flexDirection: "row", alignItems: "center", gap: 2, paddingVertical: 6 }}
+        >
+          <Text style={{ color: colors.forest600, fontFamily: "Inter_600SemiBold", fontSize: 12 }}>
+            Lihat semua
+          </Text>
+          <ChevronRight size={15} color={colors.forest600} />
+        </PressableScale>
+      ) : null}
     </View>
   );
 }
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { history, summary, loading: historyLoading } = useImpactData();
-  const stats = [
-    { icon: Recycle, value: `${summary.totalWasteProcessed} kg`, label: "Sampah Diolah" },
-    { icon: Store, value: `${summary.totalProductsMade}`, label: "Produk Dibuat" },
-    { icon: TrendingUp, value: `Rp ${summary.estimatedEconomicValue.toLocaleString("id-ID")}`, label: "Nilai Ekonomi" },
-  ];
+  const { width, height } = useWindowDimensions();
+  const { history, summary, loading } = useImpactData();
+  const compact = width < 360;
+  const target = 15;
+  const progress = Math.min(summary.totalWasteProcessed / target, 1);
+  const progressWidth = `${Math.max(progress * 100, 4)}%` as `${number}%`;
 
   return (
-    <View className="flex-1 bg-white">
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.forest700,
+        ...gradientStyle(gradients.home),
+      }}
+    >
       <ScrollView
-        className="flex-1 bg-white"
-        showsVerticalScrollIndicator={true}
-        contentContainerStyle={{ paddingBottom: 132 }}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 126 }}
       >
-        <View className="px-6 pt-5 pb-4 flex-row items-center justify-between bg-white border-b border-slate-100">
-          <View className="flex-row items-center">
-            <View className="w-10 h-10 rounded-full bg-brand items-center justify-center mr-3">
-              <Recycle size={20} color="#ffffff" />
-            </View>
-            <View>
-              <Text className="text-lg font-bold text-slate-900 tracking-tight">WASTEX</Text>
-              <Text className="text-[11px] font-medium text-gray-600 tracking-wide">AI Upcycling Agent</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push("/notifications")}
-            className="w-10 h-10 items-center justify-center rounded-full bg-slate-50"
-          >
-            <Bell size={20} color="#1e293b" />
-          </TouchableOpacity>
-        </View>
-
-        <View className="bg-white px-5 pt-5 pb-8">
-          <View className="flex-row items-center justify-between gap-4">
-            <View className="flex-1 min-w-0 pr-1">
-              <Text className="text-[28px] font-black text-slate-950 leading-[32px] tracking-tight">
-                Ubah Sampah{"\n"}Menjadi Produk{"\n"}Bernilai Jual
-              </Text>
-              <Text className="text-sm font-normal text-gray-600 leading-6 mt-3">
-                Platform AI Upcycling dengan panduan visual, estimasi harga, dan tips jual untuk semua orang.
-              </Text>
-            </View>
-
-            <HeroIllustration />
-          </View>
-
-          <View className="flex-row gap-3 mt-5">
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => router.push("/scan/upload")}
-              className="flex-1 flex-row items-center justify-center gap-2 bg-brand px-4 py-3.5 rounded-2xl shadow-sm"
-            >
-              <Camera size={18} color="#ffffff" />
-              <Text className="text-white font-bold text-sm tracking-tight">Scan Sampah</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => router.push("/scan/upload")}
-              className="flex-1 flex-row items-center justify-center gap-2 border border-brand px-4 py-3.5 rounded-2xl bg-white"
-            >
-              <Upload size={18} color="#15803d" />
-              <Text className="text-brand-dark font-bold text-sm tracking-tight">Upload Foto</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View className="px-5 mt-6">
-          <Text className="text-base font-bold text-slate-900 tracking-tight">Bagaimana Cara Kerja?</Text>
-          <View className="mt-5 flex-row items-start justify-between">
-            {steps.map((step, idx) => (
-              <View key={step.label} className="flex-1 items-center px-1">
-                <View className="w-14 h-14 rounded-[22px] bg-emerald-50 items-center justify-center border border-emerald-100">
-                  <step.icon size={24} color="#16a34a" strokeWidth={2.2} />
-                  <View className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-brand items-center justify-center">
-                    <Text className="text-[10px] font-bold text-white">{idx + 1}</Text>
-                  </View>
-                </View>
-                <Text className="text-xs font-bold text-slate-900 text-center mt-3 leading-4">{step.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View className="px-5 mt-8">
-          <Text className="text-base font-bold text-slate-900 tracking-tight">Dampak WASTEX</Text>
-          <View className="mt-5 bg-white border border-slate-100 rounded-[24px] p-4 shadow-sm">
-            {stats.map((stat, idx) => (
+        <View
+          style={{
+            minHeight: Math.min(Math.max(Math.round(height * 0.5), 390), 470),
+            paddingHorizontal: 18,
+            paddingTop: 12,
+            paddingBottom: 18,
+            justifyContent: "space-between",
+            gap: 14,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 11 }}>
               <View
-                key={stat.label}
-                className={`flex-row items-center ${idx !== stats.length - 1 ? "pb-4 mb-4 border-b border-slate-100" : ""}`}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: colors.lime300,
+                  ...gradientStyle(gradients.scanButton),
+                  boxShadow: "0 5px 14px rgba(31,48,33,0.18)",
+                }}
               >
-                <View className="w-12 h-12 rounded-[20px] bg-emerald-50 items-center justify-center mr-4">
-                  <stat.icon size={25} color="#16a34a" strokeWidth={2.2} />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xl font-black text-slate-950 tracking-tight">{stat.value}</Text>
-                  <Text className="text-sm font-semibold text-gray-600 mt-0.5">{stat.label}</Text>
-                </View>
+                <Recycle size={19} color={colors.forest900} strokeWidth={2.35} />
+              </View>
+              <View>
+                <Text style={{ color: colors.sage200, fontSize: 9, fontFamily: "Inter_500Medium", letterSpacing: 0.1 }}>
+                  Selamat datang kembali
+                </Text>
+                <Text style={{ color: colors.white, fontSize: 14, fontFamily: "Inter_700Bold", marginTop: 1, letterSpacing: -0.2 }}>
+                  WASTEX Explorer
+                </Text>
+              </View>
+            </View>
+            <PressableScale
+              accessibilityLabel="Buka notifikasi"
+              onPress={() => router.push("/notifications")}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(255,255,255,0.08)",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.07)",
+              }}
+            >
+              <Bell size={18} color={colors.cream50} strokeWidth={1.9} />
+              <View
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: 7,
+                  width: 6,
+                  height: 6,
+                  borderRadius: 4,
+                  backgroundColor: colors.danger,
+                  borderWidth: 1.5,
+                  borderColor: colors.forest900,
+                }}
+              />
+            </PressableScale>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: colors.forest700,
+              ...gradientStyle(gradients.impact),
+              borderRadius: radii.xl,
+              borderCurve: "continuous",
+              padding: compact ? 16 : 18,
+              gap: 14,
+              boxShadow: shadows.floating,
+              overflow: "hidden",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.11)",
+            }}
+          >
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                width: 132,
+                height: 132,
+                borderRadius: 66,
+                right: -47,
+                top: -54,
+                backgroundColor: "rgba(220,245,167,0.13)",
+              }}
+            />
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <View style={{ gap: 5 }}>
+                <Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 10, fontFamily: "Inter_600SemiBold", letterSpacing: 0.1 }}>
+                  Dampak keseluruhan
+                </Text>
+                <Text
+                  selectable
+                  style={{
+                    color: colors.white,
+                    fontSize: compact ? 28 : 32,
+                    lineHeight: compact ? 33 : 37,
+                    letterSpacing: -1.1,
+                    fontFamily: "Inter_700Bold",
+                    fontVariant: ["tabular-nums"],
+                  }}
+                >
+                  {summary.totalWasteProcessed} kg
+                </Text>
+                <Text style={{ color: "rgba(255,255,255,0.78)", fontSize: 11 }}>sampah berhasil diolah</Text>
+              </View>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: colors.lime300,
+                  ...gradientStyle(gradients.scanButton),
+                  boxShadow: "0 5px 13px rgba(42,63,43,0.16)",
+                }}
+              >
+                <Leaf size={21} color={colors.forest900} fill={colors.forest900} />
+              </View>
+            </View>
+
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ color: "rgba(255,255,255,0.73)", fontSize: 9, fontFamily: "Inter_500Medium" }}>
+                  Target dampak
+                </Text>
+                <Text style={{ color: colors.white, fontSize: 9, fontFamily: "Inter_600SemiBold" }}>
+                  {Math.round(progress * 100)}% dari {target} kg
+                </Text>
+              </View>
+              <View style={{ height: 5, borderRadius: 3, backgroundColor: "rgba(34,54,37,0.4)", overflow: "hidden" }}>
+                <View
+                  style={{
+                    width: progressWidth,
+                    height: 5,
+                    borderRadius: 3,
+                    backgroundColor: colors.lime300,
+                    ...gradientStyle(gradients.scanButton),
+                  }}
+                />
+              </View>
+            </View>
+
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <Text selectable style={{ color: colors.white, fontSize: 14, fontFamily: "Inter_700Bold", fontVariant: ["tabular-nums"] }}>
+                  {summary.totalProductsMade}
+                </Text>
+                <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 9, marginTop: 1 }}>Produk dibuat</Text>
+              </View>
+              <View style={{ width: 1, height: 29, backgroundColor: "rgba(255,255,255,0.2)" }} />
+              <View style={{ flex: 1, paddingLeft: 18 }}>
+                <Text selectable style={{ color: colors.white, fontSize: 14, fontFamily: "Inter_700Bold", fontVariant: ["tabular-nums"] }}>
+                  Rp {summary.estimatedEconomicValue.toLocaleString("id-ID")}
+                </Text>
+                <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 9, marginTop: 1 }}>Nilai ekonomi</Text>
+              </View>
+            </View>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              paddingHorizontal: 6,
+              paddingVertical: 11,
+              borderRadius: 22,
+              borderCurve: "continuous",
+              backgroundColor: "rgba(56,78,57,0.88)",
+              ...gradientStyle(gradients.actionRail),
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.08)",
+              boxShadow: "0 8px 20px rgba(31,47,33,0.11)",
+            }}
+          >
+            {actions.map((action, index) => (
+              <View key={action.label}>
+                <PressableScale
+                  accessibilityLabel={action.label}
+                  onPress={() => router.push(action.route)}
+                  style={{ alignItems: "center", gap: 6, width: compact ? 66 : 76 }}
+                >
+                  <View
+                    style={{
+                      width: compact ? 42 : 44,
+                      height: compact ? 42 : 44,
+                      borderRadius: 22,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: action.featured ? "rgba(220,245,167,0.26)" : "rgba(255,255,255,0.08)",
+                      borderWidth: 1,
+                      borderColor: action.featured ? "rgba(220,245,167,0.2)" : "rgba(255,255,255,0.09)",
+                    }}
+                  >
+                    <action.icon size={19} color={action.featured ? colors.lime300 : colors.cream50} strokeWidth={1.9} />
+                  </View>
+                  <Text style={{ color: colors.cream50, fontSize: 10, fontFamily: "Inter_500Medium" }}>
+                    {action.label}
+                  </Text>
+                </PressableScale>
               </View>
             ))}
           </View>
         </View>
 
-        {historyLoading || history.length > 0 ? (
-          <View className="px-5 mt-8">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-base font-bold text-slate-900 tracking-tight">Riwayat Terakhir</Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => router.push("/riwayat")}
-                className="flex-row items-center"
-              >
-                <Text className="text-xs font-semibold text-brand tracking-tight">Lihat Semua</Text>
-                <ChevronRight size={14} color="#16a34a" />
-              </TouchableOpacity>
-            </View>
-
-            {historyLoading ? (
-            <Card className="mt-5 p-4 border border-slate-100 bg-slate-50">
-              <View className="flex-row items-center">
-                <View className="w-12 h-12 rounded-2xl bg-slate-200 mr-4" />
-                <View className="flex-1">
-                  <View className="h-3 rounded-full bg-slate-200 w-3/5 mb-2" />
-                  <View className="h-2.5 rounded-full bg-slate-100 w-4/5" />
-                </View>
-              </View>
-            </Card>
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5" contentContainerStyle={{ gap: 14, paddingHorizontal: 2 }}>
-                {history.slice(0, 3).map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    activeOpacity={0.8}
-                    onPress={() => router.push(`/product/${item.product.id}`)}
-                    className="w-[260px]"
-                  >
-                    <Card className="p-3 border border-slate-100 shadow-sm">
-                      <View className="flex-row items-center">
-                        <Image source={{ uri: item.photoUri }} className="w-16 h-16 rounded-2xl bg-slate-200" resizeMode="cover" />
-                        <View className="flex-1 ml-3">
-                          <Text className="text-sm font-bold text-slate-900" numberOfLines={1}>
-                            {item.product.name}
-                          </Text>
-                          <Text className="text-xs text-slate-500 mt-1" numberOfLines={2}>
-                            {item.product.shortDescription}
-                          </Text>
-                        </View>
-                      </View>
-                      <View className="flex-row items-center justify-between mt-3">
-                        <Text className="text-[11px] text-slate-500" numberOfLines={1}>
-                          {item.material.materialLabel}
-                        </Text>
-                        <Text className="text-[11px] font-semibold text-brand-dark">
-                          Rp {item.product.estimatedCost.toLocaleString("id-ID")}
-                        </Text>
-                      </View>
-                    </Card>
-                  </TouchableOpacity>
+        <View
+          style={{
+            minHeight: 430,
+            backgroundColor: colors.cream50,
+            ...gradientStyle(gradients.contentSheet),
+            borderTopLeftRadius: radii.sheet,
+            borderTopRightRadius: radii.sheet,
+            borderCurve: "continuous",
+            paddingHorizontal: 20,
+            paddingTop: 24,
+            paddingBottom: 36,
+            gap: 28,
+            boxShadow: "0 -8px 26px rgba(43,59,44,0.1)",
+          }}
+        >
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              top: -5,
+              alignSelf: "center",
+              width: 34,
+              height: 7,
+              borderRadius: 4,
+              backgroundColor: "rgba(54,74,55,0.5)",
+            }}
+          />
+          <View style={{ gap: 16 }}>
+            <SectionHeader title="Aktivitas terbaru" onPress={() => router.push("/riwayat")} />
+            {loading ? (
+              <View style={{ gap: 12 }}>
+                {[0, 1].map((item) => (
+                  <View key={item} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <View style={{ width: 48, height: 48, borderRadius: 17, backgroundColor: colors.mist100 }} />
+                    <View style={{ flex: 1, gap: 7 }}>
+                      <View style={{ width: "58%", height: 10, borderRadius: 5, backgroundColor: colors.mist100 }} />
+                      <View style={{ width: "42%", height: 8, borderRadius: 4, backgroundColor: colors.mist100 }} />
+                    </View>
+                  </View>
                 ))}
-              </ScrollView>
+              </View>
+            ) : history.length > 0 ? (
+              <View style={{ gap: 4 }}>
+                {history.slice(0, 3).map((item, index) => (
+                  <PressableScale
+                    key={item.id}
+                    onPress={() => router.push(`/product/${item.product.id}`)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                      paddingVertical: 10,
+                      borderBottomWidth: index === Math.min(history.length, 3) - 1 ? 0 : 1,
+                      borderBottomColor: colors.mist100,
+                    }}
+                  >
+                    <Image
+                      source={{ uri: item.photoUri }}
+                      resizeMode="cover"
+                      style={{ width: 48, height: 48, borderRadius: 17, backgroundColor: colors.mist100 }}
+                    />
+                    <View style={{ flex: 1, gap: 3 }}>
+                      <Text numberOfLines={1} style={{ color: colors.ink900, fontSize: 13, fontFamily: "Inter_600SemiBold" }}>
+                        {item.product.name}
+                      </Text>
+                      <Text numberOfLines={1} style={{ color: colors.ink600, fontSize: 10 }}>
+                        {item.material.materialLabel} · Produk upcycle
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end", gap: 3 }}>
+                      <Text selectable style={{ color: colors.forest600, fontSize: 12, fontFamily: "Inter_700Bold", fontVariant: ["tabular-nums"] }}>
+                        Rp {item.product.estimatedCost.toLocaleString("id-ID")}
+                      </Text>
+                      <Text style={{ color: colors.ink400, fontSize: 9 }}>Estimasi</Text>
+                    </View>
+                  </PressableScale>
+                ))}
+              </View>
+            ) : (
+              <PressableScale
+                onPress={() => router.push("/scan/upload")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 13,
+                  backgroundColor: colors.mist50,
+                  borderRadius: radii.lg,
+                  borderCurve: "continuous",
+                  padding: 15,
+                }}
+              >
+                <View style={{ width: 46, height: 46, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: colors.sage200 }}>
+                  <Camera size={21} color={colors.forest800} />
+                </View>
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Text style={{ color: colors.ink900, fontSize: 13, fontFamily: "Inter_700Bold" }}>Mulai pemindaian pertama</Text>
+                  <Text style={{ color: colors.ink600, fontSize: 11, lineHeight: 16 }}>Foto sampah untuk melihat material dan ide upcycle.</Text>
+                </View>
+                <ChevronRight size={18} color={colors.forest600} />
+              </PressableScale>
             )}
           </View>
-        ) : null}
 
-        <View className="px-5 mt-8">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-base font-bold text-slate-900 tracking-tight">Kategori Material Didukung</Text>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => router.push("/materials")}
-              className="flex-row items-center"
-            >
-              <Text className="text-xs font-semibold text-brand tracking-tight">Lihat Semua</Text>
-              <ChevronRight size={14} color="#16a34a" />
-            </TouchableOpacity>
+          <View style={{ gap: 16 }}>
+            <SectionHeader title="Material yang didukung" onPress={() => router.push("/materials")} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingRight: 18 }}>
+              {materials.map((material, index) => (
+                <PressableScale key={material} onPress={() => router.push("/materials")} style={{ alignItems: "center", gap: 8 }}>
+                  <View
+                    style={{
+                      width: 54,
+                      height: 54,
+                      borderRadius: 20,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: index === 0 ? colors.forest800 : "rgba(227,234,225,0.9)",
+                      ...(index === 0 ? gradientStyle(gradients.materialActive) : null),
+                    }}
+                  >
+                    {index === 0 ? <Recycle size={22} color={colors.lime300} /> : <PackageCheck size={21} color={colors.forest600} />}
+                  </View>
+                  <Text style={{ color: colors.ink700, fontSize: 10, fontFamily: "Inter_500Medium" }}>{material}</Text>
+                </PressableScale>
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-5 -mx-5"
-            contentContainerStyle={{ gap: 14, paddingLeft: 20, paddingRight: 40, paddingVertical: 8 }}
-          >
-            {categories.map((cat) => (
-              <Card
-                key={cat}
-                className="w-[102px] px-3 py-4 items-center border border-slate-100 shadow-sm rounded-[22px]"
-              >
-                <View className="w-12 h-12 rounded-[20px] bg-emerald-50 items-center justify-center mb-3">
-                  <Leaf size={23} color="#16a34a" strokeWidth={2.2} />
-                </View>
-                <Text className="text-xs font-semibold text-gray-600 tracking-tight text-center leading-4">{cat}</Text>
-              </Card>
-            ))}
-          </ScrollView>
         </View>
       </ScrollView>
     </View>

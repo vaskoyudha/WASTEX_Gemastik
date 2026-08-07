@@ -52,7 +52,7 @@ export default function CompleteScreen() {
 
   if (done) {
     return (
-      <View className="flex-1 bg-slate-50">
+      <View className="flex-1 bg-cream-50">
         <Header title="Hasil Terkirim" onBack={() => safeBack(router)} />
         <View className="flex-1 items-center justify-center p-6">
           <Text className="text-base font-bold text-slate-900 text-center mb-2">Terima kasih!</Text>
@@ -66,7 +66,7 @@ export default function CompleteScreen() {
   }
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Tandai Selesai" onBack={() => safeBack(router)} />
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Text className="text-sm font-bold text-slate-900 mb-2">Foto Produk Jadi</Text>

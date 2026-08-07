@@ -26,8 +26,8 @@ export default function RootLayout() {
 
   if (!fontsLoaded) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#16a34a" />
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: "#E9EEE7" }}>
+        <ActivityIndicator size="large" color="#5D7458" />
       </View>
     );
   }
@@ -37,7 +37,7 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#ffffff" },
+          contentStyle: { backgroundColor: "#E9EEE7" },
         }}
       >
         <Stack.Screen name="(tabs)" />
