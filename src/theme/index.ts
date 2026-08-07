@@ -5,6 +5,8 @@ export { colors };
 
 export const gradients = {
   home: "linear-gradient(180deg, #15251B 0%, #294936 48%, #789080 100%)",
+  homeImageVeil:
+    "linear-gradient(180deg, rgba(4,22,16,0.18) 0%, rgba(4,22,16,0.08) 38%, rgba(4,22,16,0.42) 78%, rgba(4,22,16,0.68) 100%)",
   impact:
     "radial-gradient(circle at 92% 18%, rgba(217,241,166,0.42) 0%, rgba(217,241,166,0) 34%), linear-gradient(135deg, #536B50 0%, #71886A 58%, #A8B991 100%)",
   actionRail:
@@ -24,6 +26,10 @@ export const gradients = {
   materialActive: "linear-gradient(145deg, #405B42 0%, #263C2D 100%)",
   productHero:
     "linear-gradient(180deg, rgba(21,37,27,0) 36%, rgba(21,37,27,0.92) 100%)",
+  impactImageFade:
+    "radial-gradient(circle at 4% 0%, rgba(220,247,161,0.34) 0%, rgba(184,229,119,0.16) 23%, rgba(184,229,119,0) 48%), linear-gradient(180deg, rgba(5,25,17,0.12) 0%, rgba(5,25,17,0.2) 38%, rgba(5,25,17,0.56) 70%, rgba(5,25,17,0.9) 100%)",
+  impactImageGlow:
+    "radial-gradient(circle at 4% 0%, rgba(220,247,161,0.34) 0%, rgba(184,229,119,0.16) 23%, rgba(184,229,119,0) 48%)",
   limeWash:
     "radial-gradient(circle at 92% 8%, rgba(220,247,161,0.52) 0%, rgba(220,247,161,0) 43%), linear-gradient(145deg, #EAF2E8 0%, #D8E5D9 100%)",
 } as const;
@@ -50,7 +56,6 @@ export const screenSheetStyle: ViewStyle = {
   borderTopLeftRadius: radii.sheet,
   borderTopRightRadius: radii.sheet,
   borderCurve: "continuous",
-  overflow: "hidden",
 };
 
 export const spacing = {

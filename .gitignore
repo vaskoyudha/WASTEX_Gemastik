@@ -62,6 +62,7 @@ backend/.venv/
 .playwright-mcp/
 backend/supabase/.temp/
 *.png
+!assets/images/impact-upcycling-card-bg.png
 
 # manual image-gen playbooks (local experiments, not in repo)
 visuals/

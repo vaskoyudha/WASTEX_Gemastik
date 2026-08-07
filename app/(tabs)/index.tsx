@@ -60,10 +60,31 @@ export default function HomeScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: colors.forest700,
-        ...gradientStyle(gradients.home),
+        backgroundColor: colors.forest900,
+        overflow: "hidden",
       }}
     >
+      <Image
+        source={require("../../assets/images/home-hero-bg.png")}
+        resizeMode="cover"
+        accessibilityIgnoresInvertColors
+        style={{
+          position: "absolute",
+          top: -14,
+          right: 0,
+          width: "88%",
+          height: "88%",
+        }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "rgba(4,22,16,0.2)",
+          ...gradientStyle(gradients.homeImageVeil),
+        }}
+      />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -137,8 +158,52 @@ export default function HomeScreen() {
 
           <View
             style={{
-              backgroundColor: colors.forest700,
-              ...gradientStyle(gradients.impact),
+              width: compact ? "72%" : "68%",
+              maxWidth: 260,
+              gap: compact ? 5 : 7,
+              paddingVertical: compact ? 2 : 6,
+            }}
+          >
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.78)",
+                fontSize: compact ? 11 : 12,
+                fontFamily: "Inter_500Medium",
+                letterSpacing: 0.1,
+              }}
+            >
+              Halo, Explorer! 👋
+            </Text>
+            <Text
+              style={{
+                color: colors.white,
+                fontSize: compact ? 25 : 29,
+                lineHeight: compact ? 28 : 32,
+                letterSpacing: -1.05,
+                fontFamily: "Inter_700Bold",
+                textShadowColor: "rgba(0,0,0,0.18)",
+                textShadowOffset: { width: 0, height: 2 },
+                textShadowRadius: 8,
+              }}
+            >
+              Mari ubah sampah jadi{" "}
+              <Text style={{ color: colors.lime300, fontFamily: "Inter_700Bold" }}>peluang.</Text>
+            </Text>
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.72)",
+                fontSize: compact ? 10 : 11,
+                lineHeight: compact ? 15 : 17,
+                fontFamily: "Inter_500Medium",
+              }}
+            >
+              Setiap aksi kecilmu memberi dampak besar untuk lingkungan.
+            </Text>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: colors.forest900,
               borderRadius: radii.xl,
               borderCurve: "continuous",
               padding: compact ? 16 : 18,
@@ -149,16 +214,24 @@ export default function HomeScreen() {
               borderColor: "rgba(255,255,255,0.11)",
             }}
           >
+            <Image
+              source={require("../../assets/images/impact-upcycling-card-bg.png")}
+              resizeMode="cover"
+              accessibilityIgnoresInvertColors
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                opacity: 1,
+              }}
+            />
             <View
               pointerEvents="none"
               style={{
                 position: "absolute",
-                width: 132,
-                height: 132,
-                borderRadius: 66,
-                right: -47,
-                top: -54,
-                backgroundColor: "rgba(220,245,167,0.13)",
+                inset: 0,
+                ...gradientStyle(gradients.impactImageGlow),
               }}
             />
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>

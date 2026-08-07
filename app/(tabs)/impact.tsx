@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Award, Gift, Leaf, Plus, Recycle, TrendingUp } from "lucide-react-native";
 import { EmptyState, Header, LoadingSpinner, PressableScale } from "../../src/components/ui";
@@ -59,13 +59,32 @@ export default function ImpactScreen() {
                 borderRadius: radii.xl,
                 borderCurve: "continuous",
                 overflow: "hidden",
-                backgroundColor: colors.forest700,
-                ...gradientStyle(gradients.impact),
+                backgroundColor: colors.forest900,
                 borderWidth: 1,
                 borderColor: "rgba(255,255,255,0.11)",
                 boxShadow: shadows.floating,
               }}
             >
+              <Image
+                source={require("../../assets/images/impact-upcycling-card-bg.png")}
+                resizeMode="cover"
+                accessibilityIgnoresInvertColors
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  opacity: 1,
+                }}
+              />
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  ...gradientStyle(gradients.impactImageGlow),
+                }}
+              />
               <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
                 <View style={{ gap: 4 }}>
                   <Text style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Inter_600SemiBold", fontSize: 10 }}>Total sampah diolah</Text>
