@@ -30,7 +30,7 @@ def test_pricing_prefers_curated_values(fake_sb):
     r = client.get("/pricing/11111111-aaaa-4aaa-8aaa-111111111111")
     assert r.status_code == 200
     body = r.json()
-    assert body["material_cost"] == 8000
+    assert body["material_cost"] == 500
     assert body["suggested_price"] == 25000
     assert body["total_cost"] == body["material_cost"] + body["labor_cost"]
     assert body["currency"] == "IDR"
@@ -52,9 +52,9 @@ def test_pricing_heuristic_fallback(fake_sb):
     r = client.get("/pricing/22222222-aaaa-4aaa-8aaa-222222222222")
     assert r.status_code == 200
     body = r.json()
-    # heuristic: material 800, labor 2 steps * 0.5h * 25000 = 25000
+    # heuristic: material 800, labor 2 steps * 0.25h * 25000 = 12500
     assert body["material_cost"] == 800
-    assert body["labor_cost"] == 25000
+    assert body["labor_cost"] == 12500
     assert body["suggested_price"] % 1000 == 0
     assert body["suggested_price"] >= body["total_cost"]
 
@@ -66,7 +66,7 @@ def test_pricing_unknown_skill_404(fake_sb):
 
 
 def test_pricing_never_returns_negative_margin(fake_sb):
-    # est_price rendah (25000) < total_cost (material 8000 + labor 5*0.5*15000=37500 = 45500)
+    # est_price rendah (10000) < total_cost (material 500 + labor 5*0.25*15000=18750)
     fake_sb.table("skills").insert(
         {
             "id": "33333333-aaaa-4aaa-8aaa-333333333333",
@@ -75,7 +75,7 @@ def test_pricing_never_returns_negative_margin(fake_sb):
             "difficulty": "pemula",
             "steps": [{"order": i, "instruction": "x"} for i in range(1, 6)],
             "est_cost_idr": 8000,
-            "est_price_idr": 25000,
+            "est_price_idr": 10000,
         }
     )
     client = TestClient(app)
@@ -133,3 +133,36 @@ def test_pricing_falls_back_to_item_sum_when_stored_zero(fake_sb):
     assert r.status_code == 200
     body = r.json()
     assert body["additional_materials_cost"] == 5000
+
+
+def test_pricing_does_not_double_count_llm_material_estimate(fake_sb):
+    fake_sb.table("skills").insert(
+        {
+            "id": "66666666-aaaa-4aaa-8aaa-666666666666",
+            "title": "Pot Bunga Kaleng Bekas",
+            "material": "kaleng",
+            "difficulty": "pemula",
+            "steps": [{"order": i, "instruction": "x"} for i in range(1, 7)],
+            # Aggregate LLM estimate: cat + tanah + paku + bibit. This must not
+            # also become the cost of the recycled can.
+            "est_cost_idr": 21000,
+            "est_price_idr": 45000,
+            "additional_materials": [
+                {"name": "cat", "est_cost_idr": 10000},
+                {"name": "tanah", "est_cost_idr": 5000},
+                {"name": "paku", "est_cost_idr": 1000},
+                {"name": "bibit", "est_cost_idr": 5000},
+            ],
+            "additional_materials_cost_idr": 21000,
+        }
+    )
+    client = TestClient(app)
+    r = client.get("/pricing/66666666-aaaa-4aaa-8aaa-666666666666")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["material_cost"] == 800
+    assert body["additional_materials_cost"] == 21000
+    assert body["labor_cost"] == 22500
+    assert body["total_cost"] == 44300
+    assert body["suggested_price"] == 45000
+    assert body["profit_margin"] == 0.02

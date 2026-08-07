@@ -21,6 +21,7 @@ LABOR_RATES = {
 }
 
 DEFAULT_MARGIN = 0.4
+HOURS_PER_STEP = 0.25
 
 
 @router.get("/{skill_id}")
@@ -42,9 +43,13 @@ async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
 
     steps = skill.get("steps") or []
     labor_rate = LABOR_RATES.get(skill.get("difficulty") or "menengah", 25000)
-    labor_cost = int(len(steps) * 0.5 * labor_rate)
+    labor_cost = int(len(steps) * HOURS_PER_STEP * labor_rate)
 
-    material_cost = skill.get("est_cost_idr") or MATERIAL_COSTS.get(skill.get("material"), 500)
+    # est_cost_idr is the LLM's aggregate estimate and already includes the
+    # additional materials listed below. Using it here would count those costs
+    # twice, so the primary recycled material always uses the deterministic
+    # lookup instead.
+    material_cost = MATERIAL_COSTS.get(skill.get("material"), 500)
 
     additional_items = skill.get("additional_materials") or []
     stored_additional_cost = skill.get("additional_materials_cost_idr")

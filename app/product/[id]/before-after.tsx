@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
+import { Header, Button, Card, LoadingSpinner, FitImage } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
 import { ArrowRight } from "lucide-react-native";
@@ -40,7 +40,11 @@ export default function BeforeAfterScreen() {
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="p-4 border border-slate-100 mb-4 items-center">
           <Text className="text-xs font-semibold text-slate-500 mb-3">Sebelum & Sesudah</Text>
-          <Image source={{ uri: tutData.beforeImageUri }} className="w-full h-48 rounded-2xl bg-slate-200" />
+          <FitImage
+            source={{ uri: tutData.beforeImageUri }}
+            className="rounded-2xl overflow-hidden bg-slate-200"
+            maxHeight={400}
+          />
         </Card>
 
         <Card className="p-5 border border-slate-100 mb-6">

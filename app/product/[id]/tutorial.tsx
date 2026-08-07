@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, Image, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
+import { Header, Button, Card, LoadingSpinner, FitImage } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
 import { ShieldAlert } from "lucide-react-native";
@@ -69,7 +69,11 @@ export default function TutorialScreen() {
         {tutData.materialsImageUri ? (
           <Card className="p-4 mb-4 border border-slate-100">
             <Text className="text-xs font-semibold text-slate-500 mb-3">Panel Alat & Bahan</Text>
-            <Image source={{ uri: tutData.materialsImageUri }} className="w-full h-40 rounded-2xl bg-slate-200" />
+            <FitImage
+              source={{ uri: tutData.materialsImageUri }}
+              className="rounded-2xl overflow-hidden bg-slate-200"
+              maxHeight={320}
+            />
           </Card>
         ) : null}
 
@@ -94,7 +98,11 @@ export default function TutorialScreen() {
                 <Text className="text-[10px] font-bold text-red-600 ml-2">Peringatan Keamanan</Text>
               </View>
             )}
-            <Image source={{ uri: step.imageUri }} className="w-full h-40 rounded-2xl bg-slate-200" />
+            <FitImage
+              source={{ uri: step.imageUri }}
+              className="rounded-2xl overflow-hidden bg-slate-200"
+              maxHeight={360}
+            />
           </Card>
         ))}
 

@@ -7,3 +7,4 @@ export * from "./LoadingSpinner";
 export * from "./pressable-scale";
 export * from "./EmptyState";
 export * from "./StarRating";
+export * from "./FitImage";
