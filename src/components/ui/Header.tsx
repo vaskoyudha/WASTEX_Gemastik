@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
-import { colors, gradients, gradientStyle } from "../../theme";
+import { colors, gradients, gradientStyle, shadows } from "../../theme";
 
 export interface HeaderProps {
   title?: string;
@@ -20,12 +21,28 @@ export const Header: React.FC<HeaderProps> = ({
   transparent = false,
   className = "",
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <View
-      className={`flex-row items-center justify-between px-4 pt-12 pb-3.5 ${
-        transparent ? "bg-transparent" : ""
-      } ${className}`}
-      style={transparent ? undefined : gradientStyle(gradients.pageHero)}
+      className={`flex-row items-center justify-between ${transparent ? "bg-transparent" : ""} ${className}`}
+      style={[
+        {
+          paddingHorizontal: 16,
+          paddingTop: Math.max(insets.top, 12),
+          paddingBottom: 14,
+          zIndex: 10,
+        },
+        transparent
+          ? undefined
+          : {
+              ...gradientStyle(gradients.pageHero),
+              borderBottomLeftRadius: 26,
+              borderBottomRightRadius: 26,
+              borderCurve: "continuous",
+              boxShadow: shadows.navigation,
+            },
+      ]}
     >
       <View className="w-16 flex-row items-center">
         {onBack && (
