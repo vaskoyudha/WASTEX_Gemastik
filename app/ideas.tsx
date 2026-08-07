@@ -24,7 +24,7 @@ export default function IdeasScreen() {
   }
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Semua Ide Produk" subtitle={`${ideas.length} ide upcycling siap dijelajahi`} onBack={() => safeBack(router)} />
       <FlatList
         data={ideas}

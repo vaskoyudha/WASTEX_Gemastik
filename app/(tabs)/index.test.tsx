@@ -14,15 +14,24 @@ jest.mock("../../src/hooks/useImpactData", () => ({
   useImpactData: () => mockUseImpactData(),
 }));
 
-jest.mock("../../src/components/ui", () => ({
-  Card: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+jest.mock("../../src/components/ui", () => {
+  const ReactModule = require("react");
+  const { Pressable } = require("react-native");
+
+  return {
+    Card: ({ children }: { children: React.ReactNode }) => ReactModule.createElement(ReactModule.Fragment, null, children),
+    PressableScale: ({ children, onPress }: { children: React.ReactNode; onPress?: () => void }) =>
+      ReactModule.createElement(Pressable, { onPress }, children),
+  };
+});
 
 jest.mock("lucide-react-native", () => ({
   Bell: () => null,
   Camera: () => null,
   ChevronRight: () => null,
   Leaf: () => null,
+  Lightbulb: () => null,
+  PackageCheck: () => null,
   Recycle: () => null,
   Sparkles: () => null,
   Store: () => null,
@@ -62,15 +71,15 @@ describe("HomeScreen recent history", () => {
     expect(mockPush).toHaveBeenCalledWith("/product/product-1");
   });
 
-  it("hides recent history section when history is empty", async () => {
+  it("shows a useful first-scan action when history is empty", async () => {
     mockUseImpactData.mockReturnValue({
       history: [],
       summary: { totalWasteProcessed: 0, totalProductsMade: 0, estimatedEconomicValue: 0 },
       loading: false,
     });
 
-    const { queryByText } = await render(<HomeScreen />);
+    const { getByText } = await render(<HomeScreen />);
 
-    expect(queryByText("Riwayat Terakhir")).toBeNull();
+    expect(getByText("Mulai pemindaian pertama")).toBeTruthy();
   });
 });

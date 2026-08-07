@@ -1,0 +1,25 @@
+export const colors = {
+  forest950: "#26362A",
+  forest900: "#304331",
+  forest800: "#3E5640",
+  forest700: "#5D7458",
+  forest600: "#667F63",
+  sage500: "#849880",
+  sage300: "#C2CDC0",
+  sage200: "#D8E0D5",
+  mist100: "#E9EEE7",
+  mist50: "#F2F5F0",
+  cream50: "#FAFBF7",
+  lime400: "#CAEE82",
+  lime300: "#DCF5A7",
+  ink900: "#253027",
+  ink700: "#48534A",
+  ink600: "#707A72",
+  ink400: "#9BA39C",
+  white: "#FFFFFF",
+  success: "#45C779",
+  warning: "#E6A84A",
+  danger: "#DD625E",
+} as const;
+
+export type AppColor = keyof typeof colors;

@@ -32,7 +32,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-slate-50">
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-cream-50">
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         <Header title="Masuk" subtitle="Masukkan kredensial untuk WASTEX" />
         <View className="px-6 pt-6">

@@ -73,7 +73,7 @@ export default function AchievementsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Semua Pencapaian" subtitle="Riwayat impact dan badge WASTEX" onBack={() => safeBack(router)} />
       <ScrollView className="flex-1 px-5 pt-5" contentContainerStyle={{ paddingBottom: 36 }}>
         <Card className="p-5 mb-5 bg-emerald-50 border-emerald-100">

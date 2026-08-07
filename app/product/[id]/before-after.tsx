@@ -17,7 +17,7 @@ export default function BeforeAfterScreen() {
 
   if (error) {
     return (
-      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 text-center mb-4">Perbandingan gagal dimuat.</Text>
         <Button title="Coba Lagi" onPress={() => refetch()} />
       </View>
@@ -26,7 +26,7 @@ export default function BeforeAfterScreen() {
 
   if (!tutData) {
     return (
-      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Data tidak ditemukan.</Text>
         <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
@@ -34,7 +34,7 @@ export default function BeforeAfterScreen() {
   }
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Sebelum & Sesudah" onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>

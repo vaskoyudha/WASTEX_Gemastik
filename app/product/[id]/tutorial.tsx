@@ -20,7 +20,7 @@ export default function TutorialScreen() {
 
   if (error) {
     return (
-      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 text-center mb-4">Tutorial gagal dimuat.</Text>
         <Button title="Coba Lagi" onPress={() => refetch()} />
       </View>
@@ -29,7 +29,7 @@ export default function TutorialScreen() {
 
   if (!product || !tutData) {
     return (
-      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Tutorial tidak ditemukan.</Text>
         <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
@@ -44,7 +44,7 @@ export default function TutorialScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title={`Tutorial: ${product.name}`} onBack={() => safeBack(router)} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>

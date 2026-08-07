@@ -80,7 +80,7 @@ export default function ExpertDashboardScreen() {
   const filtered = items[activeTab];
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="Validasi Skill Baru" subtitle="Expert Dashboard" onBack={() => safeBack(router)} />
 
       <View className="px-6 pt-6">

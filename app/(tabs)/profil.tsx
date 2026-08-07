@@ -8,6 +8,7 @@ import { Award, Info, Shield, Trash2, User, LogOut, Edit, Save } from "lucide-re
 import { Input } from "../../src/components/ui/Input";
 import { apiClient } from "../../src/services/api";
 import type { Skill } from "../../src/services/types";
+import { colors, gradients, gradientStyle, radii } from "../../src/theme";
 
 export default function ProfilScreen() {
   const router = useRouter();
@@ -138,13 +139,18 @@ export default function ProfilScreen() {
 
   if (!user) {
     return (
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-slate-50">
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}
+      >
+        <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1, paddingBottom: 76 }}>
           <Header title="Profil & Pengaturan" subtitle="Silakan masuk untuk mengelola akun Anda" />
-          <View className="px-6 pt-6">
-            <Card className="p-6 items-center mb-6">
-              <User size={48} color="#94a3b8" className="mb-4" />
-              <Text className="text-slate-600 text-center mb-6">
+          <View style={{ flex: 1, minHeight: 640, paddingHorizontal: 20, paddingTop: 26, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet), borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet }}>
+            <Card className="p-6 items-center mb-6 rounded-[24px]">
+              <View style={{ width: 66, height: 66, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100, marginBottom: 16 }}>
+                <User size={32} color={colors.forest600} />
+              </View>
+              <Text className="text-center mb-6" style={{ color: colors.ink600 }}>
                 Silakan masuk untuk melihat dan mengelola profil Anda
               </Text>
               <Button 
@@ -160,22 +166,28 @@ export default function ProfilScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-slate-50">
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}
+    >
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1, paddingBottom: 76 }}>
         <Header title="Profil & Pengaturan" subtitle="Kelola akun dan preferensi aplikasi" />
         
-        <View className="px-6 pt-6">
+        <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 22, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet), borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet }}>
           {/* Profile Card */}
-          <Card className="p-5 flex-row items-center mb-6">
-            <View className="w-16 h-16 rounded-full bg-brand-light items-center justify-center mr-4">
-              <User size={32} color="#16a34a" />
+          <Card
+            className="p-5 flex-row items-center mb-6 rounded-[24px] border-0 overflow-hidden"
+            style={{ backgroundColor: colors.forest700, ...gradientStyle(gradients.impact) }}
+          >
+            <View style={{ width: 62, height: 62, borderRadius: 22, alignItems: "center", justifyContent: "center", marginRight: 14, backgroundColor: colors.lime300, ...gradientStyle(gradients.scanButton) }}>
+              <User size={29} color={colors.forest900} />
             </View>
             <View className="flex-1">
-              <Text className="text-lg font-bold text-slate-900">{user.profile?.displayName}</Text>
-              <Text className="text-xs text-slate-500">{user.email}</Text>
+              <Text className="text-lg font-bold" style={{ color: colors.white }}>{user.profile?.displayName}</Text>
+              <Text className="text-xs" style={{ color: "rgba(255,255,255,0.68)" }}>{user.email}</Text>
               {!editing && (
-                <View className="mt-2 bg-emerald-50 px-2.5 py-0.5 rounded-md self-start">
-                  <Text className="text-xs font-semibold text-brand-dark">Akun Terverifikasi</Text>
+                <View className="mt-2 px-2.5 py-0.5 rounded-md self-start" style={{ backgroundColor: "rgba(220,245,167,0.2)" }}>
+                  <Text className="text-xs font-semibold" style={{ color: colors.lime300 }}>Akun Terverifikasi</Text>
                 </View>
               )}
             </View>
@@ -185,7 +197,7 @@ export default function ProfilScreen() {
                 activeOpacity={0.7}
                 className="ml-2 p-2"
               >
-                <Edit size={20} color="#16a34a" />
+                <Edit size={20} color={colors.cream50} />
               </TouchableOpacity>
             )}
           </Card>
@@ -256,12 +268,12 @@ export default function ProfilScreen() {
           {/* Skill Saya Section */}
           {user && mySkills.length > 0 && (
             <View className="mt-6">
-              <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-6">Skill Saya</Text>
+              <Text className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: colors.forest600 }}>Skill Saya</Text>
               {mySkills.map((skill) => (
-                <Card key={skill.id} className="mx-6 mb-3 p-4 border border-slate-100">
+                <Card key={skill.id} className="mb-3 p-4">
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-sm font-bold text-slate-900 flex-1 mr-3">{skill.title}</Text>
-                    <Text className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                    <Text className="text-sm font-bold flex-1 mr-3" style={{ color: colors.ink900 }}>{skill.title}</Text>
+                    <Text className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: colors.forest800, backgroundColor: colors.sage200 }}>
                       {statusLabel(skill.status)}
                     </Text>
                   </View>
@@ -271,7 +283,7 @@ export default function ProfilScreen() {
           )}
 
           {/* Mode Ahli Section */}
-          <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">Mode Ahli</Text>
+          <Text className="text-xs font-bold uppercase tracking-wider mb-3 px-1" style={{ color: colors.forest600 }}>Mode Ahli</Text>
           <Card className="p-4 mb-6">
             <TouchableOpacity
               onPress={() => router.push("/expert-dashboard")}
@@ -279,23 +291,23 @@ export default function ProfilScreen() {
               activeOpacity={0.7}
             >
               <View className="flex-row items-center">
-                <Award size={20} color="#16a34a" />
-                <Text className="text-slate-800 font-medium ml-3 text-sm">Expert Dashboard</Text>
+                <Award size={20} color={colors.forest600} />
+                <Text className="font-medium ml-3 text-sm" style={{ color: colors.ink900 }}>Expert Dashboard</Text>
               </View>
             </TouchableOpacity>
           </Card>
 
           {/* Privasi & Keamanan Section */}
-          <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">
+          <Text className="text-xs font-bold uppercase tracking-wider mb-3 px-1" style={{ color: colors.forest600 }}>
             Privasi & Keamanan Data
           </Text>
           <Card className="p-4 mb-6">
             <View className="flex-row items-center justify-between py-2 border-b border-slate-100">
               <View className="flex-row items-center">
-                <Shield size={20} color="#16a34a" />
-                <Text className="text-slate-800 font-medium ml-3 text-sm">Enkripsi & Consent (UU PDP)</Text>
+                <Shield size={20} color={colors.forest600} />
+                <Text className="font-medium ml-3 text-sm" style={{ color: colors.ink900 }}>Enkripsi & Consent (UU PDP)</Text>
               </View>
-              <Text className="text-xs text-emerald-600 font-semibold">Aktif</Text>
+              <Text className="text-xs font-semibold" style={{ color: colors.forest600 }}>Aktif</Text>
             </View>
             <TouchableOpacity
               onPress={handleClearData}
@@ -330,21 +342,21 @@ export default function ProfilScreen() {
           </Card>
 
           {/* Tentang Aplikasi Section */}
-          <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">
+          <Text className="text-xs font-bold uppercase tracking-wider mb-3 px-1" style={{ color: colors.forest600 }}>
             Tentang Aplikasi
           </Text>
           <Card className="p-4 mb-6">
             <View className="flex-row items-center justify-between py-2 border-b border-slate-100">
               <View className="flex-row items-center">
-                <Info size={20} color="#64748b" />
-                <Text className="text-slate-800 font-medium ml-3 text-sm">Versi Aplikasi</Text>
+                <Info size={20} color={colors.forest600} />
+                <Text className="font-medium ml-3 text-sm" style={{ color: colors.ink900 }}>Versi Aplikasi</Text>
               </View>
               <Text className="text-xs text-slate-500 font-medium">1.0.0 (Gemastik XVIII)</Text>
             </View>
             <View className="flex-row items-center justify-between py-3">
               <View className="flex-row items-center">
-                <User size={20} color="#64748b" />
-                <Text className="text-slate-800 font-medium ml-3 text-sm">Tim Pengembang</Text>
+                <User size={20} color={colors.forest600} />
+                <Text className="font-medium ml-3 text-sm" style={{ color: colors.ink900 }}>Tim Pengembang</Text>
               </View>
               <Text className="text-xs text-slate-500 font-medium">Vasco, Falih, Kiral</Text>
             </View>

@@ -44,7 +44,7 @@ export default function SellingScreen() {
 
   if (error) {
     return (
-      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 text-center mb-4">AI Selling Assistant gagal dimuat.</Text>
         <Button title="Coba Lagi" onPress={() => refetch()} />
       </View>
@@ -53,7 +53,7 @@ export default function SellingScreen() {
 
   if (!product) {
     return (
-      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 mb-4">Data selling assistant tidak ditemukan.</Text>
         <Button title="Kembali ke Beranda" onPress={() => router.replace("/")} />
       </View>
@@ -68,7 +68,7 @@ export default function SellingScreen() {
 
   if (sellingError || !sellData) {
     return (
-      <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+      <View className="flex-1 bg-cream-50 items-center justify-center p-6">
         <Text className="text-slate-600 text-center mb-4">
           Materi promosi belum bisa dibuat untuk produk ini.
         </Text>
@@ -221,7 +221,7 @@ export default function SellingScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-cream-50">
       <Header title="AI Selling Assistant" onBack={handleBack} />
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
