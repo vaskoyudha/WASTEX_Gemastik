@@ -8,6 +8,7 @@ import { apiClient } from '../../src/services/api';
 import type { ChatMessage, SkillIdea, SkillProposal, SkillVerifyResponse } from '../../src/services/types';
 import { useScanStore } from '../../src/store/useScanStore';
 import { Sparkles } from 'lucide-react-native';
+import { colors, gradients, gradientStyle, radii, shadows } from '../../src/theme';
 
 type Stage = 'ideas' | 'verifying' | 'result' | 'done';
 
@@ -129,31 +130,38 @@ export default function SkillCreatorScreen() {
       );
     }
     return (
-      <View>
-        {ideas.map((idea) => (
+      <View style={{ gap: 12 }}>
+        {ideas.map((idea, index) => (
           <TouchableOpacity
             key={idea.title}
             onPress={() => handleSelect(idea)}
             disabled={expanding}
             activeOpacity={0.7}
           >
-            <Card className="p-4 border border-slate-100 mb-3">
-              <Text className="text-sm font-bold text-slate-900 mb-1">{idea.title}</Text>
-              <Text className="text-xs text-slate-500 mb-2">{idea.description}</Text>
-              <View className="flex-row gap-2">
-                <Text className="text-[10px] font-semibold text-brand-dark bg-emerald-50 px-2 py-0.5 rounded-full">
-                  {idea.difficulty}
-                </Text>
-                {idea.est_cost_idr !== null && (
-                  <Text className="text-[10px] text-slate-500 px-2 py-0.5">
-                    Est. biaya Rp{idea.est_cost_idr ?? 0}
-                  </Text>
-                )}
+            <Card className="p-4 rounded-[22px] border-0" style={{ backgroundColor: 'rgba(255,255,255,0.72)', boxShadow: shadows.card }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: index === 0 ? colors.forest800 : colors.mist100 }}>
+                  <Text style={{ color: index === 0 ? colors.lime300 : colors.forest600, fontFamily: 'Inter_700Bold', fontSize: 11 }}>{String(index + 1).padStart(2, '0')}</Text>
+                </View>
+                <View style={{ flex: 1, gap: 5 }}>
+                  <Text className="text-sm font-bold" style={{ color: colors.ink900 }}>{idea.title}</Text>
+                  <Text className="text-xs leading-5" style={{ color: colors.ink600 }}>{idea.description}</Text>
+                  <View className="flex-row gap-2" style={{ marginTop: 2 }}>
+                    <Text className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: colors.forest600, backgroundColor: colors.mist100 }}>
+                      {idea.difficulty}
+                    </Text>
+                    {idea.est_cost_idr !== null && (
+                      <Text className="text-[10px] px-2 py-0.5" style={{ color: colors.ink600 }}>
+                        Est. biaya Rp{idea.est_cost_idr ?? 0}
+                      </Text>
+                    )}
+                  </View>
+                </View>
               </View>
             </Card>
           </TouchableOpacity>
         ))}
-        {expanding && <Text className="text-xs text-slate-500 mb-3">AI sedang menyusun detail skill...</Text>}
+        {expanding ? <Text className="text-xs mb-3" style={{ color: colors.ink600 }}>AI sedang menyusun detail skill...</Text> : null}
         <Button
           title={expanding ? 'Menyusun Detail...' : 'Generate Ulang'}
           onPress={generateCall.refetch}
@@ -174,26 +182,35 @@ export default function SkillCreatorScreen() {
   const renderResult = () => {
     if (!draft) return null;
     return (
-      <View>
-        <Text className="text-sm font-bold text-slate-900 mb-1">{draft.title}</Text>
-        <Text className="text-xs text-slate-500 mb-3 leading-5">{draft.description}</Text>
-        <View className="flex-row gap-2 mb-4">
-          <Text className="text-[10px] font-semibold text-brand-dark bg-emerald-50 px-2 py-0.5 rounded-full">
-            {draft.difficulty}
-          </Text>
-          {draft.est_cost_idr !== null && (
-            <Text className="text-[10px] text-slate-500 px-2 py-0.5">
-              Est. biaya Rp{draft.est_cost_idr ?? 0}
+      <View style={{ gap: 18 }}>
+        <View style={{ padding: 18, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: colors.forest700, ...gradientStyle(gradients.impact), borderWidth: 1, borderColor: 'rgba(255,255,255,0.11)', boxShadow: shadows.floating }}>
+          <Text className="text-lg font-bold mb-1" style={{ color: colors.white }}>{draft.title}</Text>
+          <Text className="text-xs mb-3 leading-5" style={{ color: 'rgba(255,255,255,0.72)' }}>{draft.description}</Text>
+          <View className="flex-row gap-2">
+            <Text className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: colors.lime300, backgroundColor: 'rgba(220,245,167,0.18)' }}>
+              {draft.difficulty}
             </Text>
-          )}
+            {draft.est_cost_idr !== null && (
+              <Text className="text-[10px] px-2 py-0.5" style={{ color: colors.sage200 }}>
+                Est. biaya Rp{draft.est_cost_idr ?? 0}
+              </Text>
+            )}
+          </View>
         </View>
-        <Text className="text-sm font-bold text-slate-900 mb-2">Langkah Pembuatan</Text>
+        <Text className="text-sm font-bold" style={{ color: colors.ink900 }}>Langkah Pembuatan</Text>
         {draft.steps.map((step) => (
-          <Card key={step.order} className="p-3 border border-slate-100 mb-3">
-            <Text className="text-xs font-bold text-slate-500 mb-1">Langkah {step.order}</Text>
-            <Text className="text-sm text-slate-800 mb-2 leading-5">{step.instruction}</Text>
+          <Card key={step.order} className="p-4 rounded-[22px] border-0" style={{ backgroundColor: 'rgba(255,255,255,0.72)', boxShadow: shadows.card }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 9 }}>
+              <View style={{ width: 28, height: 28, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.forest800 }}>
+                <Text style={{ color: colors.lime300, fontFamily: 'Inter_700Bold', fontSize: 10 }}>{step.order}</Text>
+              </View>
+              <Text className="text-xs font-bold" style={{ color: colors.forest600 }}>Langkah {step.order}</Text>
+            </View>
+            <Text className="text-sm mb-2 leading-5" style={{ color: colors.ink900 }}>{step.instruction}</Text>
             {step.warning ? (
-              <Text className="text-xs text-amber-700 leading-5">⚠️ {step.warning}</Text>
+              <View style={{ padding: 10, borderRadius: 14, backgroundColor: '#F8F2DE' }}>
+                <Text className="text-xs leading-5" style={{ color: '#9A5A15' }}>⚠️ {step.warning}</Text>
+              </View>
             ) : null}
           </Card>
         ))}
@@ -220,7 +237,7 @@ export default function SkillCreatorScreen() {
           </View>
         )}
         <View className="mb-4">
-          <Text className="text-sm font-bold text-slate-900 mb-3">
+          <Text className="text-sm font-bold mb-3" style={{ color: colors.ink900 }}>
             {verdict?.verdict === 'layak'
               ? 'Skill layak dikirim'
               : 'Kirim draft untuk review expert'}
@@ -233,22 +250,31 @@ export default function SkillCreatorScreen() {
   };
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
       <Header
         title="Buat Skill Baru"
         subtitle={scanResult.materialLabel}
         onBack={() => safeBack(router)}
       />
-      <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 44 }}
+      >
         {stage === 'ideas' && (
-          <View className="mb-5">
-            <View className="flex-row items-center mb-3">
-              <Sparkles size={16} color="#16a34a" />
-              <Text className="text-sm font-bold text-slate-900 ml-2">Ide Skill dari AI</Text>
+          <View style={{ gap: 16 }}>
+            <View style={{ padding: 17, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: colors.forest700, ...gradientStyle(gradients.impact), borderWidth: 1, borderColor: 'rgba(255,255,255,0.11)', boxShadow: shadows.floating }}>
+              <View style={{ width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.lime300, ...gradientStyle(gradients.scanButton) }}>
+                <Sparkles size={20} color={colors.forest900} />
+              </View>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text className="text-base font-bold" style={{ color: colors.white }}>Ide skill dari AI</Text>
+                <Text className="text-[11px] leading-4" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  Pilih ide untuk {scanResult.materialLabel}, lalu AI akan menyusun dan meninjau detailnya.
+                </Text>
+              </View>
             </View>
-            <Text className="text-xs text-slate-500 mb-4 leading-5">
-              Pilih salah satu ide untuk material {scanResult.materialLabel}, lalu AI akan menyusun dan meninjau detailnya.
-            </Text>
             {renderIdeas()}
           </View>
         )}
