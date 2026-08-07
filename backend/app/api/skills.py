@@ -205,12 +205,6 @@ async def complete_skill(
     if not sb.table("skills").select("id").eq("id", skill_id).execute().data:
         raise HTTPException(status_code=404, detail="skill not found")
 
-    existing = (
-        sb.table("skill_completions").select("*").eq("skill_id", skill_id).execute().data or []
-    )
-    if any(c.get("skill_id") == skill_id and c.get("user_id") == user["user_id"] for c in existing):
-        raise HTTPException(status_code=409, detail="Anda sudah mengirimkan hasil untuk skill ini")
-
     completion_id = str(uuid4())
     photo_path = f"{completion_id}.{file.content_type.split('/')[-1]}"
     try:
@@ -238,10 +232,12 @@ async def complete_skill(
             .data[0]
         )
     except Exception:
-        # Atomic backstop for the pre-check race: the table's only unique constraint is
-        # unique(skill_id, user_id), so an insert failure here means a duplicate submission.
-        logger.exception("skill completion insert failed (duplicate)")
-        raise HTTPException(status_code=409, detail="Anda sudah mengirimkan hasil untuk skill ini")
+        logger.exception("skill completion insert failed")
+        try:
+            sb.storage.from_("completions").remove([photo_path])
+        except Exception:
+            logger.exception("failed to clean up completion photo after insert error")
+        raise HTTPException(status_code=502, detail="hasil belum dapat disimpan")
     return SkillCompletion(
         id=row["id"],
         user_id=row["user_id"],

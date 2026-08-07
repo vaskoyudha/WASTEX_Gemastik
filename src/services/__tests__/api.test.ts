@@ -145,4 +145,11 @@ describe('apiClient skill methods', () => {
     const [url] = fetchMock.mock.calls[0];
     expect(url).toContain('/skills/s1/completions');
   });
+
+  it('getCompletionSellingKit sends auth to personalized selling endpoint', async () => {
+    await apiClient.getCompletionSellingKit('s1', 'c1');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain('/selling/s1/completions/c1');
+    expect(init.headers.Authorization).toBe('Bearer tok-123');
+  });
 });

@@ -5,10 +5,10 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
-import { BackendSellingKit } from "../types";
+import { BackendCompletionSellingKit, BackendSellingKit } from "../types";
 
 describe("sellingKitFromBackend", () => {
-  const { sellingKitFromBackend } = require("../index");
+  const { completionSellingKitFromBackend, sellingKitFromBackend } = require("../index");
 
   it("maps backend snake_case kit to frontend SellingKit", () => {
     const backend: BackendSellingKit = {
@@ -26,5 +26,24 @@ describe("sellingKitFromBackend", () => {
     expect(kit.captions).toEqual(["Dari sampah jadi cuan!"]);
     expect(kit.photoTips).toEqual(["Cahaya alami"]);
     expect(kit.packagingIdeas).toEqual(["Koran bekas"]);
+    expect(kit.hashtags).toEqual(["#wastex"]);
+  });
+
+  it("maps personalized completion promo fields", () => {
+    const backend: BackendCompletionSellingKit = {
+      skill_id: "s1",
+      completion_id: "c1",
+      product_name: "Vas Botol Estetik",
+      description: "Vas cantik dari botol PET bekas.",
+      captions: ["Siap dibagikan"],
+      photo_tips: [],
+      packaging_ideas: [],
+      hashtags: ["#wastex"],
+      promo_image_url: "https://example.test/promo.png",
+    };
+
+    const kit = completionSellingKitFromBackend(backend);
+    expect(kit.completionId).toBe("c1");
+    expect(kit.promoImageUri).toBe("https://example.test/promo.png");
   });
 });

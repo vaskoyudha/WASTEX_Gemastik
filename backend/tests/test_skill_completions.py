@@ -67,7 +67,7 @@ def test_complete_creates_row_and_uploads(fake_sb):
     assert len(fake_sb.storage.from_("completions").uploads) == 1
 
 
-def test_complete_duplicate_409(fake_sb):
+def test_complete_allows_same_user_to_submit_another_project(fake_sb):
     fake_sb.table("skills").insert(SKILL)
     fake_sb.table("skill_completions").insert(
         {
@@ -78,12 +78,11 @@ def test_complete_duplicate_409(fake_sb):
         }
     )
     r = _post(TestClient(app))
-    assert r.status_code == 409
+    assert r.status_code == 201
+    assert len(fake_sb.table("skill_completions").inserted) == 2
 
 
-def test_complete_insert_race_maps_to_409(fake_sb, monkeypatch):
-    # Race backstop: two concurrent requests both pass the Python pre-check; the losing
-    # insert violates unique(skill_id, user_id). The endpoint must map that to 409, not 500.
+def test_complete_insert_failure_maps_to_502_and_cleans_photo(fake_sb, monkeypatch):
     fake_sb.table("skills").insert(SKILL)
 
     def _dup_insert(_data):
@@ -93,7 +92,8 @@ def test_complete_insert_race_maps_to_409(fake_sb, monkeypatch):
 
     monkeypatch.setattr(fake_sb.table("skill_completions"), "insert", _dup_insert)
     r = _post(TestClient(app, raise_server_exceptions=False))
-    assert r.status_code == 409
+    assert r.status_code == 502
+    assert fake_sb.storage.from_("completions").removed
 
 
 def test_complete_skill_not_found_404(fake_sb):

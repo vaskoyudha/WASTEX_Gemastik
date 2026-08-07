@@ -20,7 +20,7 @@ interface ProductDataPayload {
  * 2. Selling kit dihasilkan LLM (bisa ~20 detik) sehingga dimuat di latar
  *    belakang dan tidak boleh memblokir tampilan tutorial.
  */
-export function useProductData(id: string | undefined) {
+export function useProductData(id: string | undefined, completionId?: string) {
   const loadProductData = useCallback(async (productId: string): Promise<ProductDataPayload> => {
     const found = await recommendation.getProductById(productId);
 
@@ -47,20 +47,25 @@ export function useProductData(id: string | undefined) {
   }, []);
 
   const loadSellingKit = useCallback(
-    (productId: string): Promise<SellingKit> => selling.getSellingKit(productId),
+    (productId: string, currentCompletionId?: string): Promise<SellingKit> =>
+      selling.getSellingKit(productId, currentCompletionId),
     []
   );
 
-  const initialArgs = useMemo<[string]>(() => [id || ""], [id]);
+  const coreArgs = useMemo<[string]>(() => [id || ""], [id]);
+  const sellingArgs = useMemo<[string, string | undefined]>(
+    () => [id || "", completionId],
+    [id, completionId],
+  );
 
   const core = useServiceCall<ProductDataPayload, [string]>(loadProductData, {
     autoCall: Boolean(id),
-    initialArgs,
+    initialArgs: coreArgs,
   });
 
-  const sell = useServiceCall<SellingKit, [string]>(loadSellingKit, {
+  const sell = useServiceCall<SellingKit, [string, string | undefined]>(loadSellingKit, {
     autoCall: Boolean(id),
-    initialArgs,
+    initialArgs: sellingArgs,
   });
 
   const refetch = useCallback(async (): Promise<ProductDataPayload | null> => {

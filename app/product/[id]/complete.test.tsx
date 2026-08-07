@@ -36,11 +36,11 @@ jest.mock('../../../src/components/ui', () => ({
 jest.mock('lucide-react-native', () => ({ Image: () => null, Camera: () => null }));
 
 describe('CompleteScreen', () => {
-  beforeEach(() => { jest.clearAllMocks(); mockComplete.mockResolvedValue({}); });
+  beforeEach(() => { jest.clearAllMocks(); mockComplete.mockResolvedValue({ id: 'c1' }); });
 
   it('submit disabled until photo and rating set', async () => {
     const { getByText } = await render(<CompleteScreen />);
-    const submit = getByText('Kirim Hasil');
+    const submit = getByText('Kirim & Buat Konten Jual');
     expect(submit).toBeTruthy();
   });
 
@@ -50,8 +50,9 @@ describe('CompleteScreen', () => {
     const { getByText } = await render(<CompleteScreen />);
     await fireEvent.press(getByText('Ambil dari Galeri'));
     await fireEvent.press(getByText('stars'));
-    await fireEvent.press(getByText('Kirim Hasil'));
+    await fireEvent.press(getByText('Kirim & Buat Konten Jual'));
     await new Promise((r) => setTimeout(r, 0));
     expect(mockComplete).toHaveBeenCalledWith('s1', 'file:///p.jpg', 5, undefined);
+    expect(mockRouterReplace).toHaveBeenCalledWith('/product/s1/selling?completionId=c1');
   });
 });

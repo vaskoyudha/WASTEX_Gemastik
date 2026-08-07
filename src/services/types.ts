@@ -123,10 +123,13 @@ export interface SellingKit {
   captions: string[];
   photoTips: string[];
   packagingIdeas: string[];
+  hashtags?: string[];
+  completionId?: string;
+  promoImageUri?: string;
 }
 
 export interface SellingAssistantService {
-  getSellingKit(productId: string): Promise<SellingKit>;
+  getSellingKit(productId: string, completionId?: string): Promise<SellingKit>;
 }
 
 // ---- Backend Selling ----
@@ -138,6 +141,11 @@ export interface BackendSellingKit {
   photo_tips: string[];
   packaging_ideas: string[];
   hashtags: string[];
+}
+
+export interface BackendCompletionSellingKit extends BackendSellingKit {
+  completion_id: string;
+  promo_image_url?: string | null;
 }
 
 // ---- Tutorial ----

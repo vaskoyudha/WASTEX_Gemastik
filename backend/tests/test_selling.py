@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.selling as selling_api
+from app.auth import create_test_token
 from app.deps import get_supabase
 from app.main import app
 from app.schemas import SellingKit
@@ -60,6 +61,63 @@ def test_selling_kit_unapproved_skill_404(fake_sb, stub_agent):
     )
     client = TestClient(app)
     r = client.get("/selling/s1")
+    assert r.status_code == 404
+
+
+def test_completion_selling_kit_uses_finished_product_photo(fake_sb, stub_agent, monkeypatch):
+    fake_sb.table("skills").insert(
+        {
+            "id": "s1",
+            "title": "Vas Botol",
+            "material": "plastik_pet",
+            "status": "approved",
+            "est_price_idr": 25000,
+        }
+    )
+    fake_sb.table("skill_completions").insert(
+        {
+            "id": "c1",
+            "user_id": "u1",
+            "skill_id": "s1",
+            "photo_path": "c1.jpeg",
+            "rating": 5,
+        }
+    )
+    fake_sb.storage.from_("completions").upload("c1.jpeg", b"finished-product")
+    captured = {}
+
+    async def fake_image(prompt, references=None):
+        captured["prompt"] = prompt
+        captured["references"] = references
+        return b"promo-png"
+
+    monkeypatch.setattr(selling_api, "generate_image", fake_image)
+    token = create_test_token({"sub": "u1"})
+    r = TestClient(app).get(
+        "/selling/s1/completions/c1",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert r.status_code == 200
+    assert r.json()["completion_id"] == "c1"
+    assert r.json()["promo_image_url"].endswith("/completions/promos/c1.png")
+    assert captured["references"] == [b"finished-product"]
+    assert "FOTO PRODUK JADI PENGGUNA" in captured["prompt"]
+    assert fake_sb.table("skill_completions").updated[0]["selling_kit"]["product_name"]
+
+
+def test_completion_selling_kit_hides_another_users_completion(fake_sb, stub_agent):
+    fake_sb.table("skills").insert(
+        {"id": "s1", "title": "Vas Botol", "material": "plastik_pet", "status": "approved"}
+    )
+    fake_sb.table("skill_completions").insert(
+        {"id": "c1", "user_id": "u2", "skill_id": "s1", "photo_path": "c1.jpeg"}
+    )
+    token = create_test_token({"sub": "u1"})
+    r = TestClient(app).get(
+        "/selling/s1/completions/c1",
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert r.status_code == 404
 
 

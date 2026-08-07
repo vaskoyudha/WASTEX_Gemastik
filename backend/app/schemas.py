@@ -143,6 +143,11 @@ class SellingKit(BaseModel):
     hashtags: list[str] = []
 
 
+class CompletionSellingKit(SellingKit):
+    completion_id: str
+    promo_image_url: str | None = None
+
+
 class UserProfileCreate(BaseModel):
     auth_user_id: UUID = Field(..., description="UUID from auth.users")
     display_name: str = Field(..., min_length=1, max_length=64)

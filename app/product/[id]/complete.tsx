@@ -14,7 +14,6 @@ export default function CompleteScreen() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
 
   const pickImage = async () => {
     try {
@@ -36,8 +35,15 @@ export default function CompleteScreen() {
     if (!photo || rating < 1) return;
     setSubmitting(true);
     try {
-      await apiClient.completeSkill(id as string, photo, rating, comment.trim() || undefined);
-      setDone(true);
+      const completion = await apiClient.completeSkill(
+        id as string,
+        photo,
+        rating,
+        comment.trim() || undefined,
+      );
+      router.replace(
+        `/product/${id}/selling?completionId=${encodeURIComponent(completion.id)}`,
+      );
     } catch (e) {
       const status = (e as { status?: number }).status;
       if (status === 409) {
@@ -49,21 +55,6 @@ export default function CompleteScreen() {
       setSubmitting(false);
     }
   };
-
-  if (done) {
-    return (
-      <View className="flex-1 bg-cream-50">
-        <Header title="Hasil Terkirim" onBack={() => safeBack(router)} />
-        <View className="flex-1 items-center justify-center p-6">
-          <Text className="text-base font-bold text-slate-900 text-center mb-2">Terima kasih!</Text>
-          <Text className="text-sm text-slate-600 text-center mb-6">
-            Hasil karyamu kini tampil di galeri komunitas dan membantu user lain.
-          </Text>
-          <Button title="Kembali ke Detail" onPress={() => router.replace(`/product/${id}`)} />
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-cream-50">
@@ -102,7 +93,12 @@ export default function CompleteScreen() {
           className="border border-slate-200 rounded-xl px-4 py-3 mb-6 text-sm min-h-[80px]"
         />
 
-        <Button title="Kirim Hasil" onPress={handleSubmit} disabled={!canSubmit} loading={submitting} />
+        <Button
+          title="Kirim & Buat Konten Jual"
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+          loading={submitting}
+        />
       </ScrollView>
     </View>
   );

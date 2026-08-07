@@ -14,8 +14,9 @@ Jangan mengarang harga.
 1. product_name: nama produk yang menarik dan mudah dicari (maks 5 kata).
 2. description: deskripsi produk 2-3 kalimat yang menonjolkan nilai ramah lingkungan
    dan kisah "dari limbah jadi berharga". Jujur, tanpa klaim berlebihan.
-3. captions: 3 caption media sosial (Instagram/TikTok) dengan gaya santai, ajakan
-   bertindak, dan emoji secukupnya.
+3. captions: 3 caption siap pakai untuk Instagram, Facebook, dan WhatsApp/TikTok.
+   Setiap caption harus bisa berdiri sendiri, memakai gaya yang sesuai platform,
+   memiliki ajakan bertindak, dan emoji secukupnya.
 4. photo_tips: 3 saran foto produk praktis dengan HP (pencahayaan, latar, sudut).
 5. packaging_ideas: 2-3 ide kemasan murah dan ramah lingkungan dari bahan bekas.
 6. hashtags: 5-8 hashtag relevan (campuran Indonesia dan Inggris, tanpa spasi).

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert, Share, Platform, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
+import { Header, Button, Card, FitImage, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { useScanStore } from "../../../src/store/useScanStore";
 import { impact, scanner } from "../../../src/services";
@@ -21,17 +21,18 @@ function inferMaterialFromProduct(productId: string): MaterialType {
 }
 
 export default function SellingScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, completionId } = useLocalSearchParams<{ id: string; completionId?: string }>();
   const router = useRouter();
   const {
     product,
+    tutData,
     sellData,
     loading,
     error,
     refetch,
     sellingLoading,
     sellingError,
-  } = useProductData(id);
+  } = useProductData(id, completionId);
   const { scanResult, imageUri, resetSession } = useScanStore();
 
   const [sellingTab, setSellingTab] = useState<SellingTab>("deskripsi");
@@ -104,7 +105,7 @@ export default function SellingScreen() {
         savedAt: new Date().toISOString(),
         material,
         product,
-        photoUri: imageUri || product.thumbnailUri,
+        photoUri: sellData.promoImageUri || imageUri || product.thumbnailUri,
       });
       setConfirmVisible(false);
       resetSession();
@@ -118,18 +119,25 @@ export default function SellingScreen() {
 
   const getAllSellingText = () => {
     if (!sellData) return "";
+    const promoImageUri = sellData.promoImageUri || tutData?.mockupImageUri;
     return [
       sellData.productName,
       sellData.description,
       ...sellData.captions,
+      ...(sellData.hashtags ?? []),
       ...sellData.photoTips,
       ...sellData.packagingIdeas,
+      ...(promoImageUri ? [`Poster produk: ${promoImageUri}`] : []),
     ].join("\n\n");
   };
 
-  const shareSellingText = async (message: string, title = "AI Selling Assistant") => {
+  const shareSellingText = async (
+    message: string,
+    title = "AI Selling Assistant",
+    imageUrl?: string,
+  ) => {
     try {
-      await Share.share({ title, message });
+      await Share.share({ title, message, ...(imageUrl ? { url: imageUrl } : {}) });
     } catch {
       Alert.alert("Gagal", "Konten tidak bisa dibagikan saat ini.");
     }
@@ -169,13 +177,13 @@ export default function SellingScreen() {
       case "caption":
         return (
           <View>
-            <Text className="text-sm font-bold text-slate-900 mb-2">Caption Instagram</Text>
+            <Text className="text-sm font-bold text-slate-900 mb-2">Caption Media Sosial</Text>
             {sellData.captions.map((cap, idx) => (
               <Card key={idx} className="p-4 mb-3 border border-slate-100">
                 <Text className="text-xs text-slate-700 leading-5 mb-3">{cap}</Text>
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => copySellingText(cap, "Caption Instagram")}
+                  onPress={() => copySellingText(cap, "Caption Media Sosial")}
                   className="flex-row items-center self-start bg-slate-100 px-3 py-1.5 rounded-lg"
                 >
                   <Copy size={14} color="#64748b" />
@@ -191,7 +199,10 @@ export default function SellingScreen() {
             <Text className="text-sm font-bold text-slate-900 mb-2">Rekomendasi Hashtag</Text>
             <Card className="p-4 mb-4 border border-slate-100">
               <View className="flex-row flex-wrap gap-2">
-                {["#Upcycling", "#WASTEX", "#EcoFriendly", "#DaurUlang", "#ProdukLokal"].map((tag) => (
+                {(sellData.hashtags?.length
+                  ? sellData.hashtags
+                  : ["#Upcycling", "#WASTEX", "#EcoFriendly", "#DaurUlang", "#ProdukLokal"]
+                ).map((tag) => (
                   <View key={tag} className="bg-emerald-50 px-3 py-1.5 rounded-full">
                     <Text className="text-xs font-semibold text-brand-dark">{tag}</Text>
                   </View>
@@ -229,7 +240,7 @@ export default function SellingScreen() {
           {(
             [
               { key: "deskripsi", label: "Deskripsi" },
-              { key: "caption", label: "Caption" },
+              { key: "caption", label: "Sosmed" },
               { key: "hashtag", label: "Hashtag" },
               { key: "tips", label: "Tips Foto" },
             ] as { key: SellingTab; label: string }[]
@@ -255,6 +266,28 @@ export default function SellingScreen() {
           <Text className="font-bold text-slate-900 text-base">{sellData.productName}</Text>
         </Card>
 
+        {sellData.promoImageUri || tutData?.mockupImageUri ? (
+          <Card className="p-4 border border-slate-100 mb-4">
+            <Text className="text-sm font-bold text-slate-900 mb-1">Poster Promosi AI</Text>
+            <Text className="text-xs text-slate-500 leading-5 mb-3">
+              Siap dibagikan bersama deskripsi dan caption ke Instagram, Facebook, WhatsApp,
+              atau platform lain.
+            </Text>
+            <FitImage
+              source={{ uri: sellData.promoImageUri || tutData?.mockupImageUri }}
+              className="rounded-2xl overflow-hidden bg-slate-100"
+              maxHeight={420}
+            />
+          </Card>
+        ) : completionId ? (
+          <Card className="p-4 border border-amber-100 bg-amber-50 mb-4">
+            <Text className="text-xs text-amber-800 leading-5 mb-3">
+              Teks promosi sudah siap, tetapi poster AI belum berhasil dibuat.
+            </Text>
+            <Button title="Coba Buat Poster Lagi" variant="secondary" onPress={() => refetch()} />
+          </Card>
+        ) : null}
+
         {renderContent()}
 
         <View className="flex-row gap-3 mt-2 mb-4">
@@ -265,11 +298,17 @@ export default function SellingScreen() {
             onPress={() => copySellingText(getAllSellingText(), "Semua konten")}
           />
           <Button
-            title="Bagikan"
+            title="Bagikan Semua"
             variant="primary"
             className="flex-1"
             icon={<Share2 size={18} color="#ffffff" />}
-            onPress={() => shareSellingText(getAllSellingText())}
+            onPress={() =>
+              shareSellingText(
+                getAllSellingText(),
+                "AI Selling Assistant",
+                sellData.promoImageUri || tutData?.mockupImageUri,
+              )
+            }
           />
         </View>
 

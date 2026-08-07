@@ -392,6 +392,19 @@ def build_mockup_master_prompt(mockup_prompt: str, has_references: bool) -> str:
     return f"{_MOCKUP_MASTER_PROMPT}{policy}\n\n{mockup_prompt}"
 
 
+def build_completion_mockup_master_prompt(mockup_prompt: str) -> str:
+    """Prompt mockup yang memakai foto produk jadi milik pengguna sebagai sumber utama."""
+    policy = (
+        "\n\n[REFERENSI FOTO PRODUK JADI PENGGUNA]\n"
+        "- Gambar referensi adalah foto produk yang benar-benar selesai dibuat pengguna. "
+        "Pertahankan bentuk, bahan, warna, pola, dekorasi, ketidaksempurnaan wajar, dan "
+        "pengerjaannya dengan setia; jangan mengganti atau mendesain ulang produk.\n"
+        "- Rapikan hanya pencahayaan, latar, framing, dan komposisi agar menjadi poster "
+        "penjualan. Jangan menampilkan benda lain dari foto jika bukan bagian produk."
+    )
+    return f"{_MOCKUP_MASTER_PROMPT}{policy}\n\n{mockup_prompt}"
+
+
 async def generate_image(prompt: str, reference_images: list[bytes] | None = None) -> bytes:
     s = get_settings()
 

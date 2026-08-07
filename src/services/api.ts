@@ -1,4 +1,4 @@
-import type { ChatMessage, SkillCompletionsSummary, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
+import type { ChatMessage, SkillCompletion, SkillCompletionsSummary, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
@@ -98,7 +98,12 @@ export const apiClient = {
     return request(`/skills/${id}`);
   },
 
-  async completeSkill(skillId: string, imageUri: string, rating: number, comment?: string) {
+  async completeSkill(
+    skillId: string,
+    imageUri: string,
+    rating: number,
+    comment?: string,
+  ): Promise<SkillCompletion> {
     const formData = new FormData();
     const response = await fetch(imageUri);
     const blob = await response.blob();
@@ -184,6 +189,12 @@ export const apiClient = {
 
   async getSellingKit(skillId: string) {
     return request(`/selling/${skillId}`);
+  },
+
+  async getCompletionSellingKit(skillId: string, completionId: string) {
+    return request(`/selling/${skillId}/completions/${completionId}`, {
+      headers: await authHeaders(),
+    });
   },
 
   async logImpact(data: { skill_id?: string; material: string; waste_kg: number; est_value_idr: number }) {

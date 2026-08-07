@@ -16,6 +16,7 @@ import {
   BackendTutorial,
   BackendPricing,
   BackendSellingKit,
+  BackendCompletionSellingKit,
   Skill,
 } from "./types";
 import {
@@ -85,7 +86,7 @@ class MockPricing implements PricingService {
 }
 
 class MockSelling implements SellingAssistantService {
-  async getSellingKit(productId: string): Promise<SellingKit> {
+  async getSellingKit(productId: string, _completionId?: string): Promise<SellingKit> {
     await new Promise((resolve) => setTimeout(resolve, 700));
     return MOCK_SELLING[productId] || MOCK_SELLING["prod_pet_1"];
   }
@@ -250,11 +251,27 @@ export function sellingKitFromBackend(kit: BackendSellingKit): SellingKit {
     captions: kit.captions ?? [],
     photoTips: kit.photo_tips ?? [],
     packagingIdeas: kit.packaging_ideas ?? [],
+    hashtags: kit.hashtags ?? [],
+  };
+}
+
+export function completionSellingKitFromBackend(kit: BackendCompletionSellingKit): SellingKit {
+  return {
+    ...sellingKitFromBackend(kit),
+    completionId: kit.completion_id,
+    promoImageUri: kit.promo_image_url ?? undefined,
   };
 }
 
 class ApiSelling implements SellingAssistantService {
-  async getSellingKit(productId: string): Promise<SellingKit> {
+  async getSellingKit(productId: string, completionId?: string): Promise<SellingKit> {
+    if (completionId) {
+      const kit = (await apiClient.getCompletionSellingKit(
+        productId,
+        completionId,
+      )) as BackendCompletionSellingKit;
+      return completionSellingKitFromBackend(kit);
+    }
     const kit = (await apiClient.getSellingKit(productId)) as BackendSellingKit;
     return sellingKitFromBackend(kit);
   }
