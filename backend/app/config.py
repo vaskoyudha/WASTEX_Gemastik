@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     # parse structured output). qd/qmodel_38max was tried but ignores JSON
     # instructions and always answers Markdown/prose, so it is NOT usable here.
     # Vision stays on mimo (chat models have no working vision support).
-    chat_model: str = "oc/deepseek-v4-flash-free"
-    chat_fallback_model: str = "oc/mimo-v2.5-free"
+    chat_model: str = "oc/mimo-v2.5-free"
+    chat_fallback_model: str = "oc/deepseek-v4-flash-free"
     vision_model: str = "oc/mimo-v2.5-free"
     vision_fallback_model: str = "oc/mimo-v2.5-free"
     image_model: str = "google/gemini-2.5-flash-image-preview"
