@@ -54,17 +54,23 @@ export default function ImpactScreen() {
           <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18 }}>
             <View
               style={{
+                borderRadius: radii.xl + 1,
+                borderCurve: "continuous",
+                padding: 1,
+                ...gradientStyle(gradients.impactEdge),
+                boxShadow: "-5px -5px 20px rgba(197,240,132,0.1), 0 22px 48px rgba(21,37,27,0.14)",
+              }}
+            >
+              <View
+                style={{
                 padding: 19,
                 gap: 16,
                 borderRadius: radii.xl,
                 borderCurve: "continuous",
                 overflow: "hidden",
                 backgroundColor: colors.forest900,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.11)",
-                boxShadow: shadows.floating,
-              }}
-            >
+                }}
+              >
               <Image
                 source={require("../../assets/images/impact-upcycling-card-bg.png")}
                 resizeMode="cover"
@@ -112,6 +118,7 @@ export default function ImpactScreen() {
                   <Text selectable style={{ color: colors.white, fontFamily: "Inter_700Bold", fontSize: 14 }}>Rp {summary.estimatedEconomicValue.toLocaleString("id-ID")}</Text>
                   <Text style={{ color: "rgba(255,255,255,0.62)", fontSize: 9 }}>Nilai ekonomi</Text>
                 </View>
+              </View>
               </View>
             </View>
           </View>

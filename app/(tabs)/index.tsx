@@ -70,10 +70,11 @@ export default function HomeScreen() {
         accessibilityIgnoresInvertColors
         style={{
           position: "absolute",
-          top: -14,
-          right: 0,
-          width: "88%",
-          height: "88%",
+          top: -10,
+          left: -10,
+          width: "102%",
+          height: "84%",
+          opacity: 0.7,
         }}
       />
       <View
@@ -203,17 +204,23 @@ export default function HomeScreen() {
 
           <View
             style={{
+              borderRadius: radii.xl + 1,
+              borderCurve: "continuous",
+              padding: 1,
+              ...gradientStyle(gradients.impactEdge),
+              boxShadow: "-5px -5px 20px rgba(197,240,132,0.1), 0 22px 48px rgba(21,37,27,0.14)",
+            }}
+          >
+            <View
+              style={{
               backgroundColor: colors.forest900,
               borderRadius: radii.xl,
               borderCurve: "continuous",
               padding: compact ? 16 : 18,
               gap: 14,
-              boxShadow: shadows.floating,
               overflow: "hidden",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.11)",
-            }}
-          >
+              }}
+            >
             <Image
               source={require("../../assets/images/impact-upcycling-card-bg.png")}
               resizeMode="cover"
@@ -306,6 +313,7 @@ export default function HomeScreen() {
                 </Text>
                 <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 9, marginTop: 1 }}>Nilai ekonomi</Text>
               </View>
+            </View>
             </View>
           </View>
 

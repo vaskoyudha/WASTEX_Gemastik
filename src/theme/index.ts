@@ -30,6 +30,8 @@ export const gradients = {
     "radial-gradient(circle at 4% 0%, rgba(220,247,161,0.34) 0%, rgba(184,229,119,0.16) 23%, rgba(184,229,119,0) 48%), linear-gradient(180deg, rgba(5,25,17,0.12) 0%, rgba(5,25,17,0.2) 38%, rgba(5,25,17,0.56) 70%, rgba(5,25,17,0.9) 100%)",
   impactImageGlow:
     "radial-gradient(circle at 4% 0%, rgba(220,247,161,0.34) 0%, rgba(184,229,119,0.16) 23%, rgba(184,229,119,0) 48%)",
+  impactEdge:
+    "linear-gradient(135deg, rgba(236,255,207,0.7) 0%, rgba(193,238,132,0.39) 19%, rgba(139,201,105,0.11) 39%, rgba(139,201,105,0) 57%)",
   limeWash:
     "radial-gradient(circle at 92% 8%, rgba(220,247,161,0.52) 0%, rgba(220,247,161,0) 43%), linear-gradient(145deg, #EAF2E8 0%, #D8E5D9 100%)",
 } as const;
