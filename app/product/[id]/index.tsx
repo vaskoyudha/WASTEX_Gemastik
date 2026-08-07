@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Share, View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
+import { Alert, Share, View, Text, ScrollView, Image, TouchableOpacity, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, Badge, LoadingSpinner, StarRating } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
@@ -20,7 +20,7 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react-native";
-import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../../src/theme";
+import { colors, shadows } from "../../../src/theme";
 
 const toolIcons: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
   botol: Package,
@@ -45,6 +45,7 @@ function getToolIcon(name: string) {
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
   const { product, tutData, priceData, loading, error, refetch } = useProductData(id);
 
   const [completions, setCompletions] = useState<SkillCompletionsSummary | null>(null);
@@ -101,15 +102,27 @@ export default function ProductDetailScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
-      <Header title="Detail Produk" onBack={() => safeBack(router)} rightElement={headerRight} />
-
+    <View style={{ flex: 1, backgroundColor: "#F8F8F2" }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 46 }}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
       >
+        <Image
+          source={require("../../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{ position: "absolute", top: -128, left: 0, width: "100%", height: screenHeight }}
+        />
+        <Header
+          title="Detail Produk"
+          onBack={() => safeBack(router)}
+          rightElement={headerRight}
+          transparent
+          contentColor={colors.white}
+        />
+        <View style={{ paddingHorizontal: 18, paddingTop: 32, paddingBottom: 46 }}>
         <Card className="rounded-[28px] overflow-hidden p-0 border-0 mb-6" style={{ boxShadow: shadows.floating }}>
           <Image source={{ uri: product.thumbnailUri }} className="w-full h-[296px]" resizeMode="cover" />
         </Card>
@@ -165,17 +178,17 @@ export default function ProductDetailScreen() {
                 padding: 15,
                 borderRadius: 20,
                 borderCurve: "continuous",
-                backgroundColor: idx === 2 ? colors.forest900 : colors.surface,
-                borderWidth: idx === 2 ? 0 : 1,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
                 borderColor: colors.mist100,
-                boxShadow: idx === 2 ? shadows.card : undefined,
+                boxShadow: "0 8px 24px rgba(31,63,42,0.09)",
               }}
             >
               <View className="flex-row items-center justify-between">
-                <Text className="text-[11px]" style={{ color: idx === 2 ? "rgba(255,255,255,0.64)" : colors.ink600 }}>{row.label}</Text>
-                {idx === 2 ? <TrendingUp size={15} color={colors.lime300} /> : null}
+                <Text className="text-[11px]" style={{ color: colors.ink600 }}>{row.label}</Text>
+                {idx === 2 ? <TrendingUp size={15} color={colors.forest700} /> : null}
               </View>
-              <Text selectable className="text-[17px] font-extrabold" style={{ color: idx === 2 ? colors.white : colors.ink900, fontVariant: ["tabular-nums"], letterSpacing: -0.4 }}>{row.value}</Text>
+              <Text selectable className="text-[17px] font-extrabold" style={{ color: colors.ink900, fontVariant: ["tabular-nums"], letterSpacing: -0.4 }}>{row.value}</Text>
             </View>
           ))}
         </View>
@@ -245,6 +258,7 @@ export default function ProductDetailScreen() {
           variant="primary"
           icon={<ArrowRight size={19} color={colors.white} />}
         />
+        </View>
       </ScrollView>
     </View>
   );

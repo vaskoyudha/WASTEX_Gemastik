@@ -110,7 +110,7 @@ export default function UploadScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8F8F2" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -128,7 +128,28 @@ export default function UploadScreen() {
             source={require("../../assets/images/upload-screen-bottom-bg-062031.png")}
             resizeMode="contain"
             accessibilityIgnoresInvertColors
-            style={{ position: "absolute", left: 0, bottom: 0, width: "100%", height: screenWidth * (3 / 4) }}
+            style={{
+              position: "absolute",
+              left: "3%",
+              bottom: 0,
+              width: "94%",
+              height: screenWidth * 0.94 * (3 / 4),
+              transform: [{ translateY: 32 }],
+            }}
+          />
+        ) : !analyzeCall.loading ? (
+          <Image
+            source={require("../../assets/images/upload-screen-bottom-bg.png")}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+            style={{
+              position: "absolute",
+              left: "3%",
+              bottom: 0,
+              width: "94%",
+              height: screenWidth * 0.94 * (941 / 1672),
+              transform: [{ translateY: 40 }],
+            }}
           />
         ) : null}
         <View
@@ -172,7 +193,7 @@ export default function UploadScreen() {
         </View>
 
         {analyzeCall.loading ? (
-          <View style={[screenSheetStyle, { minHeight: Math.max(screenHeight - 100, 620), backgroundColor: "#F8F8F2" }]}>
+          <View style={[screenSheetStyle, { minHeight: Math.max(screenHeight - 100, 620), backgroundColor: "#FFFFFF" }]}>
           <AnalysisLoadingView photoUri={image} />
           </View>
         ) : (
@@ -190,12 +211,12 @@ export default function UploadScreen() {
                   letterSpacing: -0.45,
                 }}
               >
-                Mulai dari satu foto
+                Pilih foto sampah anorganik
               </Text>
             </View>
             <Text style={{ color: colors.ink600, fontFamily: "Manrope_400Regular", fontSize: 12, lineHeight: 18, textAlign: "center" }}>
-              Pastikan material terlihat jelas agar
-              {"\n"}hasil analisis lebih akurat.
+              Pastikan objek terlihat jelas agar
+              {"\n"}hasil pemindaian lebih akurat.
             </Text>
           </View>
 
