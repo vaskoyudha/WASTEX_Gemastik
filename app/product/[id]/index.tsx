@@ -17,7 +17,10 @@ import {
   Ruler,
   Sprout,
   Droplet,
+  ArrowRight,
+  TrendingUp,
 } from "lucide-react-native";
+import { colors, gradients, gradientStyle, shadows } from "../../../src/theme";
 
 const toolIcons: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
   botol: Package,
@@ -85,52 +88,57 @@ export default function ProductDetailScreen() {
         }}
         className="p-2"
       >
-        <Heart size={22} color="#1e293b" />
+        <Heart size={20} color={colors.white} />
       </TouchableOpacity>
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => Share.share({ message: `Lihat ide upcycling WASTEX: ${product.name}` })}
         className="p-2"
       >
-        <Share2 size={22} color="#1e293b" />
+        <Share2 size={20} color={colors.white} />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
       <Header title="Detail Produk" onBack={() => safeBack(router)} rightElement={headerRight} />
 
-      <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
-        <Card className="rounded-3xl overflow-hidden p-0 border-0 mb-5">
-          <Image source={{ uri: product.thumbnailUri }} className="w-full h-64" resizeMode="cover" />
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 46 }}
+      >
+        <Card className="rounded-[28px] overflow-hidden p-0 border-0 mb-6" style={{ boxShadow: shadows.floating }}>
+          <Image source={{ uri: product.thumbnailUri }} className="w-full h-[296px]" resizeMode="cover" />
         </Card>
 
-        <Text className="text-2xl font-extrabold text-slate-900 mb-2">{product.name}</Text>
+        <Text className="text-[28px] leading-[34px] font-extrabold mb-2" style={{ color: colors.ink900, letterSpacing: -1.05 }}>{product.name}</Text>
 
-        <View className="flex-row items-center mb-2">
+        <View className="flex-row items-center mb-3">
           {completions && completions.count > 0 ? (
             <>
               <StarRating value={Math.round(completions.avg_rating)} size={16} readOnly />
-              <Text className="text-sm font-bold text-slate-900 ml-2">{completions.avg_rating}</Text>
-              <Text className="text-xs text-slate-500 ml-1">({completions.count} review)</Text>
+              <Text className="text-sm font-extrabold ml-2" style={{ color: colors.ink900 }}>{completions.avg_rating}</Text>
+              <Text className="text-xs ml-1" style={{ color: colors.ink600 }}>({completions.count} ulasan)</Text>
             </>
           ) : (
             <Text className="text-xs text-slate-400">Belum ada review</Text>
           )}
         </View>
 
-        <View className="flex-row items-center gap-3 mb-4">
+        <View className="flex-row items-center gap-3 mb-5">
           <Badge variant={product.difficulty} size="sm" />
           <View className="flex-row items-center">
-            <Clock size={14} color="#64748b" />
-            <Text className="text-xs text-slate-500 ml-1">{product.estimatedTimeMinutes} menit</Text>
+            <Clock size={14} color={colors.ink400} />
+            <Text className="text-xs ml-1" style={{ color: colors.ink600 }}>{product.estimatedTimeMinutes} menit</Text>
           </View>
         </View>
 
-        <Text className="text-sm text-slate-600 leading-5 mb-6">{product.shortDescription}</Text>
+        <Text className="text-sm leading-[22px] mb-7" style={{ color: colors.ink700 }}>{product.shortDescription}</Text>
 
-        <Card className="p-0 border border-slate-100 mb-6 overflow-hidden">
+        <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.4 }}>Nilai proyek</Text>
+        <View className="flex-row flex-wrap mb-7" style={{ gap: 10 }}>
           {[
             { label: "Estim Biaya", value: `Rp ${product.estimatedCost.toLocaleString("id-ID")}` },
             {
@@ -146,33 +154,46 @@ export default function ProductDetailScreen() {
               value:
                 product.difficulty === "mudah" ? "Mudah" : product.difficulty === "sedang" ? "Sedang" : "Sulit",
             },
-          ].map((row, idx, arr) => (
+          ].map((row, idx) => (
             <View
               key={idx}
-              className={`flex-row items-center justify-between px-4 py-3.5 ${
-                idx !== arr.length - 1 ? "border-b border-slate-100" : ""
-              }`}
+              style={{
+                width: "48.5%",
+                minHeight: 104,
+                justifyContent: "space-between",
+                padding: 15,
+                borderRadius: 20,
+                borderCurve: "continuous",
+                backgroundColor: idx === 2 ? colors.forest900 : colors.surface,
+                borderWidth: idx === 2 ? 0 : 1,
+                borderColor: colors.mist100,
+                boxShadow: idx === 2 ? shadows.card : undefined,
+              }}
             >
-              <Text className="text-sm text-slate-500">{row.label}</Text>
-              <Text className="text-sm font-bold text-slate-900">{row.value}</Text>
+              <View className="flex-row items-center justify-between">
+                <Text className="text-[11px]" style={{ color: idx === 2 ? "rgba(255,255,255,0.64)" : colors.ink600 }}>{row.label}</Text>
+                {idx === 2 ? <TrendingUp size={15} color={colors.lime300} /> : null}
+              </View>
+              <Text selectable className="text-[17px] font-extrabold" style={{ color: idx === 2 ? colors.white : colors.ink900, fontVariant: ["tabular-nums"], letterSpacing: -0.4 }}>{row.value}</Text>
             </View>
           ))}
-        </Card>
+        </View>
 
-        <View className="mb-6">
-          <Text className="text-sm font-bold text-slate-900 mb-3">Alat & Bahan</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View className="mb-7">
+          <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.4 }}>Alat & bahan</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 18 }}>
             {tutData?.toolsAndMaterials.map((tool, idx) => {
               const Icon = getToolIcon(tool);
               return (
                 <View
                   key={idx}
-                  className="bg-white border border-slate-100 rounded-2xl p-3 items-center mr-3 w-24"
+                  className="rounded-[20px] p-3 items-center mr-3 w-[104px]"
+                  style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100 }}
                 >
-                  <View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center mb-2">
-                    <Icon size={20} color="#16a34a" />
+                  <View className="w-11 h-11 rounded-[16px] items-center justify-center mb-2" style={{ backgroundColor: colors.mist100 }}>
+                    <Icon size={20} color={colors.forest700} />
                   </View>
-                  <Text className="text-[10px] text-slate-600 text-center leading-4" numberOfLines={2}>
+                  <Text className="text-[10px] text-center leading-4 font-semibold" style={{ color: colors.ink700 }} numberOfLines={2}>
                     {tool}
                   </Text>
                 </View>
@@ -218,9 +239,10 @@ export default function ProductDetailScreen() {
         )}
 
         <Button
-          title="Lihat Tutorial Langkah-langkah"
+          title="Mulai Tutorial"
           onPress={() => router.push(`/product/${id}/tutorial`)}
           variant="primary"
+          icon={<ArrowRight size={19} color={colors.white} />}
         />
       </ScrollView>
     </View>

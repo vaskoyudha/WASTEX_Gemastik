@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  TouchableOpacity,
+  Pressable,
   Text,
   ActivityIndicator,
   TouchableOpacityProps,
@@ -34,23 +34,23 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   // Base Container Styles
   const variantStyles = {
-    primary: "bg-brand active:bg-brand-dark border-transparent",
-    secondary: "bg-white active:bg-emerald-50 border-slate-200",
-    outline: "bg-transparent border-slate-300 active:bg-slate-100",
+    primary: "bg-forest-900 border-transparent",
+    secondary: "bg-white border-sage-200",
+    outline: "bg-transparent border-sage-300",
     danger: "bg-risk-bahaya active:bg-red-700 border-transparent",
   };
 
   const textVariantStyles = {
     primary: "text-white font-semibold",
-    secondary: "text-brand-dark font-semibold",
-    outline: "text-slate-700 font-medium",
+    secondary: "text-forest-900 font-bold",
+    outline: "text-forest-800 font-semibold",
     danger: "text-white font-semibold",
   };
 
   const sizeStyles = {
-    sm: "py-2 px-3 rounded-xl",
-    md: "py-3.5 px-5 rounded-2xl",
-    lg: "py-4 px-6 rounded-2xl",
+    sm: "py-2.5 px-4 rounded-xl",
+    md: "py-4 px-5 rounded-2xl",
+    lg: "py-[18px] px-6 rounded-2xl",
   };
 
   const textSizeStyles = {
@@ -62,8 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
   const isDisabled = disabled || loading;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <Pressable
       onPress={onPress}
       disabled={isDisabled}
       className={`flex-row items-center justify-center border ${
@@ -71,7 +70,12 @@ export const Button: React.FC<ButtonProps> = ({
       } ${sizeStyles[size]} ${fullWidth ? "w-full" : "self-start"} ${
         isDisabled ? "opacity-50" : ""
       } ${className}`}
-      {...props}
+      style={({ pressed }) => ({
+        borderCurve: "continuous",
+        boxShadow: variant === "primary" && !isDisabled ? "0 8px 20px rgba(29,51,38,0.22)" : undefined,
+        transform: [{ scale: pressed && !isDisabled ? 0.985 : 1 }],
+      })}
+      {...props as any}
     >
       {loading ? (
         <ActivityIndicator
@@ -88,6 +92,6 @@ export const Button: React.FC<ButtonProps> = ({
           </Text>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };

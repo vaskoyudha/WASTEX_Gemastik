@@ -8,6 +8,8 @@ import { recommendation } from "../../src/services";
 import { useScanStore } from "../../src/store/useScanStore";
 import type { ProductRecommendation, ScanResult } from "../../src/services/types";
 import { safeBack } from "../../src/lib/navigation";
+import { Leaf, Sparkles } from "lucide-react-native";
+import { colors, gradients, gradientStyle } from "../../src/theme";
 
 export default function RekomendasiScreen(): React.JSX.Element {
   const router = useRouter();
@@ -64,11 +66,34 @@ export default function RekomendasiScreen(): React.JSX.Element {
       <FlatList
         data={recommendations}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 44 }}
         ListHeaderComponent={
-          <Text className="mb-4 text-sm leading-5 text-slate-500">
-            Berikut ide produk yang bisa kamu buat dari material ini.
-          </Text>
+          <View
+            style={{
+              minHeight: 156,
+              padding: 20,
+              marginBottom: 20,
+              borderRadius: 26,
+              borderCurve: "continuous",
+              overflow: "hidden",
+              ...gradientStyle(gradients.limeWash),
+            }}
+          >
+            <View className="w-10 h-10 rounded-2xl items-center justify-center mb-5" style={{ backgroundColor: colors.forest900 }}>
+              <Sparkles size={18} color={colors.lime300} />
+            </View>
+            <Text className="text-[22px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.7 }}>
+              Pilihan terbaik untuk materialmu
+            </Text>
+            <View className="flex-row items-center mt-2">
+              <Leaf size={14} color={colors.forest600} />
+              <Text className="ml-2 text-xs leading-5 flex-1" style={{ color: colors.ink700 }}>
+                {recommendations.length} ide terpilih berdasarkan biaya, waktu, dan potensi hasil.
+              </Text>
+            </View>
+          </View>
         }
         renderItem={({ item }) => (
           <ProductCard product={item} onPress={() => handleSelectProduct(item)} />
@@ -78,7 +103,7 @@ export default function RekomendasiScreen(): React.JSX.Element {
   };
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
       <Header title="Rekomendasi Produk" onBack={() => safeBack(router)} />
       {scanResult ? renderContent() : (
         <EmptyState

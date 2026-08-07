@@ -3,7 +3,7 @@ import { Platform, type ViewStyle } from "react-native";
 export { colors } from "./colors";
 
 export const gradients = {
-  home: "linear-gradient(180deg, #304331 0%, #465E45 48%, #7E947A 100%)",
+  home: "linear-gradient(180deg, #15251B 0%, #294936 48%, #789080 100%)",
   impact:
     "radial-gradient(circle at 92% 18%, rgba(217,241,166,0.42) 0%, rgba(217,241,166,0) 34%), linear-gradient(135deg, #536B50 0%, #71886A 58%, #A8B991 100%)",
   actionRail:
@@ -12,13 +12,19 @@ export const gradients = {
     "linear-gradient(180deg, rgba(151,170,145,0.24) 0%, rgba(78,102,77,0.28) 100%)",
   actionIcon:
     "radial-gradient(circle at 50% 18%, rgba(221,232,214,0.26) 0%, rgba(161,181,155,0.18) 48%, rgba(93,120,91,0.12) 100%)",
-  contentSheet: "linear-gradient(155deg, #FCFCF9 0%, #F4F7F2 58%, #EDF2EB 100%)",
+  contentSheet:
+    "radial-gradient(circle at 100% 0%, rgba(201,238,120,0.10) 0%, rgba(201,238,120,0) 28%), linear-gradient(155deg, #FCFDFB 0%, #F4F7F3 58%, #EDF2EE 100%)",
   pageHero:
     "radial-gradient(circle at 88% 4%, rgba(211,232,171,0.2) 0%, rgba(211,232,171,0) 34%), linear-gradient(160deg, #304331 0%, #4B634A 58%, #71876D 100%)",
-  navigation: "linear-gradient(180deg, #435A43 0%, #344936 100%)",
+  navigation:
+    "radial-gradient(circle at 88% 10%, rgba(220,247,161,0.18) 0%, rgba(220,247,161,0) 31%), linear-gradient(135deg, #15251B 0%, #294936 58%, #41634D 100%)",
   cameraMedallion: "linear-gradient(145deg, #71886C 0%, #506A51 100%)",
   scanButton: "linear-gradient(145deg, #DDF6AA 0%, #BEE878 100%)",
   materialActive: "linear-gradient(145deg, #405B42 0%, #263C2D 100%)",
+  productHero:
+    "linear-gradient(180deg, rgba(21,37,27,0) 36%, rgba(21,37,27,0.92) 100%)",
+  limeWash:
+    "radial-gradient(circle at 92% 8%, rgba(220,247,161,0.52) 0%, rgba(220,247,161,0) 43%), linear-gradient(145deg, #EAF2E8 0%, #D8E5D9 100%)",
 } as const;
 
 export function gradientStyle(value: string): ViewStyle {
@@ -48,7 +54,8 @@ export const spacing = {
 } as const;
 
 export const shadows = {
-  card: "0 3px 12px rgba(37, 52, 39, 0.08)",
-  floating: "0 12px 28px rgba(37, 52, 39, 0.13)",
-  navigation: "0 -7px 24px rgba(25, 39, 28, 0.18)",
+  card: "0 2px 4px rgba(21, 37, 27, 0.04), 0 12px 30px rgba(21, 37, 27, 0.07)",
+  floating: "0 4px 10px rgba(21, 37, 27, 0.08), 0 22px 48px rgba(21, 37, 27, 0.14)",
+  navigation: "0 10px 30px rgba(21, 37, 27, 0.20)",
+  button: "0 8px 20px rgba(29, 51, 38, 0.22)",
 } as const;

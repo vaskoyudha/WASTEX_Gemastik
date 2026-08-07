@@ -1,23 +1,29 @@
 import "../global.css";
 import { useEffect } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+import {
+  useFonts,
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from "@expo-google-fonts/manrope";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { seedDemoDataIfNeeded } from "../src/services/demoSeed";
 import { RootStack, RootStackScreen } from "../src/navigation/root-stack";
 
-// Apply Inter as the app-wide default font family for all RN Text.
-// Weight utilities (font-bold, dll.) tetap bekerja — Android mensintesis bold dari family dasar.
+// Manrope's open geometry gives the product flow a warmer, more distinctive voice.
 (Text as any).defaultProps = (Text as any).defaultProps || {};
-(Text as any).defaultProps.style = { fontFamily: "Inter_400Regular" };
+(Text as any).defaultProps.style = { fontFamily: "Manrope_400Regular" };
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
   });
 
   useEffect(() => {

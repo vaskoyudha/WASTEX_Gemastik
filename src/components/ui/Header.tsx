@@ -28,29 +28,31 @@ export const Header: React.FC<HeaderProps> = ({
       className={`flex-row items-center justify-between ${transparent ? "bg-transparent" : ""} ${className}`}
       style={[
         {
-          paddingHorizontal: 16,
-          paddingTop: Math.max(insets.top, 12),
-          paddingBottom: 14,
+          paddingHorizontal: 18,
+          paddingTop: Math.max(insets.top, 14),
+          paddingBottom: 16,
           zIndex: 10,
         },
         transparent
           ? undefined
           : {
-              ...gradientStyle(gradients.pageHero),
-              borderBottomLeftRadius: 26,
-              borderBottomRightRadius: 26,
+              ...gradientStyle(gradients.navigation),
+              borderBottomLeftRadius: 30,
+              borderBottomRightRadius: 30,
               borderCurve: "continuous",
               boxShadow: shadows.navigation,
             },
       ]}
     >
-      <View className="w-16 flex-row items-center">
+      <View className="w-[72px] flex-row items-center">
         {onBack && (
           <Pressable
             onPress={onBack}
             className="w-10 h-10 -ml-2 rounded-full items-center justify-center"
             style={({ pressed }) => ({
-              backgroundColor: pressed ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.08)",
+              backgroundColor: pressed ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.12)",
               transform: [{ scale: pressed ? 0.96 : 1 }],
             })}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -62,8 +64,8 @@ export const Header: React.FC<HeaderProps> = ({
       <View className="flex-1 items-center px-2">
         {title && (
           <Text
-            className="text-[17px] font-bold text-center"
-            style={{ color: transparent ? colors.ink900 : colors.white, letterSpacing: -0.25 }}
+            className="text-[17px] font-extrabold text-center"
+            style={{ color: transparent ? colors.ink900 : colors.white, letterSpacing: -0.45 }}
             numberOfLines={1}
           >
             {title}
@@ -79,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
           </Text>
         )}
       </View>
-      <View className="w-16 items-end">{rightElement}</View>
+      <View className="w-[72px] items-end">{rightElement}</View>
     </View>
   );
 };

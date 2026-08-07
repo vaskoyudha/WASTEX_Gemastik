@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Image, Modal } from "react-native";
+import { View, Text, ScrollView, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner, FitImage } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
-import { ShieldAlert } from "lucide-react-native";
+import { ArrowRight, Check, PackageOpen, ShieldAlert, Wrench } from "lucide-react-native";
+import { colors, gradients, gradientStyle, shadows } from "../../../src/theme";
 
 export default function TutorialScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,87 +51,110 @@ export default function TutorialScreen() {
   );
 
   return (
-    <View className="flex-1 bg-cream-50">
+    <View style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
       <Header title={`Tutorial: ${product.name}`} onBack={() => safeBack(router)} />
 
-      <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
-        <Text className="text-xs text-slate-500 mb-4">
-          Langkah 1 dari {tutData.steps.length}
-        </Text>
-
-        {/* Stepper */}
-        <View className="flex-row items-center mb-6">
-          {tutData.steps.map((_, idx) => (
-            <View key={idx} className="flex-row items-center flex-1">
-              <View className="w-6 h-6 rounded-full bg-brand items-center justify-center">
-                <Text className="text-[10px] font-bold text-white">{idx + 1}</Text>
-              </View>
-              {idx !== tutData.steps.length - 1 && (
-                <View className="flex-1 h-0.5 bg-emerald-200 mx-1" />
-              )}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 46 }}
+      >
+        <View style={{ padding: 18, borderRadius: 24, borderCurve: "continuous", marginBottom: 18, ...gradientStyle(gradients.navigation), boxShadow: shadows.card }}>
+          <View className="flex-row items-end justify-between mb-4">
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text className="text-[11px] mb-1" style={{ color: "rgba(255,255,255,0.62)" }}>Panduan membuat</Text>
+              <Text className="text-[19px] font-extrabold" numberOfLines={2} style={{ color: colors.white, letterSpacing: -0.55 }}>{product.name}</Text>
             </View>
-          ))}
+            <Text className="text-xs font-bold" style={{ color: colors.lime300 }}>{tutData.steps.length} tahap</Text>
+          </View>
+          <View className="flex-row items-center">
+            {tutData.steps.map((_, idx) => (
+              <View key={idx} className="flex-row items-center flex-1">
+                <View
+                  className="w-7 h-7 rounded-full items-center justify-center"
+                  style={{ backgroundColor: idx === 0 ? colors.lime300 : "rgba(255,255,255,0.13)", borderWidth: 1, borderColor: idx === 0 ? colors.lime300 : "rgba(255,255,255,0.18)" }}
+                >
+                  <Text className="text-[10px] font-extrabold" style={{ color: idx === 0 ? colors.forest950 : colors.white }}>{idx + 1}</Text>
+                </View>
+                {idx !== tutData.steps.length - 1 && <View className="flex-1 h-px mx-1" style={{ backgroundColor: "rgba(255,255,255,0.20)" }} />}
+              </View>
+            ))}
+          </View>
         </View>
 
         {hasPreparationPanel ? (
-          <Card className="p-4 mb-4 border border-slate-100">
-            <Text className="text-xs font-semibold text-slate-500">LANGKAH 0</Text>
-            <Text className="text-base font-bold text-slate-900 mt-1 mb-1">
+          <Card className="p-0 mb-6 border-0 overflow-hidden" style={{ backgroundColor: colors.surface, boxShadow: shadows.floating }}>
+            <View style={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14 }}>
+            <View className="w-10 h-10 rounded-[16px] items-center justify-center mb-4" style={{ backgroundColor: colors.mist100 }}>
+              <PackageOpen size={19} color={colors.forest700} />
+            </View>
+            <Text className="text-[20px] font-extrabold mb-1" style={{ color: colors.ink900, letterSpacing: -0.55 }}>
               Siapkan Alat & Bahan
             </Text>
-            <Text className="text-xs text-slate-500 leading-5 mb-3">
+            <Text className="text-xs leading-5" style={{ color: colors.ink600 }}>
               Pastikan semua kebutuhan berikut sudah siap sebelum mulai membuat.
             </Text>
+            </View>
 
             {tutData.materialsImageUri ? (
               <FitImage
                 source={{ uri: tutData.materialsImageUri }}
-                className="rounded-2xl overflow-hidden bg-slate-200 mb-4"
+                className="overflow-hidden bg-mist-100"
                 maxHeight={320}
               />
             ) : null}
 
             {tools.length > 0 ? (
-              <View className="mb-2">
-                <Text className="text-xs font-bold text-slate-900 mb-2">Alat</Text>
+              <View style={{ padding: 18 }}>
+                <View className="flex-row items-center mb-3">
+                  <Wrench size={15} color={colors.forest700} />
+                  <Text className="text-xs font-extrabold ml-2" style={{ color: colors.ink900 }}>Alat yang dibutuhkan</Text>
+                </View>
                 {tools.map((tool, idx) => (
                   <View
                     key={`${tool.name}-${idx}`}
-                    className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 mb-2"
+                    className="flex-row items-start py-3"
+                    style={{ borderTopWidth: idx === 0 ? 0 : 1, borderTopColor: colors.mist100 }}
                   >
+                    <View className="w-7 h-7 rounded-full items-center justify-center mr-3 mt-0.5" style={{ backgroundColor: colors.mist100 }}>
+                      <Text className="text-[10px] font-extrabold" style={{ color: colors.forest700 }}>{idx + 1}</Text>
+                    </View>
+                    <View className="flex-1">
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-xs font-bold text-slate-900 flex-1">{tool.name}</Text>
+                      <Text className="text-xs font-extrabold flex-1" style={{ color: colors.ink900 }}>{tool.name}</Text>
                       {tool.optional ? (
-                        <Text className="text-[10px] font-semibold text-emerald-700 ml-2">
+                        <Text className="text-[10px] font-semibold ml-2" style={{ color: colors.forest600 }}>
                           Opsional
                         </Text>
                       ) : null}
                     </View>
-                    <Text className="text-[11px] text-slate-500 leading-4 mt-1">
+                    <Text className="text-[11px] leading-4 mt-1" style={{ color: colors.ink600 }}>
                       {tool.description?.trim() || "Alat pendukung untuk proses pembuatan."}
                     </Text>
+                    </View>
                   </View>
                 ))}
               </View>
             ) : null}
 
             {additionalMaterials.length > 0 ? (
-              <View>
-                <Text className="text-xs font-bold text-slate-900 mb-2">Bahan Pelengkap</Text>
+              <View style={{ paddingHorizontal: 18, paddingBottom: 18 }}>
+                <Text className="text-xs font-extrabold mb-2" style={{ color: colors.ink900 }}>Bahan pelengkap</Text>
                 {additionalMaterials.map((material, idx) => (
                   <View
                     key={`${material.name}-${idx}`}
-                    className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-2"
+                    className="rounded-[16px] px-4 py-3 mb-2"
+                    style={{ backgroundColor: colors.mist50, borderWidth: 1, borderColor: colors.mist100 }}
                   >
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-xs font-bold text-slate-900 flex-1">
+                      <Text className="text-xs font-extrabold flex-1" style={{ color: colors.ink900 }}>
                         {material.name}
                       </Text>
-                      <Text className="text-xs font-semibold text-amber-700 ml-2">
+                      <Text className="text-xs font-bold ml-2" style={{ color: colors.forest700 }}>
                         Rp {material.est_cost_idr.toLocaleString("id-ID")}
                       </Text>
                     </View>
-                    <Text className="text-[11px] text-slate-500 leading-4 mt-1">
+                    <Text className="text-[11px] leading-4 mt-1" style={{ color: colors.ink600 }}>
                       {material.purpose?.trim() || "Bahan pelengkap untuk proyek ini."}
                     </Text>
                   </View>
@@ -143,43 +167,50 @@ export default function TutorialScreen() {
         {tutData.steps.map((step) => (
           <Card
             key={step.order}
-            className="p-4 mb-4 border border-slate-100"
+            className="p-0 mb-5 border-0 overflow-hidden"
+            style={{ backgroundColor: colors.surface, boxShadow: shadows.card }}
             onPress={step.safetyWarning ? () => handleStepPress(step.safetyWarning) : undefined}
           >
-            <View className="flex-row items-start mb-3">
-              <View className="w-7 h-7 rounded-full bg-brand items-center justify-center mr-3 mt-0.5">
-                <Text className="text-[10px] font-bold text-white">{step.order}</Text>
+            <View className="flex-row items-start p-[18px]">
+              <View className="w-9 h-9 rounded-[14px] items-center justify-center mr-3 mt-0.5" style={{ backgroundColor: colors.forest900 }}>
+                <Text className="text-xs font-extrabold" style={{ color: colors.lime300 }}>{step.order}</Text>
               </View>
               <View className="flex-1">
-                <Text className="font-bold text-slate-900 text-sm mb-1">{step.title}</Text>
-                <Text className="text-xs text-slate-600 leading-5">{step.description}</Text>
+                <Text className="font-extrabold text-[15px] mb-1" style={{ color: colors.ink900, letterSpacing: -0.25 }}>{step.title}</Text>
+                <Text className="text-xs leading-5" style={{ color: colors.ink600 }}>{step.description}</Text>
               </View>
             </View>
             {step.safetyWarning && (
-              <View className="flex-row items-center bg-red-50 px-3 py-2 rounded-xl mb-3">
+              <View className="flex-row items-center mx-[18px] mb-4 px-3 py-2.5 rounded-[14px]" style={{ backgroundColor: "#FFF3EB", borderWidth: 1, borderColor: "#F4D5BE" }}>
                 <ShieldAlert size={14} color="#dc2626" />
                 <Text className="text-[10px] font-bold text-red-600 ml-2">Peringatan Keamanan</Text>
               </View>
             )}
             <FitImage
               source={{ uri: step.imageUri }}
-              className="rounded-2xl overflow-hidden bg-slate-200"
+              className="overflow-hidden bg-mist-100"
               maxHeight={360}
             />
           </Card>
         ))}
 
-        <Card className="bg-emerald-50 border-emerald-100 p-4 mb-6">
-          <Text className="text-xs text-slate-600 leading-5">
-            <Text className="font-bold text-brand-dark">Tips: </Text>
+        <Card className="border-0 p-4 mb-6" style={{ backgroundColor: colors.mist100 }}>
+          <View className="flex-row items-center">
+            <View className="w-8 h-8 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.surface }}>
+              <Check size={15} color={colors.forest700} />
+            </View>
+          <Text className="text-xs leading-5 flex-1" style={{ color: colors.ink700 }}>
+            <Text className="font-extrabold" style={{ color: colors.forest900 }}>Tips: </Text>
             Gunakan cat akrilik agar tahan lama.
           </Text>
+          </View>
         </Card>
 
         <Button
           title="Lihat Before & After"
           onPress={() => router.push(`/product/${id}/before-after`)}
           variant="primary"
+          icon={<ArrowRight size={18} color={colors.white} />}
         />
         <Button
           title="Saya Sudah Selesai"

@@ -56,6 +56,8 @@ jest.mock('lucide-react-native', () => ({
   ShieldCheck: () => null,
   ArrowRight: () => null,
   Sparkles: () => null,
+  Check: () => null,
+  ChevronRight: () => null,
 }));
 
 describe('HasilScreen skill section', () => {

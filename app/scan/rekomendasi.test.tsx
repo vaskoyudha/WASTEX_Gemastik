@@ -78,6 +78,9 @@ jest.mock("lucide-react-native", () => ({
   ChevronRight: () => null,
   Clock: () => null,
   Tag: () => null,
+  Sparkles: () => null,
+  Leaf: () => null,
+  ArrowUpRight: () => null,
 }));
 
 describe("RekomendasiScreen", () => {

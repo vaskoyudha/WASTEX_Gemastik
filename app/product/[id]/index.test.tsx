@@ -50,7 +50,7 @@ describe('ProductDetailScreen rating', () => {
     });
     const { findByText } = await render(<ProductDetailScreen />);
     expect(await findByText('4.5')).toBeTruthy();
-    expect(await findByText('(3 review)')).toBeTruthy();
+    expect(await findByText('(3 ulasan)')).toBeTruthy();
     expect(await findByText('Hasil Komunitas')).toBeTruthy();
   });
 

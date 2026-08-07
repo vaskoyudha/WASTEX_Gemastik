@@ -3,7 +3,9 @@ import { RiskBadge, ProductCard, TutorialStepCard, SafetyModal } from "./index";
 
 jest.mock("lucide-react-native", () => ({
   AlertTriangle: () => null,
+  ArrowUpRight: () => null,
   Clock: () => null,
+  Leaf: () => null,
   ShieldCheck: () => null,
 }));
 

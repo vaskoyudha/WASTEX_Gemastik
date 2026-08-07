@@ -1,9 +1,10 @@
 import React from "react";
 import { Image, Modal, Text, TouchableOpacity, View } from "react-native";
-import { AlertTriangle, Clock, ShieldCheck } from "lucide-react-native";
+import { AlertTriangle, ArrowUpRight, Clock, Leaf, ShieldCheck } from "lucide-react-native";
 import { Badge, Card } from "../components/ui";
 import { DIFFICULTY_META, RISK_META } from "../lib/theme";
 import { formatRupiah } from "../lib/format";
+import { colors, shadows } from "../theme";
 import type {
   ProductRecommendation,
   RiskLevel,
@@ -27,33 +28,56 @@ export interface ProductCardProps {
 
 export function ProductCard({ product, onPress }: ProductCardProps): React.JSX.Element {
   const difficulty = DIFFICULTY_META[product.difficulty];
+  const [imageFailed, setImageFailed] = React.useState(false);
 
   return (
-    <Card onPress={onPress} className="mb-4 overflow-hidden p-0">
-      <View className="flex-row">
-        <Image
-          source={{ uri: product.thumbnailUri }}
-          accessibilityLabel={product.name}
-          className="h-28 w-28 bg-slate-100"
-          resizeMode="cover"
-        />
-        <View className="flex-1 p-4">
-          <Text className="text-base font-bold text-slate-900" numberOfLines={1}>
+    <Card
+      onPress={onPress}
+      className="mb-4 overflow-hidden p-0 border-0"
+      style={{ backgroundColor: colors.surface, boxShadow: shadows.card }}
+    >
+      <View className="flex-row p-2.5">
+        {imageFailed ? (
+          <View className="h-32 w-[116px] rounded-[18px] items-center justify-center" style={{ backgroundColor: colors.mist100 }}>
+            <View className="w-11 h-11 rounded-[16px] items-center justify-center" style={{ backgroundColor: colors.surface }}>
+              <Leaf size={20} color={colors.forest600} />
+            </View>
+          </View>
+        ) : (
+          <Image
+            source={{ uri: product.thumbnailUri }}
+            accessibilityLabel={product.name}
+            className="h-32 w-[116px] bg-mist-100 rounded-[18px]"
+            resizeMode="cover"
+            onError={() => setImageFailed(true)}
+          />
+        )}
+        <View className="flex-1 py-2 pl-3.5 pr-1">
+          <View className="flex-row items-start">
+            <Text
+              className="text-[15px] font-extrabold flex-1 pr-2"
+              style={{ color: colors.ink900, letterSpacing: -0.35 }}
+              numberOfLines={2}
+            >
             {product.name}
-          </Text>
-          <Text className="mt-1 text-xs leading-4 text-slate-500" numberOfLines={2}>
+            </Text>
+            <View className="w-7 h-7 rounded-full items-center justify-center" style={{ backgroundColor: colors.mist100 }}>
+              <ArrowUpRight size={14} color={colors.forest700} />
+            </View>
+          </View>
+          <Text className="mt-1 text-[11px] leading-4" style={{ color: colors.ink600 }} numberOfLines={2}>
             {product.shortDescription}
           </Text>
-          <View className="mt-3 flex-row items-center justify-between">
+          <View className="mt-auto flex-row items-center justify-between">
             <Badge label={difficulty.label} variant={product.difficulty} size="sm" />
             <View className="flex-row items-center">
-              <Clock size={13} color="#64748b" />
-              <Text className="ml-1 text-xs font-medium text-slate-500">
+              <Clock size={13} color={colors.ink400} />
+              <Text className="ml-1 text-[11px] font-medium" style={{ color: colors.ink600 }}>
                 {product.estimatedTimeMinutes} menit
               </Text>
             </View>
           </View>
-          <Text className="mt-2 text-sm font-bold text-brand-dark">
+          <Text className="mt-2 text-sm font-extrabold" style={{ color: colors.forest900, fontVariant: ["tabular-nums"] }}>
             {formatRupiah(product.estimatedCost)}
           </Text>
         </View>

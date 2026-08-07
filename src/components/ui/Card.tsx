@@ -31,15 +31,15 @@ export const Card: React.FC<CardProps> = ({
     elevated: "bg-cream-50 border-0",
   };
 
-  const containerClasses = `rounded-2xl ${variantStyles[variant]} ${paddingStyles[padding]} ${className}`;
+  const containerClasses = `rounded-[24px] ${variantStyles[variant]} ${paddingStyles[padding]} ${className}`;
 
   if (onPress) {
     return (
       <TouchableOpacity
-        activeOpacity={0.7}
+        activeOpacity={0.86}
         onPress={onPress}
         className={containerClasses}
-        style={[{ borderCurve: "continuous", boxShadow: "0 4px 14px rgba(37,52,39,0.07)" }, style]}
+        style={[{ borderCurve: "continuous", boxShadow: "0 2px 4px rgba(21,37,27,0.04), 0 12px 30px rgba(21,37,27,0.07)" }, style]}
         {...props}
       >
         {children}
@@ -50,7 +50,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <View
       className={containerClasses}
-      style={[{ borderCurve: "continuous", boxShadow: "0 4px 14px rgba(37,52,39,0.07)" }, style]}
+      style={[{ borderCurve: "continuous", boxShadow: "0 2px 4px rgba(21,37,27,0.04), 0 12px 30px rgba(21,37,27,0.07)" }, style]}
       {...props}
     >
       {children}

@@ -25,6 +25,7 @@ jest.mock('../../../src/services/api', () => ({
 
 jest.mock('../../../src/components/ui', () => ({
   Header: ({ title }: { title: string }) => <MockText>{title}</MockText>,
+  Card: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   Button: ({ title, onPress, disabled }: any) => (
     <MockPressable onPress={onPress} disabled={disabled}><MockText>{title}</MockText></MockPressable>
   ),
@@ -33,7 +34,11 @@ jest.mock('../../../src/components/ui', () => ({
   ),
 }));
 
-jest.mock('lucide-react-native', () => ({ Image: () => null, Camera: () => null }));
+jest.mock('lucide-react-native', () => ({
+  Camera: () => null,
+  CheckCircle2: () => null,
+  Sparkles: () => null,
+}));
 
 describe('CompleteScreen', () => {
   beforeEach(() => { jest.clearAllMocks(); mockComplete.mockResolvedValue({ id: 'c1' }); });

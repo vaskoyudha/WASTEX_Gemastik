@@ -9,8 +9,8 @@ import { apiClient } from "../../src/services/api";
 import { recommendation } from "../../src/services";
 import { safeBack } from "../../src/lib/navigation";
 import { useServiceCall } from "../../src/hooks/useServiceCall";
-import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight, Sparkles } from "lucide-react-native";
-import { colors, gradients, gradientStyle, radii, shadows } from "../../src/theme";
+import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight, Sparkles, Check, ChevronRight } from "lucide-react-native";
+import { colors, gradients, gradientStyle, shadows } from "../../src/theme";
 
 const materialTraits: Record<string, string[]> = {
   plastik_pet: ["Ringan", "Tahan Air", "Mudah Dipotong", "Daur Ulang"],
@@ -133,20 +133,46 @@ export default function HasilScreen() {
         style={{ flex: 1, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 44, gap: 20 }}
       >
-        {/* Photo Preview */}
+        {/* Analysis hero */}
         <Card
-          className="p-0 rounded-[26px] overflow-hidden bg-mist-100 border-0"
+          className="p-0 rounded-[28px] overflow-hidden bg-mist-100 border-0"
           style={{ boxShadow: shadows.floating }}
         >
-          {imageUri && <Image source={{ uri: imageUri }} className="w-full h-56" resizeMode="cover" />}
-          <TouchableOpacity
-            onPress={() => router.push("/scan/upload")}
-            className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full flex-row items-center"
-            style={{ backgroundColor: "rgba(38,54,42,0.82)" }}
+          <View style={{ position: "relative" }}>
+            {imageUri && <Image source={{ uri: imageUri }} className="w-full h-[244px]" resizeMode="cover" />}
+            <View style={{ position: "absolute", left: 14, top: 14, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(21,37,27,0.78)", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" }}>
+              <Text className="text-[10px] font-bold" style={{ color: colors.white, letterSpacing: 0.4 }}>ANALISIS SELESAI</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push("/scan/upload")}
+              className="absolute bottom-3 right-3 px-3 py-2 rounded-full flex-row items-center"
+              style={{ backgroundColor: "rgba(21,37,27,0.84)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }}
+            >
+              <Edit3 size={12} color={colors.white} />
+              <Text className="text-[11px] font-bold ml-1.5" style={{ color: colors.white }}>Ganti foto</Text>
+            </TouchableOpacity>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              paddingHorizontal: 18,
+              paddingTop: 18,
+              paddingBottom: 20,
+              backgroundColor: colors.forest900,
+              ...gradientStyle(gradients.navigation),
+            }}
           >
-            <Edit3 size={12} color="#ffffff" />
-            <Text className="text-white text-xs font-semibold ml-1">Edit Foto</Text>
-          </TouchableOpacity>
+            <View style={{ flex: 1, paddingRight: 14 }}>
+              <Text className="text-[11px] mb-1.5" style={{ color: "rgba(255,255,255,0.62)" }}>Material terdeteksi</Text>
+              <Text className="text-[24px] font-extrabold" style={{ color: colors.white, letterSpacing: -0.8 }}>{scanResult.materialLabel}</Text>
+            </View>
+            <View className="items-end">
+              <Text selectable className="text-[34px] font-extrabold" style={{ color: colors.lime300, fontVariant: ["tabular-nums"], letterSpacing: -1.4 }}>{confidencePct}%</Text>
+              <Text className="text-[9px]" style={{ color: "rgba(255,255,255,0.58)" }}>tingkat keyakinan</Text>
+            </View>
+          </View>
         </Card>
 
         {/* Low-confidence verification banner */}
@@ -159,35 +185,10 @@ export default function HasilScreen() {
           </View>
         )}
 
-        {/* Material Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            padding: 18,
-            borderRadius: radii.xl,
-            borderCurve: "continuous",
-            overflow: "hidden",
-            backgroundColor: colors.forest700,
-            ...gradientStyle(gradients.impact),
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.11)",
-            boxShadow: shadows.floating,
-          }}
-        >
-          <View style={{ flex: 1, paddingRight: 12 }}>
-            <Text className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.68)" }}>Jenis material</Text>
-            <Text className="text-2xl font-extrabold" style={{ color: colors.white, letterSpacing: -0.6 }}>{scanResult.materialLabel}</Text>
-          </View>
-          <View className="items-end">
-            <Text selectable className="text-3xl font-extrabold" style={{ color: colors.lime300, fontVariant: ["tabular-nums"] }}>{confidencePct}%</Text>
-            <Text className="text-[10px]" style={{ color: "rgba(255,255,255,0.66)" }}>Tingkat keyakinan</Text>
-          </View>
-        </View>
-
         {/* Detail Rows */}
-        <Card className="p-0 border-0 overflow-hidden rounded-[24px]" style={{ backgroundColor: "rgba(255,255,255,0.72)", boxShadow: shadows.card }}>
+        <View>
+          <Text className="text-[16px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.35 }}>Ringkasan material</Text>
+          <Card className="p-0 border-0 overflow-hidden rounded-[24px]" style={{ backgroundColor: colors.surface, boxShadow: shadows.card }}>
           {detailRows.map((row, idx) => (
             <View
               key={idx}
@@ -196,13 +197,13 @@ export default function HasilScreen() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 paddingHorizontal: 15,
-                paddingVertical: 13,
+                paddingVertical: 14,
                 borderBottomWidth: idx !== detailRows.length - 1 ? 1 : 0,
                 borderBottomColor: colors.mist100,
               }}
             >
               <View className="flex-row items-center" style={{ flex: 1 }}>
-                <View style={{ width: 34, height: 34, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
                   <row.icon size={17} color={colors.forest600} />
                 </View>
                 <Text className="text-sm ml-3" style={{ color: colors.ink600 }}>{row.label}</Text>
@@ -214,14 +215,15 @@ export default function HasilScreen() {
               )}
             </View>
           ))}
-        </Card>
+          </Card>
+        </View>
 
         {/* Material Traits */}
         <View>
-          <Text className="text-sm font-bold mb-3" style={{ color: colors.ink900 }}>Sifat material</Text>
+          <Text className="text-[16px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.35 }}>Sifat material</Text>
           <View className="flex-row flex-wrap gap-2">
             {traits.map((t, idx) => (
-              <View key={idx} style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.mist100, borderWidth: 1, borderColor: colors.sage200 }}>
+              <View key={idx} style={{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.sage200 }}>
                 <Text className="text-xs font-semibold" style={{ color: colors.forest600 }}>{t}</Text>
               </View>
             ))}
@@ -250,18 +252,24 @@ export default function HasilScreen() {
             <Text className="text-white font-semibold text-sm ml-2">Buat Skill Baru dari Material Ini</Text>
           </TouchableOpacity>
 
-          <Text className="text-sm font-bold" style={{ color: colors.ink900 }}>Skill terverifikasi</Text>
+          <Text className="text-[16px] font-extrabold mt-1" style={{ color: colors.ink900, letterSpacing: -0.35 }}>Skill terverifikasi</Text>
           {verifiedSkills.length === 0 ? (
             <Text className="text-xs" style={{ color: colors.ink600 }}>
               Belum ada skill terverifikasi untuk material ini.
             </Text>
           ) : (
             verifiedSkills.map((skill) => (
-              <Card key={skill.id} className="p-4 mb-2 rounded-[20px]" style={{ backgroundColor: "rgba(255,255,255,0.68)" }}>
-                <Text className="text-sm font-bold mb-1" style={{ color: colors.ink900 }}>{skill.title}</Text>
-                <Text className="text-[10px] font-semibold self-start px-2 py-0.5 rounded-full" style={{ color: colors.forest600, backgroundColor: colors.mist100 }}>
-                  {skill.difficulty}
-                </Text>
+              <Card key={skill.id} className="p-4 mb-2 rounded-[20px] border-0" style={{ backgroundColor: colors.surface }}>
+                <View className="flex-row items-center">
+                  <View className="w-9 h-9 rounded-[14px] items-center justify-center mr-3" style={{ backgroundColor: colors.mist100 }}>
+                    <Check size={16} color={colors.forest700} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-sm font-extrabold mb-1" style={{ color: colors.ink900 }}>{skill.title}</Text>
+                    <Text className="text-[10px] font-semibold" style={{ color: colors.forest600 }}>{skill.difficulty}</Text>
+                  </View>
+                  <ChevronRight size={18} color={colors.ink400} />
+                </View>
               </Card>
             ))
           )}
@@ -278,7 +286,8 @@ export default function HasilScreen() {
       {/* Manual Selection Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View className="flex-1 justify-end" style={{ backgroundColor: "rgba(22,32,24,0.58)" }}>
-          <View style={{ maxHeight: "70%", padding: 22, paddingBottom: 30, borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet) }}>
+          <View accessibilityViewIsModal style={{ maxHeight: "74%", paddingHorizontal: 20, paddingTop: 10, paddingBottom: 30, borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: colors.cream50, ...gradientStyle(gradients.contentSheet), boxShadow: shadows.floating }}>
+            <View style={{ width: 42, height: 5, borderRadius: 99, backgroundColor: colors.sage300, alignSelf: "center", marginBottom: 13 }} />
             <View className="flex-row justify-between items-center mb-4 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.mist100 }}>
               <Text className="text-lg font-bold" style={{ color: colors.ink900 }}>
                 {scanResult.needsVerification ? "Verifikasi Material" : "Pilih Material Manual"}
@@ -298,18 +307,23 @@ export default function HasilScreen() {
                 { type: "kaleng" as MaterialType, label: "Kaleng Minuman / Susu" },
                 { type: "kaca" as MaterialType, label: "Botol Kaca Bekas" },
                 { type: "sachet" as MaterialType, label: "Kemasan Sachet Multilayer" },
-              ].map((item) => (
+              ].map((item) => {
+                const selected = item.type === scanResult.materialType;
+                return (
                 <TouchableOpacity
                   key={item.type}
                   disabled={manualCorrectionCall.loading}
                   onPress={() => handleManualSelect(item.type, item.label)}
                   className={`py-3.5 px-4 rounded-2xl mb-3 ${manualCorrectionCall.loading ? "opacity-60" : ""}`}
-                  style={{ backgroundColor: manualCorrectionCall.loading ? colors.mist100 : "rgba(255,255,255,0.7)", borderWidth: 1, borderColor: colors.mist100 }}
+                  style={{ backgroundColor: selected ? colors.forest900 : manualCorrectionCall.loading ? colors.mist100 : colors.surface, borderWidth: 1, borderColor: selected ? colors.forest900 : colors.mist100 }}
                   activeOpacity={0.7}
                 >
-                  <Text className="font-semibold text-sm" style={{ color: colors.ink900 }}>{item.label}</Text>
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-bold text-sm" style={{ color: selected ? colors.white : colors.ink900 }}>{item.label}</Text>
+                    {selected ? <Check size={17} color={colors.lime300} /> : <ChevronRight size={17} color={colors.ink400} />}
+                  </View>
                 </TouchableOpacity>
-              ))}
+              );})}
             </ScrollView>
           </View>
         </View>

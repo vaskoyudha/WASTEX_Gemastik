@@ -69,7 +69,13 @@ jest.mock('../../../src/components/ui', () => ({
   FitImage: () => <MockText>image</MockText>,
 }));
 
-jest.mock('lucide-react-native', () => ({ ShieldAlert: () => null }));
+jest.mock('lucide-react-native', () => ({
+  ArrowRight: () => null,
+  Check: () => null,
+  PackageOpen: () => null,
+  ShieldAlert: () => null,
+  Wrench: () => null,
+}));
 
 describe('TutorialScreen', () => {
   beforeEach(() => {
@@ -85,7 +91,7 @@ describe('TutorialScreen', () => {
   it('shows tool descriptions and material purposes even without a generated image', async () => {
     const { findByText } = await render(<TutorialScreen />);
 
-    expect(await findByText('LANGKAH 0')).toBeTruthy();
+    expect(await findByText('Siapkan Alat & Bahan')).toBeTruthy();
     expect(await findByText('membantu membuat lubang drainase')).toBeTruthy();
     expect(await findByText('mengecat dan menghias permukaan kaleng')).toBeTruthy();
     expect(await findByText('Opsional')).toBeTruthy();
