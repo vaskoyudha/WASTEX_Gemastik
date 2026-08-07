@@ -181,6 +181,7 @@ export function tutorialFromBackend(t: BackendTutorial): ProductTutorial {
     beforeImageUri: '',
     afterImageUri: '',
     mockupImageUri: '',
+    tools: t.tools ?? [],
     toolsAndMaterials: [
       ...(t.tools ?? []).map((tool) => tool.name),
       ...(t.additional_materials ?? []).map((m) => m.name),

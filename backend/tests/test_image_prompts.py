@@ -11,7 +11,14 @@ SKILL = {
     "id": "s1",
     "title": "Vas Botol PET",
     "material": "plastik_pet",
-    "tools": [{"name": "Gunting", "optional": False}, {"name": "Lem tembak", "optional": True}],
+    "tools": [
+        {
+            "name": "Gunting",
+            "optional": False,
+            "description": "Memotong botol sesuai pola",
+        },
+        {"name": "Lem tembak", "optional": True},
+    ],
     "additional_materials": [
         {
             "name": "Cat akrilik",
@@ -248,6 +255,9 @@ def test_materials_panel_prompt_lists_everything():
     assert "Cat akrilik" in p
     assert "flat-lay" in p
     assert "ilustrasi flat" in p
+    assert "Memotong botol sesuai pola" in p
+    assert "Menghias permukaan" in p
+    assert "jangan render nama, deskripsi, label, caption, atau teks" in p
 
 
 def test_materials_panel_prompt_includes_identity():

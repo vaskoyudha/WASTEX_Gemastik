@@ -35,7 +35,17 @@ def generic_safe_procedure(material: Material) -> SolutionPackage:
             Step(order=3, instruction="Pilah berdasarkan jenis material.", warning=note),
             Step(order=4, instruction="Setorkan ke bank sampah atau pengepul terdekat."),
         ],
-        tools=[ToolItem(name="sarung tangan", optional=True), ToolItem(name="air dan sabun")],
+        tools=[
+            ToolItem(
+                name="sarung tangan",
+                optional=True,
+                description="melindungi tangan saat menangani limbah",
+            ),
+            ToolItem(
+                name="air dan sabun",
+                description="membersihkan residu dari permukaan bahan",
+            ),
+        ],
         risks=[
             Risk(
                 hazard="Kontaminasi residu",

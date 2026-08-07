@@ -45,6 +45,9 @@ class ObjectIdentity(BaseModel):
 class ToolItem(BaseModel):
     name: str
     optional: bool = False
+    # Default kosong menjaga kompatibilitas dengan skill lama yang tersimpan
+    # sebelum kegunaan alat menjadi bagian dari kontrak LLM.
+    description: str = ""
 
 
 class AdditionalMaterial(BaseModel):

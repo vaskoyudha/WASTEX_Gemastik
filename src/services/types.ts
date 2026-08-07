@@ -80,6 +80,8 @@ export interface RecommendationService {
 export interface ToolItem {
   name: string;
   optional: boolean;
+  /** Tidak tersedia pada skill lama yang dibuat sebelum field ini ditambahkan. */
+  description?: string;
 }
 
 export interface AdditionalMaterial {
@@ -154,6 +156,7 @@ export interface ProductTutorial {
   afterImageUri: string;
   mockupImageUri: string;
   materialsImageUri?: string;
+  tools?: ToolItem[];
   toolsAndMaterials: string[];
   additionalMaterials?: AdditionalMaterial[];
 }

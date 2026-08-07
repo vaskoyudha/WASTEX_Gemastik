@@ -64,6 +64,8 @@ Buat DRAFT SKILL LENGKAP berdasarkan ide berikut yang dipilih user:
   dan sejenisnya) BOLEH dipakai, WAJIB dideklarasikan di additional_materials
   dengan name, category (tali|cat|lem|tanah_tanaman|pengait|alat|lainnya),
   est_cost_idr (perkiraan harga wajar dalam IDR), dan purpose (kegunaan, >= 3 kata).
+- Setiap alat di tools WAJIB memiliki description yang menjelaskan kegunaannya
+  dalam proyek ini (>= 3 kata), selain name dan optional.
 - DILARANG menyebut bahan pelengkap di langkah (instruction/warning) yang TIDAK
   terdaftar di additional_materials.
 - Setiap langkah wajib punya instruksi jelas dan peringatan keamanan bila ada risiko
@@ -94,6 +96,7 @@ Buat DRAFT SKILL LENGKAP berdasarkan ide berikut yang dipilih user:
 ## Self-Check (sebelum menjawab)
 - Judul dan description sama persis dengan ide user?
 - Hanya memakai {material} sebagai bahan utama?
+- Semua alat punya description kegunaan minimal 3 kata?
 - Semua bahan pelengkap di langkah terdaftar di additional_materials?
 - Urutan langkah kontinu dengan SATU aksi utama per langkah?
 - JSON valid sesuai format?
@@ -103,7 +106,7 @@ Jawab HANYA dengan JSON valid berformat:
   "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
   "difficulty": "pemula|menengah|mahir",
   "steps": [{{"order": 1, "instruction": "...", "warning": "...", "visual_description": "..."}}],
-  "tools": [{{"name": "...", "optional": false}}],
+  "tools": [{{"name": "...", "optional": false, "description": "..."}}],
   "additional_materials": [{{"name": "...", "category": "tali|cat|lem|tanah_tanaman|pengait|alat|lainnya", "est_cost_idr": 2000, "purpose": "..."}}],
   "est_cost_idr": 5000, "est_price_idr": 25000}}}}"""
 
@@ -194,6 +197,8 @@ Jika material tidak cocok untuk ide apa pun, jawab daftar proposals kosong.
   dan sejenisnya) BOLEH dipakai, WAJIB dideklarasikan di additional_materials
   dengan name, category (tali|cat|lem|tanah_tanaman|pengait|alat|lainnya),
   est_cost_idr (perkiraan harga wajar dalam IDR), dan purpose (kegunaan, >= 3 kata).
+- Setiap alat di tools WAJIB memiliki description yang menjelaskan kegunaannya
+  dalam proyek ini (>= 3 kata), selain name dan optional.
 - DILARANG menyebut bahan pelengkap di langkah (instruction/warning) yang TIDAK
   terdaftar di additional_materials.
 - Jika material tidak cocok untuk ide apa pun, jawab dengan daftar proposals kosong.
@@ -225,6 +230,7 @@ Jika material tidak cocok untuk ide apa pun, jawab daftar proposals kosong.
 
 ## Self-Check (sebelum menjawab)
 - Setiap proposal hanya memakai {material} sebagai bahan utama?
+- Semua alat punya description kegunaan minimal 3 kata?
 - Semua bahan pelengkap di langkah terdaftar di additional_materials?
 - Semua langkah aman, jelas, dan peringatan ada untuk risiko?
 - Urutan langkah kontinu: bisa langkah N+1 dikerjakan persis setelah langkah N tanpa
@@ -237,7 +243,7 @@ Jawab HANYA dengan JSON valid berformat:
   "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
   "difficulty": "pemula|menengah|mahir",
   "steps": [{{"order": 1, "instruction": "...", "warning": "...", "visual_description": "..."}}],
-  "tools": [{{"name": "...", "optional": false}}],
+  "tools": [{{"name": "...", "optional": false, "description": "..."}}],
   "additional_materials": [{{"name": "...", "category": "tali|cat|lem|tanah_tanaman|pengait|alat|lainnya", "est_cost_idr": 2000, "purpose": "..."}}],
   "est_cost_idr": 5000, "est_price_idr": 25000}}]}}"""
 
@@ -267,6 +273,7 @@ Jika SATU aspek gagal, verdict = "perbaiki". Tanpa pengecualian.
 - Bahan pelengkap disebut di langkah tapi tidak terdaftar di additional_materials -> WAJIB "perbaiki".
 - additional_materials.est_cost_idr tidak wajar (> Rp100.000 per item) atau purpose
   kurang dari 3 kata -> WAJIB "perbaiki".
+- tools.description kosong atau kurang dari 3 kata -> WAJIB "perbaiki".
 - Feedback kosong saat verdict "perbaiki" -> jangan, beri alasan spesifik.
 - Verdict "layak" karena enggan menolak -> jangan, ikuti aspek.
 
@@ -298,6 +305,8 @@ Kamu adalah perajin ulung yang harus memperbaiki draft skill berdasarkan hasil v
 ## Aturan
 - Boleh mengubah, menambah, memecah, atau mengurutkan ulang steps.
 - Boleh melengkapi tools dan additional_materials bila dibutuhkan oleh langkah.
+- Setiap alat di tools wajib punya description yang menjelaskan kegunaannya
+  dalam proyek ini (>= 3 kata).
 - Semua bahan pelengkap yang disebut dalam langkah wajib terdaftar di
   additional_materials dengan category, est_cost_idr, dan purpose yang jelas.
 - Setiap langkah berbahaya wajib memiliki warning yang spesifik.
@@ -307,6 +316,7 @@ Kamu adalah perajin ulung yang harus memperbaiki draft skill berdasarkan hasil v
 ## Self-Check
 - Semua feedback verifier sudah diperbaiki?
 - Title, description, material, difficulty, dan ide tetap sama?
+- Semua alat punya description kegunaan minimal 3 kata?
 - JSON valid sesuai format?
 
 Jawab HANYA dengan JSON valid berformat:
@@ -314,7 +324,7 @@ Jawab HANYA dengan JSON valid berformat:
   "material": "plastik_pet|plastik_hdpe|kardus|kaleng|kaca|sachet",
   "difficulty": "pemula|menengah|mahir",
   "steps": [{{"order": 1, "instruction": "...", "warning": "...", "visual_description": "..."}}],
-  "tools": [{{"name": "...", "optional": false}}],
+  "tools": [{{"name": "...", "optional": false, "description": "..."}}],
   "additional_materials": [{{"name": "...", "category": "tali|cat|lem|tanah_tanaman|pengait|alat|lainnya", "est_cost_idr": 2000, "purpose": "..."}}],
   "est_cost_idr": 5000, "est_price_idr": 25000}}}}"""
 

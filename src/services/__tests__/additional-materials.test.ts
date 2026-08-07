@@ -7,7 +7,9 @@ describe('tutorialFromBackend', () => {
     title: 'Pot Gantung',
     description: 'Pot dari kaleng',
     difficulty: 'pemula',
-    tools: [{ name: 'gunting', optional: false }],
+    tools: [
+      { name: 'gunting', optional: false, description: 'memotong botol sesuai pola' },
+    ],
     steps: [{ order: 1, instruction: 'Cuci kaleng' }],
     estimated_time: '20 menit',
     additional_materials: [
@@ -25,5 +27,6 @@ describe('tutorialFromBackend', () => {
   it('maps tools objects to names in toolsAndMaterials', () => {
     const result = tutorialFromBackend(backend);
     expect(result.toolsAndMaterials).toEqual(['gunting', 'tali']);
+    expect(result.tools).toEqual(backend.tools);
   });
 });

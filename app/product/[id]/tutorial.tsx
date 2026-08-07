@@ -43,6 +43,12 @@ export default function TutorialScreen() {
     }
   };
 
+  const tools = tutData.tools ?? [];
+  const additionalMaterials = tutData.additionalMaterials ?? [];
+  const hasPreparationPanel = Boolean(
+    tutData.materialsImageUri || tools.length || additionalMaterials.length
+  );
+
   return (
     <View className="flex-1 bg-cream-50">
       <Header title={`Tutorial: ${product.name}`} onBack={() => safeBack(router)} />
@@ -66,14 +72,71 @@ export default function TutorialScreen() {
           ))}
         </View>
 
-        {tutData.materialsImageUri ? (
+        {hasPreparationPanel ? (
           <Card className="p-4 mb-4 border border-slate-100">
-            <Text className="text-xs font-semibold text-slate-500 mb-3">Panel Alat & Bahan</Text>
-            <FitImage
-              source={{ uri: tutData.materialsImageUri }}
-              className="rounded-2xl overflow-hidden bg-slate-200"
-              maxHeight={320}
-            />
+            <Text className="text-xs font-semibold text-slate-500">LANGKAH 0</Text>
+            <Text className="text-base font-bold text-slate-900 mt-1 mb-1">
+              Siapkan Alat & Bahan
+            </Text>
+            <Text className="text-xs text-slate-500 leading-5 mb-3">
+              Pastikan semua kebutuhan berikut sudah siap sebelum mulai membuat.
+            </Text>
+
+            {tutData.materialsImageUri ? (
+              <FitImage
+                source={{ uri: tutData.materialsImageUri }}
+                className="rounded-2xl overflow-hidden bg-slate-200 mb-4"
+                maxHeight={320}
+              />
+            ) : null}
+
+            {tools.length > 0 ? (
+              <View className="mb-2">
+                <Text className="text-xs font-bold text-slate-900 mb-2">Alat</Text>
+                {tools.map((tool, idx) => (
+                  <View
+                    key={`${tool.name}-${idx}`}
+                    className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 mb-2"
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-xs font-bold text-slate-900 flex-1">{tool.name}</Text>
+                      {tool.optional ? (
+                        <Text className="text-[10px] font-semibold text-emerald-700 ml-2">
+                          Opsional
+                        </Text>
+                      ) : null}
+                    </View>
+                    <Text className="text-[11px] text-slate-500 leading-4 mt-1">
+                      {tool.description?.trim() || "Alat pendukung untuk proses pembuatan."}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {additionalMaterials.length > 0 ? (
+              <View>
+                <Text className="text-xs font-bold text-slate-900 mb-2">Bahan Pelengkap</Text>
+                {additionalMaterials.map((material, idx) => (
+                  <View
+                    key={`${material.name}-${idx}`}
+                    className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-2"
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-xs font-bold text-slate-900 flex-1">
+                        {material.name}
+                      </Text>
+                      <Text className="text-xs font-semibold text-amber-700 ml-2">
+                        Rp {material.est_cost_idr.toLocaleString("id-ID")}
+                      </Text>
+                    </View>
+                    <Text className="text-[11px] text-slate-500 leading-4 mt-1">
+                      {material.purpose?.trim() || "Bahan pelengkap untuk proyek ini."}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </Card>
         ) : null}
 
@@ -105,26 +168,6 @@ export default function TutorialScreen() {
             />
           </Card>
         ))}
-
-        {tutData?.additionalMaterials && tutData.additionalMaterials.length > 0 && (
-          <View className="mb-6">
-            <Text className="text-sm font-bold text-slate-900 mb-3">Bahan Tambahan</Text>
-            {tutData.additionalMaterials.map((m, idx) => (
-              <View
-                key={idx}
-                className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-2"
-              >
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-xs font-bold text-slate-900">{m.name}</Text>
-                  <Text className="text-xs font-semibold text-amber-700">
-                    Rp {m.est_cost_idr.toLocaleString('id-ID')}
-                  </Text>
-                </View>
-                <Text className="text-[11px] text-slate-500 mt-1">{m.purpose}</Text>
-              </View>
-            ))}
-          </View>
-        )}
 
         <Card className="bg-emerald-50 border-emerald-100 p-4 mb-6">
           <Text className="text-xs text-slate-600 leading-5">

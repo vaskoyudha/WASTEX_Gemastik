@@ -210,8 +210,16 @@ def _tools_materials_section(skill: dict, step: dict) -> str:
 
 def build_materials_panel_prompt(skill: dict, identity: ObjectIdentity | None = None) -> str:
     material = _MATERIAL_ID.get(skill.get("material", ""), "bahan daur ulang rumah tangga")
-    tools = [t.get("name") for t in (skill.get("tools") or []) if t.get("name")]
-    materials = [m.get("name") for m in (skill.get("additional_materials") or []) if m.get("name")]
+    tools = [
+        f"{t['name']} — {t['description']}" if t.get("description") else t["name"]
+        for t in (skill.get("tools") or [])
+        if t.get("name")
+    ]
+    materials = [
+        f"{m['name']} — {m['purpose']}" if m.get("purpose") else m["name"]
+        for m in (skill.get("additional_materials") or [])
+        if m.get("name")
+    ]
     sections = [
         (
             "[PANEL ALAT & BAHAN]\n"
@@ -223,12 +231,16 @@ def build_materials_panel_prompt(skill: dict, identity: ObjectIdentity | None = 
         sections.append(build_identity_block(identity).lstrip("\n"))
     items = ["Susunan visual (flat-lay) di atas meja kerja:"]
     if tools:
-        items.append("- Alat-alat: " + ", ".join(tools) + ".")
+        items.append("- Alat-alat (nama — kegunaan): " + "; ".join(tools) + ".")
     if materials:
-        items.append("- Bahan pelengkap: " + ", ".join(materials) + ".")
+        items.append("- Bahan pelengkap (nama — kegunaan): " + "; ".join(materials) + ".")
     items.append(
         "- Semua benda tersusun rapi dan terlihat jelas, jarak antar benda cukup, "
         "proporsi wajar, pencahayaan merata."
+    )
+    items.append(
+        "- Keterangan kegunaan hanya menjadi konteks untuk menggambar benda yang tepat; "
+        "jangan render nama, deskripsi, label, caption, atau teks apa pun di dalam gambar."
     )
     sections.append("[ISI PANEL]\n" + "\n".join(items))
     sections.append(f"[GAYA VISUAL]\n{_STYLE_STORYBOARD}")

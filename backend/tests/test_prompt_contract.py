@@ -14,6 +14,7 @@ from app.agent.tools.skill_proposals import (
     SKILL_IDEA_PROMPT,
     SKILL_PROPOSAL_PROMPT,
     SKILL_VERIFY_PROMPT,
+    SKILL_VERIFY_REPAIR_PROMPT,
 )
 from app.agent.tools.vision import IDENTITY_PROMPT, VISION_PROMPT
 from app.rag.bootstrap import SEED_PROMPT
@@ -68,3 +69,10 @@ def test_idea_prompt_asks_three_ideas():
 def test_expand_prompt_keeps_idea_fields():
     assert "idea_json" in SKILL_EXPAND_PROMPT
     assert "Judul dan description WAJIB TETAP SAMA PERSIS" in SKILL_EXPAND_PROMPT
+
+
+def test_skill_prompts_require_tool_descriptions():
+    for prompt in (SKILL_EXPAND_PROMPT, SKILL_PROPOSAL_PROMPT, SKILL_VERIFY_REPAIR_PROMPT):
+        assert '"description": "..."' in prompt
+        assert "tools" in prompt
+    assert "tools.description kosong" in SKILL_VERIFY_PROMPT

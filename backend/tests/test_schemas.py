@@ -9,6 +9,7 @@ from app.schemas import (
     SkillDraft,
     SkillProposal,
     SolutionPackage,
+    ToolItem,
 )
 
 
@@ -40,6 +41,16 @@ def test_skill_draft_defaults_empty_lists() -> None:
 def test_solution_package_sources_default() -> None:
     p = SolutionPackage(recommendation="tidak tersedia")
     assert p.sources == []
+
+
+def test_tool_item_accepts_description_and_keeps_legacy_default() -> None:
+    described = ToolItem(
+        name="gunting",
+        optional=False,
+        description="memotong botol sesuai pola",
+    )
+    assert described.description == "memotong botol sesuai pola"
+    assert ToolItem(name="gunting").description == ""
 
 
 def test_step_accepts_visual_description() -> None:
