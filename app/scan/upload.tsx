@@ -125,10 +125,10 @@ export default function UploadScreen() {
         />
         {!image ? (
           <Image
-            source={require("../../assets/images/upload-screen-bottom-bg.png")}
+            source={require("../../assets/images/upload-screen-bottom-bg-062031.png")}
             resizeMode="contain"
             accessibilityIgnoresInvertColors
-            style={{ position: "absolute", left: 0, bottom: 0, width: "100%", height: screenWidth * (2 / 3) }}
+            style={{ position: "absolute", left: 0, bottom: 0, width: "100%", height: screenWidth * (3 / 4) }}
           />
         ) : null}
         <View
