@@ -153,6 +153,7 @@ export interface ProductTutorial {
   beforeImageUri: string;
   afterImageUri: string;
   mockupImageUri: string;
+  materialsImageUri?: string;
   toolsAndMaterials: string[];
   additionalMaterials?: AdditionalMaterial[];
 }

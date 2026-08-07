@@ -26,6 +26,7 @@ import {
   MOCK_SELLING,
 } from "../mocks/mockData";
 import { apiClient } from "./api";
+import { visualUrl } from "./api";
 
 class MockScanner implements WasteScannerService {
   async scan(_imageUri: string): Promise<ScanResult> {
@@ -108,6 +109,19 @@ function skillToProduct(skill: Skill): ProductRecommendation {
   };
 }
 
+/** Ambil URL visual untuk produk; fallback mockup -> before_after -> "" (tanpa gambar). */
+async function productThumbnailUri(skillId: string): Promise<string> {
+  for (const kind of ["mockup", "before_after"] as const) {
+    try {
+      const v = await apiClient.getVisual(skillId, kind);
+      if (v?.image_path) return visualUrl(v.image_path);
+    } catch {
+      // visual belum ada — coba kind berikutnya
+    }
+  }
+  return "";
+}
+
 class ApiScanner implements WasteScannerService {
   async scan(imageUri: string): Promise<ScanResult> {
     const result = (await apiClient.scan(imageUri)) as BackendScanResult;
@@ -132,13 +146,16 @@ class ApiRecommendation implements RecommendationService {
   async getRecommendations(material: ScanResult): Promise<ProductRecommendation[]> {
     const skills = (await apiClient.getProducts()) as Skill[];
     const matching = skills.filter((s) => s.material === material.materialType);
-    return (matching.length > 0 ? matching : skills).map(skillToProduct);
+    const list = (matching.length > 0 ? matching : skills).map(skillToProduct);
+    return Promise.all(list.map(async (p) => ({ ...p, thumbnailUri: await productThumbnailUri(p.id) })));
   }
 
   async getProductById(productId: string): Promise<ProductRecommendation | null> {
     try {
       const skill = (await apiClient.getProduct(productId)) as Skill;
-      return skillToProduct(skill);
+      const product = skillToProduct(skill);
+      product.thumbnailUri = await productThumbnailUri(productId);
+      return product;
     } catch {
       return null;
     }
@@ -146,7 +163,8 @@ class ApiRecommendation implements RecommendationService {
 
   async getAllProducts(): Promise<ProductRecommendation[]> {
     const skills = (await apiClient.getProducts()) as Skill[];
-    return skills.map(skillToProduct);
+    const list = skills.map(skillToProduct);
+    return Promise.all(list.map(async (p) => ({ ...p, thumbnailUri: await productThumbnailUri(p.id) })));
   }
 }
 
@@ -174,7 +192,36 @@ export function tutorialFromBackend(t: BackendTutorial): ProductTutorial {
 class ApiTutorial implements TutorialService {
   async getTutorial(productId: string): Promise<ProductTutorial> {
     const t = (await apiClient.getTutorial(productId)) as BackendTutorial;
-    return tutorialFromBackend(t);
+    const tut = tutorialFromBackend(t);
+
+    // Ambil visuals yang sudah digenerate (storyboard per step, before/after,
+    // mockup, panel materials). Gagal diam-diam -> placeholder kosong seperti sebelumnya.
+    const [storyboards, beforeAfter, mockup, materials] = await Promise.all([
+      Promise.allSettled(
+        (t.steps ?? []).map((s) => apiClient.getVisual(productId, "storyboard", s.order))
+      ),
+      apiClient.getVisual(productId, "before_after").catch(() => null),
+      apiClient.getVisual(productId, "mockup").catch(() => null),
+      apiClient.getVisual(productId, "materials").catch(() => null),
+    ]);
+
+    storyboards.forEach((res, i) => {
+      if (res.status === "fulfilled" && res.value?.image_path && tut.steps[i]) {
+        tut.steps[i].imageUri = visualUrl(res.value.image_path);
+      }
+    });
+    if (beforeAfter?.image_path) {
+      tut.beforeImageUri = visualUrl(beforeAfter.image_path);
+      tut.afterImageUri = visualUrl(beforeAfter.image_path);
+    }
+    if (mockup?.image_path) {
+      tut.mockupImageUri = visualUrl(mockup.image_path);
+    }
+    if (materials?.image_path) {
+      tut.materialsImageUri = visualUrl(materials.image_path);
+    }
+
+    return tut;
   }
 }
 

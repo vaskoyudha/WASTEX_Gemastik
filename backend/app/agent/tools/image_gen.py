@@ -28,6 +28,15 @@ _STYLE_PHOTO = (
     "tanpa watermark."
 )
 
+_STYLE_SALES_MOCKUP = (
+    "Fotografi produk komersial fotorealistik premium, cahaya studio lembut, warna hangat "
+    "dan alami, detail material tajam, bayangan realistis, serta desain grafis editorial "
+    "modern. Tipografi sans-serif tebal, rapi, kontras tinggi, dan mudah dibaca pada layar "
+    "ponsel. Tanpa watermark."
+)
+
+MOCKUP_PROMPT_REVISION = "sales-v2"
+
 
 def build_identity_block(identity: ObjectIdentity | None) -> str:
     if identity is None:
@@ -238,15 +247,60 @@ def build_before_after_prompt(skill: dict) -> str:
     )
 
 
+def _format_idr(value: object) -> str:
+    try:
+        amount = int(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return "HARGA SESUAI PESANAN"
+    if amount <= 0:
+        return "HARGA SESUAI PESANAN"
+    return f"Rp{amount:,}".replace(",", ".")
+
+
 def build_mockup_prompt(skill: dict) -> str:
     material = _MATERIAL_ID.get(skill.get("material", ""), "bahan daur ulang rumah tangga")
-    return (
-        "[FOTO PRODUK MOCKUP]\n"
-        f"Mockup fotografi produk dari '{skill.get('title')}', produk kerajinan daur ulang "
-        f"buatan tangan dari {material}, ditata di atas meja kayu dengan tanaman kecil, "
-        "siap untuk katalog online. Fotorealistik.\n"
-        f"[GAYA FOTO]\n{_STYLE_PHOTO}"
-    )
+    title = str(skill.get("title") or "Produk Upcycle").strip()
+    price = _format_idr(skill.get("est_price_idr"))
+    description = str(skill.get("description") or "").strip()
+    context = f"\n- Konteks produk: {description}" if description else ""
+    return f"""[VERSI PROMPT: {MOCKUP_PROMPT_REVISION}]
+
+[FOTO PRODUK MOCKUP]
+
+[ASET PROMOSI SIAP UNGGAH]
+Buat SATU poster penjualan digital persegi 1:1 untuk katalog online, Instagram, dan
+WhatsApp. Hasil akhir harus tampak seperti iklan yang sudah selesai dan siap unggah,
+BUKAN template kosong, wireframe, foto polos, atau mockup dengan ruang harga yang kosong.
+
+[PRODUK]
+- Produk utama: produk jadi "{title}", kerajinan upcycle buatan tangan dari {material}.{context}
+- Tampilkan produk jadi yang bersih, rapi, fungsional, dan realistis sebagai fokus utama.
+- Produk memenuhi sekitar 60–70% area gambar, tampak utuh, tidak terpotong, sudut 3/4.
+- Gunakan meja kayu terang dan satu tanaman kecil sebagai properti pendukung yang subtil;
+  jangan biarkan properti menutupi atau mengalahkan produk.
+
+[TEKS PROMOSI WAJIB — SALIN PERSIS]
+Render HANYA empat elemen teks berikut sebagai overlay grafis, bukan tulisan pada produk:
+1. "{title}" sebagai judul utama.
+2. "{price}" di dalam label harga solid yang jelas dan menonjol.
+3. "HANDMADE • UPCYCLE" sebagai selling point pendek.
+4. "PESAN SEKARANG" sebagai tombol ajakan bertindak.
+Ejaan, angka, tanda baca, dan kapitalisasi harus PERSIS. Jangan memparafrasekan, memotong,
+mengulang, atau menambahkan teks lain. Semua teks harus tajam dan terbaca pada ukuran ponsel.
+
+[TATA LETAK]
+- Hierarki visual jelas: judul di area atas, produk di tengah, label harga dekat produk tanpa
+  menutupinya, selling point dan tombol ajakan di area bawah yang aman dari tepi.
+- Beri ruang napas yang cukup dan margin aman di semua sisi agar siap dibagikan tanpa edit.
+- Palet krem, hijau daun, dan aksen oranye hangat; kontras teks minimal setara materi iklan.
+
+[BATASAN KEJUJURAN]
+Jangan menciptakan diskon, harga coret, rating, jumlah ulasan, sertifikasi, klaim manfaat,
+nomor telepon, akun media sosial, QR code, logo merek, identitas penjual, atau watermark.
+Jangan tampilkan sampah mentah, alat kerja, tangan, manusia, kemasan palsu, atau produk lain.
+
+[GAYA FOTO DAN DESAIN]
+{_STYLE_SALES_MOCKUP}"""
 
 
 class ImageGenUnavailable(Exception):
@@ -292,10 +346,38 @@ _REFERENCE_POLICY = (
     "ilustrasi flat, JANGAN pernah fotorealistik, JANGAN mencampur tekstur foto ke dalam panel."
 )
 
+_MOCKUP_MASTER_PROMPT = (
+    "[PERAN]\n"
+    "Kamu adalah desainer iklan e-commerce dan fotografer produk senior. Tugasmu membuat "
+    "SATU aset promosi produk upcycle yang benar-benar siap dipublikasikan dan digunakan "
+    "penjual tanpa penyuntingan tambahan.\n\n"
+    "[ATURAN PRIORITAS MOCKUP PENJUALAN]\n"
+    "1. Pertahankan bentuk, bahan, warna, pola, dekorasi, dan pengerjaan produk jadi sesuai "
+    "referensi; jangan mendesain ulang produknya.\n"
+    "2. TEKS PROMOSI yang dinyatakan wajib pada brief adalah pengecualian yang HARUS "
+    "dirender. Jangan mengikuti aturan tutorial yang melarang semua teks.\n"
+    "3. Buat satu komposisi iklan persegi yang selesai, bukan panel tutorial atau kolase.\n"
+    "4. Utamakan keterbacaan harga dan kejujuran informasi; jangan mengarang data penjualan."
+)
+
+_MOCKUP_REFERENCE_POLICY = (
+    "\n\n[REFERENSI PRODUK]\n"
+    "- Jika tersedia, panel tutorial terakhir adalah sumber visual utama untuk PRODUK JADI: "
+    "salin wujud produknya dengan setia lalu ubah hanya pencahayaan, latar, dan komposisi "
+    "menjadi fotografi iklan fotorealistik.\n"
+    "- Foto scan hanya menunjukkan asal material. Jangan kembalikan produk jadi menjadi "
+    "sampah mentah dan jangan menampilkan foto scan di poster."
+)
+
 
 def build_master_prompt(step_prompt: str, has_references: bool) -> str:
     policy = _REFERENCE_POLICY if has_references else ""
     return f"{_MASTER_PROMPT}{policy}\n\n{step_prompt}"
+
+
+def build_mockup_master_prompt(mockup_prompt: str, has_references: bool) -> str:
+    policy = _MOCKUP_REFERENCE_POLICY if has_references else ""
+    return f"{_MOCKUP_MASTER_PROMPT}{policy}\n\n{mockup_prompt}"
 
 
 async def generate_image(prompt: str, reference_images: list[bytes] | None = None) -> bytes:

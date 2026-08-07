@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
-import { ArrowDown, ArrowRight } from "lucide-react-native";
+import { ArrowRight } from "lucide-react-native";
 
 export default function BeforeAfterScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,19 +39,8 @@ export default function BeforeAfterScreen() {
 
       <ScrollView className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
         <Card className="p-4 border border-slate-100 mb-4 items-center">
-          <Text className="text-xs font-semibold text-slate-500 mb-3">Sebelum (Sampah)</Text>
+          <Text className="text-xs font-semibold text-slate-500 mb-3">Sebelum & Sesudah</Text>
           <Image source={{ uri: tutData.beforeImageUri }} className="w-full h-48 rounded-2xl bg-slate-200" />
-        </Card>
-
-        <View className="items-center mb-4">
-          <View className="w-8 h-8 rounded-full bg-emerald-100 items-center justify-center">
-            <ArrowDown size={18} color="#16a34a" />
-          </View>
-        </View>
-
-        <Card className="p-4 border border-slate-100 mb-6 items-center">
-          <Text className="text-xs font-semibold text-brand-dark mb-3">Sesudah (Produk Bernilai)</Text>
-          <Image source={{ uri: tutData.afterImageUri }} className="w-full h-48 rounded-2xl bg-slate-200" />
         </Card>
 
         <Card className="p-5 border border-slate-100 mb-6">

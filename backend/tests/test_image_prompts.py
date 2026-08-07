@@ -2,6 +2,7 @@ from app.agent.tools.image_gen import (
     build_before_after_prompt,
     build_identity_block,
     build_materials_panel_prompt,
+    build_mockup_master_prompt,
     build_mockup_prompt,
     build_storyboard_prompt,
 )
@@ -19,6 +20,7 @@ SKILL = {
             "purpose": "Menghias permukaan",
         }
     ],
+    "est_price_idr": 25000,
     "steps": [{"order": 1, "instruction": "Potong botol jadi dua", "warning": "Hati-hati gunting"}],
 }
 
@@ -57,11 +59,34 @@ def test_before_after_prompt_has_split_layout():
     assert "sebelum" in p.lower() and "sesudah" in p.lower()
 
 
-def test_mockup_prompt_is_product_photo_style():
+def test_mockup_prompt_is_ready_to_publish_sales_asset():
     p = build_mockup_prompt(SKILL)
     assert "Vas Botol PET" in p
     assert "fotografi produk" in p.lower()
     assert "fotorealistik" in p.lower()
+    assert "Rp25.000" in p
+    assert "HANDMADE • UPCYCLE" in p
+    assert "PESAN SEKARANG" in p
+    assert "[VERSI PROMPT: sales-v2]" in p
+    assert "siap unggah" in p.lower()
+    assert "diskon" in p.lower()
+    assert "rating" in p.lower()
+
+
+def test_mockup_prompt_does_not_invent_missing_price():
+    p = build_mockup_prompt({**SKILL, "est_price_idr": None})
+    assert "HARGA SESUAI PESANAN" in p
+    assert "Rp0" not in p
+
+
+def test_mockup_master_allows_only_the_requested_sales_text():
+    p = build_mockup_master_prompt(build_mockup_prompt(SKILL), has_references=True)
+    assert "desainer iklan" in p.lower()
+    assert "TEKS PROMOSI" in p
+    assert "produk jadi" in p.lower()
+    assert "foto scan" in p.lower()
+    assert "JANGAN render teks" not in p
+    assert "JANGAN pernah fotorealistik" not in p
 
 
 def test_storyboard_prompt_injects_relevant_tools_and_materials():

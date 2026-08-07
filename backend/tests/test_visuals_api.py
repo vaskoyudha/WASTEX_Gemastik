@@ -14,6 +14,7 @@ SKILL = {
     "id": "s1",
     "title": "Vas Botol PET",
     "material": "plastik_pet",
+    "est_price_idr": 25000,
     "status": "approved",
     "steps": [{"order": 1, "instruction": "Potong botol", "warning": None}],
 }
@@ -37,15 +38,16 @@ def stub_image(monkeypatch):
 
 def test_mockup_generates_and_stores(fake_sb, stub_image):
     fake_sb.table("skills").insert(dict(SKILL))
-    client = TestClient(app)
-    r = client.get("/visuals/s1/mockup")
-    assert r.status_code == 200
-    body = r.json()
+    body = asyncio.run(visuals_api.get_visual("s1", "mockup", sb=fake_sb))
     assert body["kind"] == "mockup"
     assert body["cached"] is False
     assert body["image_path"].endswith(".png")
     assert fake_sb.storage.from_("visuals").uploads
     assert fake_sb.table("generated_visuals").inserted
+    prompt = fake_sb.table("generated_visuals").inserted[0]["prompt"]
+    assert "Rp25.000" in prompt
+    assert "PESAN SEKARANG" in prompt
+    assert "JANGAN render teks" not in prompt
 
 
 def test_storyboard_requires_valid_step(fake_sb, stub_image):
@@ -58,7 +60,13 @@ def test_storyboard_requires_valid_step(fake_sb, stub_image):
 def test_cached_visual_skips_generation(fake_sb, monkeypatch):
     fake_sb.table("skills").insert(dict(SKILL))
     fake_sb.table("generated_visuals").insert(
-        {"skill_id": "s1", "kind": "mockup", "step_order": None, "image_path": "v/s1-mockup.png"}
+        {
+            "skill_id": "s1",
+            "kind": "mockup",
+            "step_order": None,
+            "image_path": "v/s1-mockup.png",
+            "prompt": "[VERSI PROMPT: sales-v2]",
+        }
     )
 
     async def boom(prompt, reference_images=None):
@@ -69,6 +77,25 @@ def test_cached_visual_skips_generation(fake_sb, monkeypatch):
     r = client.get("/visuals/s1/mockup")
     assert r.status_code == 200
     assert r.json()["cached"] is True
+
+
+def test_legacy_mockup_cache_is_regenerated(fake_sb, stub_image):
+    fake_sb.table("skills").insert(dict(SKILL))
+    fake_sb.table("generated_visuals").insert(
+        {
+            "skill_id": "s1",
+            "kind": "mockup",
+            "step_order": None,
+            "image_path": "s1-mockup.png",
+            "prompt": "[FOTO PRODUK MOCKUP] old prompt",
+        }
+    )
+
+    body = asyncio.run(visuals_api.get_visual("s1", "mockup", sb=fake_sb))
+
+    assert body["cached"] is False
+    assert body["image_path"].endswith("mockup-sales-v2.png")
+    assert len(fake_sb.table("generated_visuals").inserted) == 2
 
 
 def test_unknown_kind_422(fake_sb, stub_image):

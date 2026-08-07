@@ -1,6 +1,22 @@
 import type { ChatMessage, SkillCompletionsSummary, SkillIdea, SkillProposal, SkillVerifyResponse } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
+
+export type VisualKind = 'storyboard' | 'materials' | 'before_after' | 'mockup';
+
+export interface GeneratedVisual {
+  skill_id: string;
+  kind: VisualKind;
+  step: number | null;
+  image_path: string;
+  cached: boolean;
+}
+
+/** URL publik gambar visual di bucket storage `visuals`. */
+export function visualUrl(imagePath: string): string {
+  return `${SUPABASE_URL.replace(/\/$/, '')}/storage/v1/object/public/visuals/${imagePath}`;
+}
 
 interface ApiOptions {
   method?: string;
@@ -106,6 +122,11 @@ export const apiClient = {
 
   async getSkillCompletions(skillId: string): Promise<SkillCompletionsSummary> {
     return request(`/skills/${skillId}/completions`);
+  },
+
+  async getVisual(skillId: string, kind: VisualKind, step?: number): Promise<GeneratedVisual> {
+    const query = step !== undefined ? `?step=${step}` : '';
+    return request(`/visuals/${skillId}/${kind}${query}`);
   },
 
   async createSkill(data: SkillProposal & { reference_scan_id?: string; ai_verdict?: string | null }) {

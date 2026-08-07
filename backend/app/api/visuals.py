@@ -3,10 +3,12 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.agent.tools.image_gen import (
+    MOCKUP_PROMPT_REVISION,
     ImageGenUnavailable,
     build_before_after_prompt,
     build_master_prompt,
     build_materials_panel_prompt,
+    build_mockup_master_prompt,
     build_mockup_prompt,
     build_storyboard_prompt,
     generate_image,
@@ -22,6 +24,8 @@ Kind = Literal["storyboard", "materials", "before_after", "mockup"]
 
 
 def _cache_key(skill_id: str, kind: str, step: int | None) -> str:
+    if kind == "mockup":
+        return f"{skill_id}-{kind}-{MOCKUP_PROMPT_REVISION}.png"
     suffix = f"-{step}" if step is not None else ""
     return f"{skill_id}-{kind}{suffix}.png"
 
@@ -41,9 +45,17 @@ def _cached_visual(sb: Client, skill_id: str, kind: str, step: int | None) -> di
             if row.get("skill_id") == skill_id
             and row.get("kind") == kind
             and row.get("step_order") == step
+            and _cache_is_current(row)
         ),
         None,
     )
+
+
+def _cache_is_current(row: dict) -> bool:
+    if row.get("kind") != "mockup":
+        return True
+    marker = f"[VERSI PROMPT: {MOCKUP_PROMPT_REVISION}]"
+    return marker in (row.get("prompt") or "")
 
 
 async def _load_reference_bytes(sb: Client, skill: dict) -> list[bytes]:
@@ -80,7 +92,10 @@ async def _generate_visual(
         prompt = build_mockup_prompt(skill)
 
     refs = reference_images or []
-    final_prompt = build_master_prompt(prompt, has_references=bool(refs))
+    if kind == "mockup":
+        final_prompt = build_mockup_master_prompt(prompt, has_references=bool(refs))
+    else:
+        final_prompt = build_master_prompt(prompt, has_references=bool(refs))
     image = await generate_image(final_prompt, refs)
 
     path = _cache_key(skill["id"], kind, step)
@@ -120,7 +135,11 @@ async def generate_all_visuals(sb: Client, skill_id: str) -> None:
         return
 
     cached = sb.table("generated_visuals").select("*").eq("skill_id", skill_id).execute()
-    have = {(row.get("kind"), row.get("step_order")) for row in (cached.data or [])}
+    have = {
+        (row.get("kind"), row.get("step_order"))
+        for row in (cached.data or [])
+        if _cache_is_current(row)
+    }
 
     photo = await _load_reference_bytes(sb, skill)
     identity = None

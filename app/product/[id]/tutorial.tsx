@@ -66,6 +66,13 @@ export default function TutorialScreen() {
           ))}
         </View>
 
+        {tutData.materialsImageUri ? (
+          <Card className="p-4 mb-4 border border-slate-100">
+            <Text className="text-xs font-semibold text-slate-500 mb-3">Panel Alat & Bahan</Text>
+            <Image source={{ uri: tutData.materialsImageUri }} className="w-full h-40 rounded-2xl bg-slate-200" />
+          </Card>
+        ) : null}
+
         {tutData.steps.map((step) => (
           <Card
             key={step.order}
