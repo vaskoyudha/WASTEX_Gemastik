@@ -11,6 +11,15 @@ declare module "expo-router" {
     tabBarStyle?: Record<string, unknown>;
     tabBarLabelStyle?: Record<string, unknown>;
     contentStyle?: Record<string, unknown>;
+    animation?:
+      | "default"
+      | "none"
+      | "fade"
+      | "shift"
+      | "fade_from_bottom"
+      | "slide_from_bottom"
+      | "slide_from_right"
+      | "slide_from_left";
   }
 
   export const Stack: ComponentType<PropsWithChildren<{ screenOptions?: ScreenOptions }>> & {

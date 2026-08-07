@@ -1,10 +1,10 @@
 import "../global.css";
-import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { seedDemoDataIfNeeded } from "../src/services/demoSeed";
+import { RootStack, RootStackScreen } from "../src/navigation/root-stack";
 
 // Apply Inter as the app-wide default font family for all RN Text.
 // Weight utilities (font-bold, dll.) tetap bekerja — Android mensintesis bold dari family dasar.
@@ -34,28 +34,23 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: "#E9EEE7" },
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="scan/upload" />
-        <Stack.Screen name="scan/hasil" />
-        <Stack.Screen name="scan/rekomendasi" />
-        <Stack.Screen name="product/[id]/index" />
-        <Stack.Screen name="product/[id]/tutorial" />
-        <Stack.Screen name="product/[id]/before-after" />
-        <Stack.Screen name="product/[id]/mockup" />
-        <Stack.Screen name="product/[id]/pricing" />
-        <Stack.Screen name="product/[id]/selling" />
-        <Stack.Screen name="expert-dashboard" />
-        <Stack.Screen name="notifications" />
-        <Stack.Screen name="materials" />
-        <Stack.Screen name="ideas" />
-        <Stack.Screen name="achievements" />
-      </Stack>
+      <RootStack>
+        <RootStackScreen name="(tabs)" />
+        <RootStackScreen name="scan/upload" />
+        <RootStackScreen name="scan/hasil" />
+        <RootStackScreen name="scan/rekomendasi" />
+        <RootStackScreen name="product/[id]/index" />
+        <RootStackScreen name="product/[id]/tutorial" />
+        <RootStackScreen name="product/[id]/before-after" />
+        <RootStackScreen name="product/[id]/mockup" />
+        <RootStackScreen name="product/[id]/pricing" />
+        <RootStackScreen name="product/[id]/selling" />
+        <RootStackScreen name="expert-dashboard" />
+        <RootStackScreen name="notifications" />
+        <RootStackScreen name="materials" />
+        <RootStackScreen name="ideas" />
+        <RootStackScreen name="achievements" />
+      </RootStack>
     </ErrorBoundary>
   );
 }

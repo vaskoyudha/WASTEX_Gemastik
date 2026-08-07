@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import { Camera, History, Home, Leaf, User } from "lucide-react-native";
 import { colors, gradients, gradientStyle, shadows } from "../../src/theme";
+import { useReducedMotion } from "../../src/hooks/useReducedMotion";
 
 function ScanTabButton() {
   const router = useRouter();
@@ -40,10 +41,13 @@ function ScanTabButton() {
 }
 
 export default function TabLayout() {
+  const reducedMotion = useReducedMotion();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        animation: reducedMotion ? "none" : "fade",
         tabBarActiveTintColor: colors.cream50,
         tabBarInactiveTintColor: "#91A18E",
         tabBarStyle: {
