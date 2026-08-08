@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Clock, Tag, ChevronRight } from "lucide-react-native";
 import { Header, Card, Badge, LoadingSpinner } from "../src/components/ui";
 import { recommendation } from "../src/services";
+import { MaterialThumbnail } from "../src/features/MaterialThumbnail";
 import { ProductRecommendation } from "../src/services/types";
 import { safeBack } from "../src/lib/navigation";
 import { colors, screenSheetStyle } from "../src/theme";
@@ -35,7 +36,7 @@ export default function IdeasScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity activeOpacity={0.8} onPress={() => router.push(`/product/${item.id}`)}>
             <Card className="flex-row p-3 mb-4 border border-slate-100">
-              <Image source={{ uri: item.thumbnailUri }} className="w-24 h-24 rounded-xl bg-slate-200" resizeMode="cover" />
+              <MaterialThumbnail product={item} style={{ width: 96, height: 96, borderRadius: 12 }} />
               <View className="flex-1 ml-4 justify-between">
                 <View>
                   <Text className="text-base font-bold text-slate-900 mb-1" numberOfLines={1}>{item.name}</Text>

@@ -5,6 +5,7 @@ import { Header, Button, Card, Badge, LoadingSpinner, StarRating } from "../../.
 import { useProductData } from "../../../src/hooks/useProductData";
 import { favorites } from "../../../src/services/localState";
 import { apiClient } from "../../../src/services/api";
+import { MaterialThumbnail } from "../../../src/features/MaterialThumbnail";
 import type { SkillCompletionsSummary } from "../../../src/services/types";
 import { safeBack } from "../../../src/lib/navigation";
 import {
@@ -127,7 +128,7 @@ export default function ProductDetailScreen() {
         />
         <View style={{ paddingHorizontal: 18, paddingTop: 32, paddingBottom: 46 }}>
         <Card className="rounded-[28px] overflow-hidden p-0 border-0 mb-6" style={{ boxShadow: shadows.floating }}>
-          <Image source={{ uri: product.thumbnailUri }} className="w-full h-[296px]" resizeMode="cover" />
+          <MaterialThumbnail product={product} style={{ width: "100%", height: 296 }} />
         </Card>
 
         <Text className="text-[28px] leading-[34px] font-extrabold mb-2" style={{ color: colors.ink900, letterSpacing: -1.05 }}>{product.name}</Text>
@@ -157,7 +158,13 @@ export default function ProductDetailScreen() {
         <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, fontFamily: "serif", letterSpacing: -0.4 }}>Nilai proyek</Text>
         <View className="flex-row flex-wrap mb-7" style={{ gap: 10 }}>
           {[
-            { label: "Estim Biaya", value: `Rp ${product.estimatedCost.toLocaleString("id-ID")}`, icon: Wallet },
+            {
+              label: "Estim Biaya",
+              value: priceData
+                ? `Rp ${priceData.totalCost.toLocaleString("id-ID")}`
+                : `Rp ${product.estimatedCost.toLocaleString("id-ID")}`,
+              icon: Wallet,
+            },
             {
               label: "Est. Harga Jual",
               value: priceData ? `Rp ${priceData.suggestedSellPrice.toLocaleString("id-ID")}` : "-",
