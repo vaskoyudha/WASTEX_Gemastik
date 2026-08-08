@@ -361,12 +361,11 @@ export default function HomeScreen() {
                   accessibilityLabel={action.label}
                   onPress={() => router.push(action.route)}
                   hitSlop={4}
-                  android_ripple={{ color: "rgba(255,255,255,0.08)", borderless: false }}
                   style={({ pressed }) => ({
                     width: "100%",
                     height: actionCardHeight,
                     alignSelf: "stretch",
-                    backgroundColor: pressed ? "rgba(255,255,255,0.05)" : "transparent",
+                    opacity: pressed ? 0.9 : 1,
                   })}
                 >
                   <View
