@@ -1,7 +1,8 @@
 import React from "react";
-import { Image, Modal, Text, TouchableOpacity, View } from "react-native";
-import { AlertTriangle, ArrowUpRight, Clock, Leaf, ShieldCheck } from "lucide-react-native";
+import { Modal, Text, TouchableOpacity, View } from "react-native";
+import { AlertTriangle, ArrowUpRight, Clock, ShieldCheck } from "lucide-react-native";
 import { Badge, Card } from "../components/ui";
+import { MaterialThumbnail } from "./MaterialThumbnail";
 import { DIFFICULTY_META, RISK_META } from "../lib/theme";
 import { formatRupiah } from "../lib/format";
 import { colors, shadows } from "../theme";
@@ -28,7 +29,6 @@ export interface ProductCardProps {
 
 export function ProductCard({ product, onPress }: ProductCardProps): React.JSX.Element {
   const difficulty = DIFFICULTY_META[product.difficulty];
-  const [imageFailed, setImageFailed] = React.useState(false);
 
   return (
     <Card
@@ -37,21 +37,10 @@ export function ProductCard({ product, onPress }: ProductCardProps): React.JSX.E
       style={{ backgroundColor: colors.surface, boxShadow: shadows.card }}
     >
       <View className="flex-row p-2.5">
-        {imageFailed ? (
-          <View className="h-32 w-[116px] rounded-[18px] items-center justify-center" style={{ backgroundColor: colors.mist100 }}>
-            <View className="w-11 h-11 rounded-[16px] items-center justify-center" style={{ backgroundColor: colors.surface }}>
-              <Leaf size={20} color={colors.forest600} />
-            </View>
-          </View>
-        ) : (
-          <Image
-            source={{ uri: product.thumbnailUri }}
-            accessibilityLabel={product.name}
-            className="h-32 w-[116px] bg-mist-100 rounded-[18px]"
-            resizeMode="cover"
-            onError={() => setImageFailed(true)}
-          />
-        )}
+        <MaterialThumbnail
+          product={product}
+          style={{ height: 128, width: 116, borderRadius: 18 }}
+        />
         <View className="flex-1 py-2 pl-3.5 pr-1">
           <View className="flex-row items-start">
             <Text
@@ -78,7 +67,7 @@ export function ProductCard({ product, onPress }: ProductCardProps): React.JSX.E
             </View>
           </View>
           <Text className="mt-2 text-sm font-extrabold" style={{ color: colors.forest900, fontVariant: ["tabular-nums"] }}>
-            {formatRupiah(product.estimatedCost)}
+            {formatRupiah(product.suggestedPrice)}
           </Text>
         </View>
       </View>

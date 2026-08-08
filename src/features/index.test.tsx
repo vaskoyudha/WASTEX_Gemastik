@@ -4,9 +4,15 @@ import { RiskBadge, ProductCard, TutorialStepCard, SafetyModal } from "./index";
 jest.mock("lucide-react-native", () => ({
   AlertTriangle: () => null,
   ArrowUpRight: () => null,
+  Box: () => null,
   Clock: () => null,
+  Coffee: () => null,
+  CupSoda: () => null,
   Leaf: () => null,
+  Package: () => null,
+  Recycle: () => null,
   ShieldCheck: () => null,
+  Wine: () => null,
 }));
 
 jest.setTimeout(15000);
@@ -36,7 +42,7 @@ describe("Falih feature components", () => {
     );
 
     expect(getByText("Pot Botol PET")).toBeTruthy();
-    expect(getByText("Rp 15.000")).toBeTruthy();
+    expect(getByText("Rp 35.000")).toBeTruthy();
     expect(getByText("Mudah")).toBeTruthy();
     expect(getByText("30 menit")).toBeTruthy();
   });
