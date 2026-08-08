@@ -231,10 +231,13 @@ export default function HomeScreen() {
               accessibilityIgnoresInvertColors
               style={{
                 position: "absolute",
-                inset: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
                 width: "100%",
                 height: "100%",
-                opacity: 1,
+                transform: [{ scale: 1.08 }],
               }}
             />
             <View
@@ -328,7 +331,7 @@ export default function HomeScreen() {
             }}
           >
             {actions.map((action) => (
-              <View key={action.label} style={{ flex: 1 }}>
+              <View key={action.label} style={{ flex: 1, flexBasis: 0, minWidth: 0 }}>
                 <PressableScale
                   accessibilityLabel={action.label}
                   onPress={() => router.push(action.route)}
@@ -371,7 +374,19 @@ export default function HomeScreen() {
                       strokeWidth={1.8}
                     />
                   </View>
-                  <Text style={{ color: colors.white, fontSize: 11, fontFamily: "Inter_600SemiBold" }}>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      width: "100%",
+                      height: 16,
+                      color: colors.white,
+                      fontSize: 11,
+                      lineHeight: 16,
+                      fontFamily: "Inter_600SemiBold",
+                      textAlign: "center",
+                      includeFontPadding: false,
+                    }}
+                  >
                     {action.label}
                   </Text>
                 </PressableScale>
@@ -385,8 +400,8 @@ export default function HomeScreen() {
             minHeight: 430,
             backgroundColor: colors.cream50,
             ...gradientStyle(gradients.contentSheet),
-            borderTopLeftRadius: radii.sheet,
-            borderTopRightRadius: radii.sheet,
+            borderTopLeftRadius: 18,
+            borderTopRightRadius: 18,
             borderCurve: "continuous",
             paddingHorizontal: 20,
             paddingTop: 24,
@@ -399,7 +414,7 @@ export default function HomeScreen() {
             pointerEvents="none"
             style={{
               position: "absolute",
-              top: -5,
+              top: 8,
               alignSelf: "center",
               width: 34,
               height: 7,

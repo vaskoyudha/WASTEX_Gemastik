@@ -9,6 +9,11 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
+import {
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { seedDemoDataIfNeeded } from "../src/services/demoSeed";
 import { RootStack, RootStackScreen } from "../src/navigation/root-stack";
@@ -24,6 +29,9 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   useEffect(() => {

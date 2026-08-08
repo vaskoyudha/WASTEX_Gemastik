@@ -77,11 +77,7 @@ export default function TutorialScreen() {
             paddingHorizontal: 18,
             paddingTop: 18,
             paddingBottom: 46,
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
-            borderCurve: "continuous",
-            backgroundColor: colors.cream50,
-            ...gradientStyle(gradients.contentSheet),
+            backgroundColor: "transparent",
           }}
         >
         <View

@@ -121,7 +121,13 @@ export default function UploadScreen() {
           source={require("../../assets/images/upload-screen-bg.png")}
           resizeMode="cover"
           accessibilityIgnoresInvertColors
-          style={{ position: "absolute", top: -128, left: 0, width: "100%", height: screenHeight }}
+          style={{
+            position: "absolute",
+            top: -128,
+            left: 0,
+            width: "100%",
+            height: screenHeight + 128,
+          }}
         />
         {!image ? (
           <Image
@@ -148,7 +154,7 @@ export default function UploadScreen() {
               bottom: 0,
               width: "94%",
               height: screenWidth * 0.94 * (941 / 1672),
-              transform: [{ translateY: 40 }],
+              transform: [{ translateY: 72 }],
             }}
           />
         ) : null}
@@ -300,45 +306,59 @@ export default function UploadScreen() {
                   { mode: "camera" as const, label: "Kamera", caption: "Ambil foto sekarang", icon: Camera },
                   { mode: "gallery" as const, label: "Galeri", caption: "Pilih dari galeri", icon: ImageIcon },
                 ].map((option) => (
-                  <PressableScale
+                  <View
                     key={option.mode}
-                    onPress={() => pickImage(option.mode)}
-                    accessibilityLabel={option.mode === "camera" ? "Ambil foto dengan kamera" : "Pilih foto dari galeri"}
-                    style={{
-                      flex: 1,
-                      height: 136,
-                      borderRadius: 22,
-                      borderCurve: "continuous",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      backgroundColor: "rgba(42,94,55,0.92)",
-                      ...gradientStyle(gradients.uploadChoice),
-                      borderWidth: 1,
-                      borderColor: "rgba(205,239,146,0.43)",
-                      boxShadow: "inset 0 1px 0 rgba(243,255,221,0.12), 0 7px 15px rgba(7,39,21,0.2)",
-                    }}
+                    style={{ flex: 1, flexBasis: 0, minWidth: 0 }}
                   >
-                    <View
+                    <PressableScale
+                      onPress={() => pickImage(option.mode)}
+                      accessibilityLabel={option.mode === "camera" ? "Ambil foto dengan kamera" : "Pilih foto dari galeri"}
                       style={{
-                        width: 58,
-                        height: 58,
-                        borderRadius: 29,
+                        width: "100%",
+                        height: 136,
+                        borderRadius: 22,
+                        borderCurve: "continuous",
+                        overflow: "hidden",
                         alignItems: "center",
                         justifyContent: "center",
-                        backgroundColor: "rgba(91,148,80,0.5)",
+                        gap: 8,
+                        backgroundColor: "rgba(42,94,55,0.92)",
+                        ...gradientStyle(gradients.uploadChoice),
                         borderWidth: 1,
-                        borderColor: "rgba(217,245,166,0.34)",
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                        borderColor: "rgba(205,239,146,0.43)",
+                        boxShadow: "inset 0 1px 0 rgba(243,255,221,0.12), 0 7px 15px rgba(7,39,21,0.2)",
                       }}
                     >
-                      <option.icon size={25} color={colors.white} strokeWidth={1.9} />
-                    </View>
-                    <Text style={{ color: colors.white, fontFamily: "Manrope_700Bold", fontSize: 13 }}>{option.label}</Text>
-                    <Text style={{ color: "rgba(255,255,255,0.66)", fontFamily: "Manrope_400Regular", fontSize: 9.5 }}>
-                      {option.caption}
-                    </Text>
-                  </PressableScale>
+                      <View
+                        style={{
+                          width: 58,
+                          height: 58,
+                          borderRadius: 29,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "rgba(91,148,80,0.5)",
+                          borderWidth: 1,
+                          borderColor: "rgba(217,245,166,0.34)",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                        }}
+                      >
+                        <option.icon size={25} color={colors.white} strokeWidth={1.9} />
+                      </View>
+                      <Text style={{ color: colors.white, fontFamily: "Manrope_700Bold", fontSize: 13 }}>{option.label}</Text>
+                      <Text
+                        numberOfLines={1}
+                        style={{
+                          width: "100%",
+                          color: "rgba(255,255,255,0.66)",
+                          fontFamily: "Manrope_400Regular",
+                          fontSize: 9.5,
+                          textAlign: "center",
+                        }}
+                      >
+                        {option.caption}
+                      </Text>
+                    </PressableScale>
+                  </View>
                 ))}
               </View>
             </View>

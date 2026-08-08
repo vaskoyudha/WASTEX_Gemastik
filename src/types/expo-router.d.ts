@@ -9,6 +9,7 @@ declare module "expo-router" {
     tabBarActiveTintColor?: string;
     tabBarInactiveTintColor?: string;
     tabBarStyle?: Record<string, unknown>;
+    tabBarItemStyle?: Record<string, unknown>;
     tabBarLabelStyle?: Record<string, unknown>;
     contentStyle?: Record<string, unknown>;
     animation?:

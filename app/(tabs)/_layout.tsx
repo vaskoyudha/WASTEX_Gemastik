@@ -1,42 +1,56 @@
 import React from "react";
-import { Pressable, View } from "react-native";
-import { Tabs, useRouter } from "expo-router";
+import { Pressable, View, type PressableProps, type StyleProp, type ViewStyle } from "react-native";
+import { Tabs } from "expo-router";
 import { Camera, History, Home, Leaf, User } from "lucide-react-native";
 import { colors, gradients, gradientStyle } from "../../src/theme";
 import { useReducedMotion } from "../../src/hooks/useReducedMotion";
 
-function ScanTabButton() {
-  const router = useRouter();
+type ScanTabButtonProps = {
+  onPress?: PressableProps["onPress"];
+  onLongPress?: PressableProps["onLongPress"];
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+};
 
+function ScanTabButton({ onPress, onLongPress, style, testID }: ScanTabButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Scan sampah"
-      onPress={() => router.push("/scan/upload")}
-      style={({ pressed }) => ({
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        transform: [{ translateY: -13 }, { scale: pressed ? 0.95 : 1 }],
-      })}
-    >
-      <View
-        style={{
-          width: 58,
-          height: 58,
-          borderRadius: 29,
+      onPress={onPress}
+      onLongPress={onLongPress}
+      testID={testID}
+      style={() => [
+        style,
+        {
           alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.forest700,
-          ...gradientStyle(gradients.tabCamera),
-          borderWidth: 2,
-          borderColor: "rgba(224,248,190,0.52)",
-          boxShadow:
-            "inset 0 1px 0 rgba(250,255,241,0.34), 0 5px 4px rgba(0,12,7,0.34), 0 15px 24px rgba(0,8,4,0.52)",
-        }}
-      >
-        <Camera size={24} color={colors.cream50} strokeWidth={2.2} />
-      </View>
+          justifyContent: "flex-start",
+          overflow: "visible",
+        },
+      ]}
+    >
+      {({ pressed }) => (
+        <View
+          style={{
+            position: "absolute",
+            top: -34,
+            width: 58,
+            height: 58,
+            borderRadius: 29,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.forest700,
+            ...gradientStyle(gradients.tabCamera),
+            borderWidth: 2,
+            borderColor: "rgba(224,248,190,0.52)",
+            boxShadow:
+              "inset 0 1px 0 rgba(250,255,241,0.34), 0 5px 4px rgba(0,12,7,0.34), 0 15px 24px rgba(0,8,4,0.52)",
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          }}
+        >
+          <Camera size={24} color={colors.cream50} strokeWidth={2.2} />
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -70,7 +84,9 @@ export default function TabLayout() {
           ...gradientStyle(gradients.tabNavigation),
           boxShadow:
             "inset 0 1px 0 rgba(239,255,224,0.13), 0 -10px 28px rgba(4,20,11,0.18), 0 14px 30px rgba(0,0,0,0.22)",
+          overflow: "visible",
         },
+        tabBarItemStyle: { overflow: "visible" },
         tabBarLabelStyle: {
           fontSize: 10,
           fontFamily: "Inter_600SemiBold",
@@ -92,7 +108,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <History size={size - 1} color={color} strokeWidth={2.2} />,
         }}
       />
-      <Tabs.Screen name="scan" options={{ title: "", tabBarButton: () => <ScanTabButton /> }} />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: "",
+          tabBarButton: (props) => <ScanTabButton {...(props as ScanTabButtonProps)} />,
+          tabBarItemStyle: { overflow: "visible" },
+        }}
+      />
       <Tabs.Screen
         name="impact"
         options={{
