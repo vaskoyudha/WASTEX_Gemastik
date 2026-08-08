@@ -19,6 +19,8 @@ const PROJECT: SavedProject = {
     thumbnailUri: "",
     difficulty: "sedang",
     estimatedCost: 12000,
+    suggestedPrice: 55000,
+    material: "kaca",
     estimatedTimeMinutes: 45,
     shortDescription: "",
   },

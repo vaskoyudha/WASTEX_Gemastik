@@ -27,6 +27,8 @@ describe("Falih feature components", () => {
           thumbnailUri: "https://example.com/pot.png",
           difficulty: "mudah",
           estimatedCost: 15000,
+          suggestedPrice: 35000,
+          material: "plastik_pet",
           estimatedTimeMinutes: 30,
           shortDescription: "Pot tanaman dari botol bekas.",
         }}

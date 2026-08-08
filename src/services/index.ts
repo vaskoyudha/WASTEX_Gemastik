@@ -105,6 +105,9 @@ function skillToProduct(skill: Skill): ProductRecommendation {
     thumbnailUri: "",
     difficulty: DIFFICULTY_MAP[skill.difficulty] ?? "sedang",
     estimatedCost: skill.est_cost_idr ?? 0,
+    suggestedPrice: skill.suggested_price ?? skill.est_price_idr ?? 0,
+    totalCost: skill.total_cost,
+    material: skill.material,
     estimatedTimeMinutes: (skill.steps?.length ?? 0) * 10 || 30,
     shortDescription: skill.description ?? "",
   };
@@ -233,7 +236,8 @@ class ApiPricing implements PricingService {
     return {
       productId: p.skill_id,
       materialCost: p.material_cost,
-      additionalCost: p.labor_cost,
+      additionalCost: p.additional_materials_cost ?? 0,
+      totalCost: p.total_cost,
       suggestedSellPrice: p.suggested_price,
       estimatedProfit: p.suggested_price - p.total_cost,
       priceRangeLow: Math.round((p.suggested_price * 0.9) / 1000) * 1000,

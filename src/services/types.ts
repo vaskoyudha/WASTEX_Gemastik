@@ -66,6 +66,9 @@ export interface ProductRecommendation {
   thumbnailUri: string;
   difficulty: Difficulty;
   estimatedCost: number;
+  suggestedPrice: number;
+  totalCost?: number;
+  material: string;
   estimatedTimeMinutes: number;
   shortDescription: string;
 }
@@ -195,6 +198,7 @@ export interface PricingEstimate {
   productId: string;
   materialCost: number;
   additionalCost: number;
+  totalCost: number;
   suggestedSellPrice: number;
   estimatedProfit: number;
   priceRangeLow: number;
@@ -211,6 +215,7 @@ export interface BackendPricing {
   skill_id: string;
   title: string;
   material_cost: number;
+  additional_materials_cost: number;
   labor_cost: number;
   total_cost: number;
   profit_margin: number;
@@ -231,6 +236,8 @@ export interface Skill {
   risks: Risk[];
   est_cost_idr?: number;
   est_price_idr?: number;
+  suggested_price?: number;
+  total_cost?: number;
   status: SkillStatus;
   author_id?: string;
   created_at: string;

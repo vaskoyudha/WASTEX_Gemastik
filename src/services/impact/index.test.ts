@@ -36,6 +36,8 @@ function makeProject(id: string, estimatedCost: number): SavedProject {
       thumbnailUri: `file://${id}.png`,
       difficulty: "mudah",
       estimatedCost,
+      suggestedPrice: 35000,
+      material: "plastik_pet",
       estimatedTimeMinutes: 30,
       shortDescription: "Produk uji",
     },
