@@ -1,6 +1,7 @@
 import "../global.css";
 import { useEffect } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import {
   useFonts,
   Manrope_400Regular,
@@ -48,6 +49,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
+      <StatusBar hidden />
       <RootStack>
         <RootStackScreen name="(tabs)" />
         <RootStackScreen name="scan/upload" />
