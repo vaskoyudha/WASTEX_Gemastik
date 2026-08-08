@@ -189,7 +189,7 @@ export default function SkillCreatorScreen() {
     if (!draft) return null;
     return (
       <View style={{ gap: 18 }}>
-        <View style={{ padding: 18, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: colors.forest700, ...gradientStyle(gradients.impact), borderWidth: 1, borderColor: 'rgba(255,255,255,0.11)', boxShadow: shadows.floating }}>
+        <View style={{ padding: 18, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: '#2B7748', ...gradientStyle(gradients.uploadAnalyze), borderWidth: 1, borderColor: 'rgba(190,232,120,0.24)', boxShadow: '0 9px 22px rgba(20,69,39,0.22)' }}>
           <Text className="text-lg font-bold mb-1" style={{ color: colors.white }}>{draft.title}</Text>
           <Text className="text-xs mb-3 leading-5" style={{ color: 'rgba(255,255,255,0.72)' }}>{draft.description}</Text>
           <View className="flex-row gap-2">
@@ -246,7 +246,7 @@ export default function SkillCreatorScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F8F8F2' }}>
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}

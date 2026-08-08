@@ -77,18 +77,22 @@ export default function RekomendasiScreen(): React.JSX.Element {
             borderRadius: 26,
             borderCurve: "continuous",
             overflow: "hidden",
-            ...gradientStyle(gradients.limeWash),
+            backgroundColor: "#2B7748",
+            ...gradientStyle(gradients.uploadAnalyze),
+            borderWidth: 1,
+            borderColor: "rgba(190,232,120,0.24)",
+            boxShadow: "0 9px 22px rgba(20,69,39,0.22)",
           }}
         >
           <View className="w-10 h-10 rounded-2xl items-center justify-center mb-5" style={{ backgroundColor: colors.forest900 }}>
             <Sparkles size={18} color={colors.lime300} />
           </View>
-          <Text className="text-[22px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.7 }}>
+          <Text className="text-[22px] font-extrabold" style={{ color: colors.white, letterSpacing: -0.7 }}>
             Pilihan terbaik untuk materialmu
           </Text>
           <View className="flex-row items-center mt-2">
-            <Leaf size={14} color={colors.forest600} />
-            <Text className="ml-2 text-xs leading-5 flex-1" style={{ color: colors.ink700 }}>
+            <Leaf size={14} color={colors.lime300} />
+            <Text className="ml-2 text-xs leading-5 flex-1" style={{ color: "rgba(255,255,255,0.74)" }}>
               {recommendations.length} ide terpilih berdasarkan biaya, waktu, dan potensi hasil.
             </Text>
           </View>
