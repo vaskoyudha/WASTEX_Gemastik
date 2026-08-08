@@ -8,8 +8,7 @@ import { recommendation } from "../../src/services";
 import { useScanStore } from "../../src/store/useScanStore";
 import type { ProductRecommendation, ScanResult } from "../../src/services/types";
 import { safeBack } from "../../src/lib/navigation";
-import { Leaf, Sparkles } from "lucide-react-native";
-import { colors, gradients, gradientStyle } from "../../src/theme";
+import { colors } from "../../src/theme";
 
 export default function RekomendasiScreen(): React.JSX.Element {
   const router = useRouter();
@@ -69,34 +68,35 @@ export default function RekomendasiScreen(): React.JSX.Element {
 
     return (
       <View style={{ paddingHorizontal: 18, paddingTop: 30, paddingBottom: 44 }}>
-        <View
+        <Text
+          selectable
           style={{
-            minHeight: 156,
-            padding: 20,
-            marginBottom: 20,
-            borderRadius: 26,
-            borderCurve: "continuous",
-            overflow: "hidden",
-            backgroundColor: "#2B7748",
-            ...gradientStyle(gradients.uploadAnalyze),
-            borderWidth: 1,
-            borderColor: "rgba(190,232,120,0.24)",
-            boxShadow: "0 9px 22px rgba(20,69,39,0.22)",
+            color: colors.ink900,
+            fontFamily: "serif",
+            fontSize: 26,
+            fontWeight: "700",
+            letterSpacing: -0.45,
+            lineHeight: 31,
+            textAlign: "center",
           }}
         >
-          <View className="w-10 h-10 rounded-2xl items-center justify-center mb-5" style={{ backgroundColor: colors.forest900 }}>
-            <Sparkles size={18} color={colors.lime300} />
-          </View>
-          <Text className="text-[22px] font-extrabold" style={{ color: colors.white, letterSpacing: -0.7 }}>
-            Pilihan terbaik untuk materialmu
-          </Text>
-          <View className="flex-row items-center mt-2">
-            <Leaf size={14} color={colors.lime300} />
-            <Text className="ml-2 text-xs leading-5 flex-1" style={{ color: "rgba(255,255,255,0.74)" }}>
-              {recommendations.length} ide terpilih berdasarkan biaya, waktu, dan potensi hasil.
-            </Text>
-          </View>
-        </View>
+          Pilihan terbaik untuk{"\n"}
+          <Text style={{ color: colors.forest600 }}>materialmu</Text>
+        </Text>
+        <Text
+          selectable
+          style={{
+            color: colors.ink700,
+            fontFamily: "Manrope_400Regular",
+            fontSize: 12,
+            lineHeight: 19,
+            marginTop: 8,
+            marginBottom: 26,
+            textAlign: "center",
+          }}
+        >
+          {recommendations.length} ide terpilih berdasarkan biaya, waktu, dan potensi hasil.
+        </Text>
         {recommendations.map((item) => (
           <ProductCard key={item.id} product={item} onPress={() => handleSelectProduct(item)} />
         ))}
