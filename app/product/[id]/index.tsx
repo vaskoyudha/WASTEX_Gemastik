@@ -154,7 +154,7 @@ export default function ProductDetailScreen() {
 
         <Text className="text-sm leading-[22px] mb-7" style={{ color: colors.ink700 }}>{product.shortDescription}</Text>
 
-        <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.4 }}>Nilai proyek</Text>
+        <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, fontFamily: "serif", letterSpacing: -0.4 }}>Nilai proyek</Text>
         <View className="flex-row flex-wrap mb-7" style={{ gap: 10 }}>
           {[
             { label: "Estim Biaya", value: `Rp ${product.estimatedCost.toLocaleString("id-ID")}`, icon: Wallet },
@@ -234,7 +234,7 @@ export default function ProductDetailScreen() {
         </View>
 
         <View className="mb-7">
-          <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.4 }}>Alat & bahan</Text>
+          <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, fontFamily: "serif", letterSpacing: -0.4 }}>Alat & bahan</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 18 }}>
             {tutData?.toolsAndMaterials.map((tool, idx) => {
               const Icon = getToolIcon(tool);
@@ -258,7 +258,7 @@ export default function ProductDetailScreen() {
 
         {tutData?.additionalMaterials && tutData.additionalMaterials.length > 0 && (
           <View className="mb-6">
-            <Text className="text-sm font-bold text-slate-900 mb-3">Bahan Tambahan</Text>
+            <Text className="text-sm font-bold text-slate-900 mb-3" style={{ fontFamily: "serif" }}>Bahan Tambahan</Text>
             {tutData.additionalMaterials.map((m, idx) => (
               <View
                 key={idx}
