@@ -1,9 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.pricing import compute_pricing
 from app.deps import ensure_uuid, get_supabase
 from supabase import Client
 
 router = APIRouter()
+
+PRICING_FIELDS = ("suggested_price", "total_cost")
+
+
+def _enrich(skill: dict) -> dict:
+    return {
+        **skill,
+        **{k: v for k, v in compute_pricing(skill).items() if k in PRICING_FIELDS},
+    }
 
 
 @router.get("")
@@ -16,7 +26,7 @@ async def list_products(limit: int = 20, offset: int = 0, sb: Client = Depends(g
         .range(offset, offset + limit - 1)
         .execute()
     )
-    return resp.data or []
+    return [_enrich(skill) for skill in (resp.data or [])]
 
 
 @router.get("/{product_id}")
@@ -27,7 +37,7 @@ async def get_product(product_id: str, sb: Client = Depends(get_supabase)):
     if not resp.data:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    return resp.data
+    return _enrich(resp.data)
 
 
 @router.get("/{product_id}/recommendations")
