@@ -52,9 +52,9 @@ def test_pricing_heuristic_fallback(fake_sb):
     r = client.get("/pricing/22222222-aaaa-4aaa-8aaa-222222222222")
     assert r.status_code == 200
     body = r.json()
-    # heuristic: material 800, labor 2 steps * 0.25h * 25000 = 12500
+    # heuristic: material 800, labor 2 steps * 0.15h * 15000 = 4500
     assert body["material_cost"] == 800
-    assert body["labor_cost"] == 12500
+    assert body["labor_cost"] == 4500
     assert body["suggested_price"] % 1000 == 0
     assert body["suggested_price"] >= body["total_cost"]
 
@@ -66,7 +66,7 @@ def test_pricing_unknown_skill_404(fake_sb):
 
 
 def test_pricing_never_returns_negative_margin(fake_sb):
-    # est_price rendah (10000) < total_cost (material 500 + labor 5*0.25*15000=18750)
+    # est_price rendah (10000) < total_cost (material 500 + labor 5*0.15*10000=7500)
     fake_sb.table("skills").insert(
         {
             "id": "33333333-aaaa-4aaa-8aaa-333333333333",
@@ -82,7 +82,9 @@ def test_pricing_never_returns_negative_margin(fake_sb):
     r = client.get("/pricing/33333333-aaaa-4aaa-8aaa-333333333333")
     assert r.status_code == 200
     body = r.json()
+    # est_price 10000 > total_cost 8000 -> tidak kena floor, harga tetap 10000
     assert body["profit_margin"] >= 0
+    assert body["suggested_price"] == 10000
     assert body["suggested_price"] >= body["total_cost"]
 
 
@@ -162,7 +164,57 @@ def test_pricing_does_not_double_count_llm_material_estimate(fake_sb):
     body = r.json()
     assert body["material_cost"] == 800
     assert body["additional_materials_cost"] == 21000
-    assert body["labor_cost"] == 22500
-    assert body["total_cost"] == 44300
-    assert body["suggested_price"] == 45000
-    assert body["profit_margin"] == 0.02
+    assert body["labor_cost"] == 9000
+    assert body["total_cost"] == 30800
+    # est_price 45000 di atas plafon kaleng pemula (40000) -> dipatok ke plafon
+    assert body["suggested_price"] == 40000
+    assert body["profit_margin"] == 0.3
+
+
+def test_pricing_floor_is_break_even_not_forced_margin(fake_sb):
+    # Regresi: est_price LLM (15000) < total_cost (mahir 7 step x 0.15h x 20000
+    # = 21000 + material 500 = 21500). Dulu floor memaksa harga = biaya * 1.4
+    # = 30100, yang terlihat "kemahalan" untuk kerajinan botol PET. Sekarang
+    # floor hanya menaikkan ke titik impas (break-even) 22000.
+    fake_sb.table("skills").insert(
+        {
+            "id": "77777777-aaaa-4aaa-8aaa-777777777777",
+            "title": "Organizer Modular Botol PET",
+            "material": "plastik_pet",
+            "difficulty": "mahir",
+            "steps": [{"order": i, "instruction": "x"} for i in range(1, 8)],
+            "est_cost_idr": 0,
+            "est_price_idr": 15000,
+        }
+    )
+    client = TestClient(app)
+    r = client.get("/pricing/77777777-aaaa-4aaa-8aaa-777777777777")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["labor_cost"] == 21000
+    assert body["total_cost"] == 21500
+    assert body["suggested_price"] == 22000
+    assert body["profit_margin"] == 0
+
+
+def test_compute_pricing_pure_function():
+    from app.api.pricing import compute_pricing
+
+    skill = {
+        "id": "88888888-aaaa-4aaa-8aaa-888888888888",
+        "title": "Organizer PET",
+        "material": "plastik_pet",
+        "difficulty": "mahir",
+        "steps": [{"order": i, "instruction": "x"} for i in range(1, 8)],
+        "est_cost_idr": 0,
+        "est_price_idr": 15000,
+        "additional_materials": [],
+        "additional_materials_cost_idr": 0,
+    }
+    out = compute_pricing(skill)
+    assert out["skill_id"] == "88888888-aaaa-4aaa-8aaa-888888888888"
+    assert out["labor_cost"] == 21000
+    assert out["total_cost"] == 21500
+    assert out["suggested_price"] == 22000
+    assert out["profit_margin"] == 0
+    assert out["currency"] == "IDR"
