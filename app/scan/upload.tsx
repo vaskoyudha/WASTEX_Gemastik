@@ -216,10 +216,6 @@ export default function UploadScreen() {
                 <Text style={{ color: "#3C9A57", fontStyle: "italic" }}>Sampah Anorganik</Text>
               </Text>
             </View>
-            <Text style={{ color: colors.ink600, fontFamily: "Manrope_400Regular", fontSize: 12, lineHeight: 18, textAlign: "center" }}>
-              Pastikan objek terlihat jelas agar
-              {"\n"}hasil pemindaian lebih akurat.
-            </Text>
           </View>
 
           {image ? (
