@@ -47,8 +47,7 @@ export default function PricingScreen() {
           {[
             { label: "Biaya Material", value: priceData.materialCost },
             { label: "Aksesoris & Tambahan", value: priceData.additionalCost },
-            { label: "Waktu Pengerjaan (45 mnt)", value: 10000 },
-            { label: "Biaya Lain-lain", value: 2000 },
+            { label: "Biaya Tenaga Kerja", value: priceData.totalCost - priceData.materialCost - priceData.additionalCost },
           ].map((row, idx, arr) => (
             <View
               key={idx}
@@ -62,6 +61,13 @@ export default function PricingScreen() {
               </Text>
             </View>
           ))}
+        </Card>
+
+        <Card className="bg-emerald-50 border-emerald-100 p-5 mb-4 items-center">
+          <Text className="text-xs text-slate-500 mb-1">Total Biaya Produksi</Text>
+          <Text className="text-3xl font-extrabold text-brand-dark">
+            Rp {priceData.totalCost.toLocaleString("id-ID")}
+          </Text>
         </Card>
 
         <Card className="bg-emerald-50 border-emerald-100 p-5 mb-4 items-center">

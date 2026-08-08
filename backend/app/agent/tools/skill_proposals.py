@@ -21,6 +21,14 @@ Kamu adalah perajin ulung yang mengubah sampah anorganik menjadi produk kreatif
 bernilai jual tinggi. Buat 3 ide skill ringkas yang bisa dibuat dari material ini:
 {material}.
 
+## Panduan Harga (WAJIB)
+- Bahan utama (sampah) GRATIS. est_cost_idr = perkiraan biaya belanja bahan
+  pelengkap yang benar-benar dibeli (tali, cat, lem, tanah, dan lain-lain), bukan
+  nilai bahan utama. Rp0 hanya bila proyek benar-benar tanpa belanja.
+- est_price_idr = harga jual wajar kerajinan daur ulang rumahan. Acuan realistis:
+  pemula Rp5.000-Rp20.000, menengah Rp15.000-Rp35.000, mahir Rp25.000-Rp50.000.
+  DILARANG mengarang harga fantastis (di atas Rp100.000) untuk kerajinan sederhana.
+
 ## Iron Law
 HANYA GUNAKAN MATERIAL YANG DIBERIKAN SEBAGAI BAHAN UTAMA. DILARANG MENAMBAH BAHAN UTAMA DARI LUAR.
 Jika material tidak cocok untuk ide apa pun, jawab dengan daftar ideas kosong.
@@ -53,6 +61,14 @@ Kamu adalah perajin ulung yang mengubah sampah anorganik menjadi produk kreatif
 bernilai jual tinggi, sekaligus perancang kerajinan daur ulang (upcycling) yang teliti.
 Buat DRAFT SKILL LENGKAP berdasarkan ide berikut yang dipilih user:
 {idea_json}
+
+## Panduan Harga (WAJIB)
+- Bahan utama (sampah) GRATIS. est_cost_idr = perkiraan biaya belanja bahan
+  pelengkap yang benar-benar dibeli (tali, cat, lem, tanah, dan lain-lain) dan
+  harus konsisten dengan additional_materials. Rp0 hanya bila benar-benar tanpa belanja.
+- est_price_idr = harga jual wajar kerajinan daur ulang rumahan. Acuan realistis:
+  pemula Rp5.000-Rp20.000, menengah Rp15.000-Rp35.000, mahir Rp25.000-Rp50.000.
+  DILARANG mengarang harga fantastis (di atas Rp100.000) untuk kerajinan sederhana.
 
 ## Iron Law
 - HANYA GUNAKAN MATERIAL YANG DIBERIKAN SEBAGAI BAHAN UTAMA: {material}.
@@ -171,6 +187,9 @@ JANGAN mengubah ide utama draft; hanya perbaiki urutan dan tambah prasyarat yang
   ATAU ubah urutan langkah agar prasyarat muncul sebelum penggunaannya.
 - Setiap langkah (termasuk yang baru) WAJIB punya visual_description detail 2-4 kalimat.
 - Langkah tetap SATU aksi utama, tidak kondisional/pilihan ganda.
+- Pertahankan est_cost_idr dan est_price_idr dari draft (jangan ubah tanpa alasan;
+  bila harga tidak wajar, perbaiki: est_price wajar Rp5.000-Rp50.000 untuk kerajinan
+  rumahan, jangan lebih dari Rp100.000).
 ## Red Flags (hati-hati bila ini terjadi)
 - Menghapus langkah yang sudah benar atau mengubah ide utama -> jangan, hanya tambah/susun ulang.
 - Langkah baru tanpa visual_description -> jangan, WAJIB lengkap.
@@ -185,6 +204,14 @@ SKILL_PROPOSAL_PROMPT = """# Tugas
 Kamu adalah perajin ulung yang mengubah sampah anorganik menjadi produk kreatif
 bernilai jual tinggi, sekaligus perancang kerajinan daur ulang (upcycling) yang teliti.
 Buat 3 proposal skill yang BENAR-BENAR bisa dibuat dari material ini: {material}.
+
+## Panduan Harga (WAJIB)
+- Bahan utama (sampah) GRATIS. est_cost_idr = perkiraan biaya belanja bahan
+  pelengkap yang benar-benar dibeli (tali, cat, lem, tanah, dan lain-lain) dan
+  harus konsisten dengan additional_materials. Rp0 hanya bila benar-benar tanpa belanja.
+- est_price_idr = harga jual wajar kerajinan daur ulang rumahan. Acuan realistis:
+  pemula Rp5.000-Rp20.000, menengah Rp15.000-Rp35.000, mahir Rp25.000-Rp50.000.
+  DILARANG mengarang harga fantastis (di atas Rp100.000) untuk kerajinan sederhana.
 
 ## Iron Law
 HANYA GUNAKAN MATERIAL YANG DIBERIKAN SEBAGAI BAHAN UTAMA. DILARANG MENAMBAH BAHAN UTAMA DARI LUAR.
@@ -267,12 +294,17 @@ Jika SATU aspek gagal, verdict = "perbaiki". Tanpa pengecualian.
    pengeringan sebelum mengecat, lubang sebelum memasang tali, pengampelasan sebelum
    mengecat)? Jika ada lompatan prasyarat atau langkah yang menggabungkan banyak aksi
    atau bersifat pilihan ganda ("bisa A atau B") -> WAJIB "perbaiki".
+5. Kewajaran harga: est_price_idr harus wajar untuk kerajinan daur ulang rumahan
+   (acuan Rp5.000-Rp50.000; DILARANG di atas Rp100.000). est_cost_idr harus
+   konsisten dengan additional_materials (Rp0 hanya bila benar-benar tanpa belanja).
+   Harga fantastis atau tidak konsisten -> WAJIB "perbaiki".
 
 ## Red Flags (hati-hati bila ini terjadi)
 - Langkah berbahaya (tajam/panas/beracun) tanpa peringatan -> WAJIB "perbaiki".
 - Bahan pelengkap disebut di langkah tapi tidak terdaftar di additional_materials -> WAJIB "perbaiki".
 - additional_materials.est_cost_idr tidak wajar (> Rp100.000 per item) atau purpose
   kurang dari 3 kata -> WAJIB "perbaiki".
+- est_price_idr di atas Rp100.000 atau tidak wajar untuk kerajinan rumahan -> WAJIB "perbaiki".
 - tools.description kosong atau kurang dari 3 kata -> WAJIB "perbaiki".
 - Feedback kosong saat verdict "perbaiki" -> jangan, beri alasan spesifik.
 - Verdict "layak" karena enggan menolak -> jangan, ikuti aspek.
@@ -312,6 +344,9 @@ Kamu adalah perajin ulung yang harus memperbaiki draft skill berdasarkan hasil v
 - Setiap langkah berbahaya wajib memiliki warning yang spesifik.
 - Setiap langkah wajib punya satu aksi utama dan visual_description 2-4 kalimat.
 - Urutan langkah harus kontinu dari persiapan hingga produk selesai.
+- Perbaiki est_cost_idr/est_price_idr bila diminta verifier: harga wajar kerajinan
+  rumahan Rp5.000-Rp50.000, jangan lebih dari Rp100.000; est_cost_idr konsisten
+  dengan additional_materials (Rp0 hanya bila benar-benar tanpa belanja).
 
 ## Self-Check
 - Semua feedback verifier sudah diperbaiki?

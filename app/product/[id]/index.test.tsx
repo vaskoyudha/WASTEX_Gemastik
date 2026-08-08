@@ -18,7 +18,7 @@ jest.mock('../../../src/hooks/useProductData', () => ({
   useProductData: () => ({
     product: { name: 'Pot', difficulty: 'mudah', estimatedTimeMinutes: 30, shortDescription: 'd', estimatedCost: 5000, thumbnailUri: 'u' },
     tutData: { toolsAndMaterials: [], additionalMaterials: [] },
-    priceData: { suggestedSellPrice: 25000, estimatedProfit: 10000 },
+    priceData: { suggestedSellPrice: 25000, estimatedProfit: 10000, totalCost: 10000 },
     loading: false, error: null, refetch: jest.fn(),
   }),
 }));

@@ -9,8 +9,10 @@ Alur:
 4. Tulis README-*.md format v3 per skill di visuals/manual-generation/.
 
 Jalankan dari backend/: uv run python scripts/build_pet_kits.py
+Opsional: uv run python scripts/build_pet_kits.py <skill-id> untuk satu skill saja.
 """
 
+import argparse
 import asyncio
 import json
 import os
@@ -20,6 +22,7 @@ from app.agent.tools.image_gen import (
     build_before_after_prompt,
     build_master_prompt,
     build_materials_panel_prompt,
+    build_mockup_master_prompt,
     build_mockup_prompt,
     build_storyboard_prompt,
 )
@@ -153,7 +156,7 @@ def _render_readme(
 
 {_fence(ba_prompt)}
 
-**Mockup** — Upload: `panel-{n}` + `{photo}`
+**Mockup (sales-v2)** — Upload: `panel-{n}` + `{photo}` — diproses dengan `build_mockup_master_prompt` (master mockup penjualan + reference policy + brief sales-v2), bukan `build_master_prompt` tutorial:
 
 {_fence(mock_prompt)}
 
@@ -189,14 +192,22 @@ Hanya JSON valid:
 
 
 async def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Bangun kit prompt image v3 untuk skil plastik_pet"
+    )
+    parser.add_argument("skill_id", nargs="?", help="hanya regenerasi skill ini (opsional)")
+    args = parser.parse_args()
+
     s = {k: os.environ.get(k) for k in ("SUPABASE_URL", "SUPABASE_SERVICE_KEY")}
     if not all(s.values()):
         raise SystemExit("SUPABASE_URL/SUPABASE_SERVICE_KEY tidak ada di env")
     sb = create_client(s["SUPABASE_URL"], s["SUPABASE_SERVICE_KEY"])
     rows = sb.table("skills").select("*").eq("status", "approved").execute().data
     skills = [r for r in rows if r["id"] in SKILL_IDS]
-    if len(skills) != len(SKILL_IDS):
-        raise SystemExit(f"skill tidak lengkap: {[r['id'] for r in skills]}")
+    if args.skill_id:
+        skills = [r for r in skills if r["id"] == args.skill_id]
+    if not skills:
+        raise SystemExit(f"skill tidak ditemukan: {args.skill_id or SKILL_IDS}")
 
     # identity vision per foto unik
     identities: dict[str, dict] = {}
@@ -222,7 +233,8 @@ async def main() -> None:
             )
             steps_prompts.append((step["order"], build_master_prompt(raw, has_references=True)))
         ba = build_before_after_prompt(skill)
-        mock = build_mockup_prompt(skill)
+        mock_raw = build_mockup_prompt(skill)
+        mock = build_mockup_master_prompt(mock_raw, has_references=True)
         slug = {
             "88f3fa43-e918-4238-8dc9-4b09a7805e44": "hidropot",
             "b0fe87c2-acfb-4ef1-b30c-78148329a0ba": "pencil-case",
