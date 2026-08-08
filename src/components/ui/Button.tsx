@@ -6,6 +6,7 @@ import {
   TouchableOpacityProps,
   View,
 } from "react-native";
+import { colors, gradients, gradientStyle } from "../../theme";
 
 export interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -34,7 +35,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   // Base Container Styles
   const variantStyles = {
-    primary: "bg-forest-900 border-transparent",
+    primary: "bg-[#2B7748] border-transparent",
     secondary: "bg-white border-sage-200",
     outline: "bg-transparent border-sage-300",
     danger: "bg-risk-bahaya active:bg-red-700 border-transparent",
@@ -71,8 +72,18 @@ export const Button: React.FC<ButtonProps> = ({
         isDisabled ? "opacity-50" : ""
       } ${className}`}
       style={({ pressed }) => ({
+        ...(variant === "primary"
+          ? {
+              backgroundColor: "#2B7748",
+              ...gradientStyle(gradients.uploadAnalyze),
+              borderColor: "rgba(190,232,120,0.28)",
+            }
+          : {}),
         borderCurve: "continuous",
-        boxShadow: variant === "primary" && !isDisabled ? "0 8px 20px rgba(29,51,38,0.22)" : undefined,
+        boxShadow:
+          variant === "primary" && !isDisabled
+            ? "0 8px 18px rgba(20,69,39,0.24)"
+            : undefined,
         transform: [{ scale: pressed && !isDisabled ? 0.985 : 1 }],
       })}
       {...props as any}
@@ -80,7 +91,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === "primary" || variant === "danger" ? "#ffffff" : "#15803d"}
+          color={variant === "primary" || variant === "danger" ? colors.white : colors.forest700}
         />
       ) : (
         <View className="flex-row items-center justify-center space-x-2">

@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from "react";
-import { Alert, View, Text, ScrollView, Image, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
+import { Alert, View, Text, ScrollView, Image, TouchableOpacity, Modal, useWindowDimensions, type ViewStyle } from "react-native";
 import { useRouter } from "expo-router";
 import { Header, Button } from "../../src/components/ui";
 import { useScanStore } from "../../src/store/useScanStore";
@@ -9,7 +9,8 @@ import { apiClient } from "../../src/services/api";
 import { recommendation } from "../../src/services";
 import { safeBack } from "../../src/lib/navigation";
 import { useServiceCall } from "../../src/hooks/useServiceCall";
-import { Edit3, X, MapPin, BarChart2, TrendingUp, ShieldCheck, ArrowRight, Sparkles, Check, ChevronRight } from "lucide-react-native";
+import { Edit3, X, ArrowRight, Sparkles, Check, ChevronRight } from "lucide-react-native";
+import { ChartLineUp, Gauge, Scan, ShieldCheck, ShieldWarning } from "phosphor-react-native";
 import { colors, gradients, gradientStyle, shadows } from "../../src/theme";
 
 const materialTraits: Record<string, string[]> = {
@@ -19,6 +20,24 @@ const materialTraits: Record<string, string[]> = {
   kaleng: ["Tahan Lama", "Konduktif", "Mudah Dibentuk", "Daur Ulang"],
   kaca: ["Transparan", "Tahan Lama", "Premium", "Daur Ulang"],
   sachet: ["Lentur", "Tahan Air", "Multilayer", "Daur Ulang"],
+};
+
+const materialInfoCardStyle: ViewStyle = {
+  backgroundColor: "#F5F8EE",
+  ...gradientStyle(gradients.uploadTip),
+  borderWidth: 1,
+  borderColor: "#DCE7CE",
+  boxShadow: "0 6px 16px rgba(31,62,38,0.10)",
+};
+
+const materialInfoIconStyle: ViewStyle = {
+  width: 48,
+  height: 48,
+  borderRadius: 18,
+  borderCurve: "continuous",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#DDEBCD",
 };
 
 interface ManualCorrectionPayload {
@@ -204,7 +223,7 @@ export default function HasilScreen() {
         {/* Low-confidence verification banner */}
         {scanResult.needsVerification && (
           <View style={{ paddingHorizontal: 14, paddingVertical: 12, borderRadius: 17, borderCurve: "continuous", flexDirection: "row", alignItems: "center", backgroundColor: "#F8F2DE", borderWidth: 1, borderColor: "#E8D8A6" }}>
-            <ShieldCheck size={16} color="#b45309" />
+            <ShieldWarning size={16} color="#b45309" weight="duotone" />
             <Text className="text-amber-800 text-xs font-semibold ml-2 flex-1">
               Keyakinan AI rendah. Pilih material yang benar agar rekomendasinya akurat.
             </Text>
@@ -213,23 +232,34 @@ export default function HasilScreen() {
 
         {/* Editorial material summary */}
         <View style={{ gap: 12 }}>
-          <Text className="text-[19px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Tentang material ini</Text>
+          <Text
+            selectable
+            style={{
+              color: colors.ink900,
+              fontFamily: "serif",
+              fontSize: 26,
+              fontWeight: "700",
+              letterSpacing: -0.45,
+              lineHeight: 31,
+              textAlign: "center",
+            }}
+          >
+            Hasil Analisis{"\n"}
+            <Text style={{ color: "#3C9A57", fontStyle: "italic" }}>Sampah Anorganik Ini</Text>
+          </Text>
           <View
             style={{
+              ...materialInfoCardStyle,
               padding: 18,
               borderRadius: 22,
               borderCurve: "continuous",
-              backgroundColor: colors.surface,
-              borderWidth: 1,
-              borderColor: "rgba(41,73,54,0.08)",
-              boxShadow: "0 8px 24px rgba(31,63,42,0.09)",
               flexDirection: "row",
               alignItems: "center",
               gap: 14,
             }}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
-              <MapPin size={24} color={colors.forest700} />
+            <View style={materialInfoIconStyle}>
+              <Scan size={25} color={colors.forest700} duotoneColor="#78A958" weight="duotone" />
             </View>
             <View style={{ flex: 1, gap: 9 }}>
               <Text className="text-[11px] font-bold" style={{ color: colors.forest600 }}>Kondisi terdeteksi</Text>
@@ -240,32 +270,36 @@ export default function HasilScreen() {
           </View>
 
           <View className="flex-row" style={{ gap: 10 }}>
-            <View style={{ flex: 1, minHeight: 112, padding: 14, borderRadius: 21, borderCurve: "continuous", flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100, boxShadow: "0 8px 24px rgba(31,63,42,0.09)" }}>
-              <View style={{ width: 48, height: 48, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
-                <BarChart2 size={25} color={colors.forest700} />
+            <View style={{ ...materialInfoCardStyle, flex: 1, minHeight: 112, padding: 14, borderRadius: 21, borderCurve: "continuous", flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={materialInfoIconStyle}>
+                <Gauge size={25} color={colors.forest700} duotoneColor="#78A958" weight="duotone" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.ink400 }}>Kesulitan</Text>
+                <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.forest600 }}>Kesulitan</Text>
                 <Text selectable className="text-[18px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.4 }}>{difficultyLabel}</Text>
               </View>
             </View>
-            <View style={{ flex: 1, minHeight: 112, padding: 14, borderRadius: 21, borderCurve: "continuous", flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100, boxShadow: "0 8px 24px rgba(31,63,42,0.09)" }}>
-              <View style={{ width: 48, height: 48, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
-                <TrendingUp size={25} color={colors.forest700} />
+            <View style={{ ...materialInfoCardStyle, flex: 1, minHeight: 112, padding: 14, borderRadius: 21, borderCurve: "continuous", flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={materialInfoIconStyle}>
+                <ChartLineUp size={25} color={colors.forest700} duotoneColor="#78A958" weight="duotone" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.ink400 }}>Potensi nilai</Text>
+                <Text className="text-[10px] font-semibold mb-1" style={{ color: colors.forest600 }}>Potensi nilai</Text>
                 <Text selectable className="text-[18px] font-extrabold" style={{ color: colors.ink900, letterSpacing: -0.4 }}>{potentialLabel}</Text>
               </View>
             </View>
           </View>
 
-          <View style={{ minHeight: 64, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 19, borderCurve: "continuous", flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.mist100, boxShadow: "0 8px 24px rgba(31,63,42,0.09)" }}>
-            <View style={{ width: 44, height: 44, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: colors.mist100 }}>
-              <ShieldCheck size={22} color={scanResult.riskLevel === "aman" ? colors.forest700 : "#A46212"} />
+          <View style={{ ...materialInfoCardStyle, minHeight: 72, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 21, borderCurve: "continuous", flexDirection: "row", alignItems: "center" }}>
+            <View style={{ ...materialInfoIconStyle, width: 44, height: 44, borderRadius: 17 }}>
+              {scanResult.riskLevel === "aman" ? (
+                <ShieldCheck size={23} color={colors.forest700} duotoneColor="#78A958" weight="duotone" />
+              ) : (
+                <ShieldWarning size={23} color="#A46212" duotoneColor="#D39A45" weight="duotone" />
+              )}
             </View>
             <View className="flex-1 ml-3">
-              <Text className="text-[10px] font-semibold" style={{ color: colors.ink600 }}>Risiko pengolahan</Text>
+              <Text className="text-[10px] font-semibold" style={{ color: colors.forest600 }}>Risiko pengolahan</Text>
               <Text selectable className="text-sm font-extrabold mt-0.5" style={{ color: scanResult.riskLevel === "aman" ? colors.forest900 : "#8A4E0B" }}>{riskLabel}</Text>
             </View>
             <Text className="text-[10px] font-semibold" style={{ color: colors.ink400 }}>Ikuti panduan</Text>

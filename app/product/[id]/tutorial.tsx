@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Modal } from "react-native";
+import { View, Text, ScrollView, Modal, TouchableOpacity, Image, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner, FitImage } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { safeBack } from "../../../src/lib/navigation";
 import { ArrowRight, Check, PackageOpen, ShieldAlert, Wrench } from "lucide-react-native";
-import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../../src/theme";
+import { colors, gradients, gradientStyle, shadows } from "../../../src/theme";
 
 export default function TutorialScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
   const { product, tutData, loading, error, refetch } = useProductData(id);
 
   const [warningModalVisible, setWarningModalVisible] = useState(false);
@@ -51,16 +52,51 @@ export default function TutorialScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900, ...gradientStyle(gradients.home) }}>
-      <Header title={`Tutorial: ${product.name}`} onBack={() => safeBack(router)} />
-
+    <View style={{ flex: 1, backgroundColor: "#F8F8F2" }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        style={[screenSheetStyle, gradientStyle(gradients.contentSheet)]}
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 46 }}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
       >
-        <View style={{ padding: 18, borderRadius: 24, borderCurve: "continuous", marginBottom: 18, ...gradientStyle(gradients.navigation), boxShadow: shadows.card }}>
+        <Image
+          source={require("../../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{ position: "absolute", top: -128, left: 0, width: "100%", height: screenHeight }}
+        />
+        <Header
+          title={`Tutorial: ${product.name}`}
+          onBack={() => safeBack(router)}
+          transparent
+          contentColor={colors.white}
+        />
+
+        <View
+          style={{
+            paddingHorizontal: 18,
+            paddingTop: 18,
+            paddingBottom: 46,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            borderCurve: "continuous",
+            backgroundColor: colors.cream50,
+            ...gradientStyle(gradients.contentSheet),
+          }}
+        >
+        <View
+          style={{
+            padding: 18,
+            borderRadius: 24,
+            borderCurve: "continuous",
+            marginBottom: 18,
+            backgroundColor: "#2B7748",
+            ...gradientStyle(gradients.uploadAnalyze),
+            borderWidth: 1,
+            borderColor: "rgba(190,232,120,0.24)",
+            boxShadow: "0 9px 22px rgba(20,69,39,0.22)",
+          }}
+        >
           <View className="flex-row items-end justify-between mb-4">
             <View style={{ flex: 1, paddingRight: 12 }}>
               <Text className="text-[11px] mb-1" style={{ color: "rgba(255,255,255,0.62)" }}>Panduan membuat</Text>
@@ -207,18 +243,38 @@ export default function TutorialScreen() {
           </View>
         </Card>
 
-        <Button
-          title="Lihat Before & After"
+        <TouchableOpacity
           onPress={() => router.push(`/product/${id}/before-after`)}
-          variant="primary"
-          icon={<ArrowRight size={18} color={colors.white} />}
-        />
+          activeOpacity={0.84}
+          accessibilityRole="button"
+          accessibilityLabel="Lihat Before & After"
+          style={{
+            minHeight: 58,
+            borderRadius: 18,
+            borderCurve: "continuous",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            backgroundColor: "#2B7748",
+            ...gradientStyle(gradients.uploadAnalyze),
+            borderWidth: 1,
+            borderColor: "rgba(190,232,120,0.24)",
+            boxShadow: "0 8px 20px rgba(20,69,39,0.22)",
+          }}
+        >
+          <ArrowRight size={20} color={colors.white} />
+          <Text style={{ color: colors.white, fontFamily: "Manrope_600SemiBold", fontSize: 16 }}>
+            Lihat Before & After
+          </Text>
+        </TouchableOpacity>
         <Button
           title="Saya Sudah Selesai"
           onPress={() => router.push(`/product/${id}/complete`)}
           variant="secondary"
           className="mt-3"
         />
+        </View>
       </ScrollView>
 
       {/* Safety Warning Modal */}

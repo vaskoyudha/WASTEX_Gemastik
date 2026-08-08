@@ -19,8 +19,11 @@ import {
   Droplet,
   ArrowRight,
   TrendingUp,
+  Wallet,
+  Tag,
+  Gauge,
 } from "lucide-react-native";
-import { colors, shadows } from "../../../src/theme";
+import { colors, gradients, gradientStyle, shadows } from "../../../src/theme";
 
 const toolIcons: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
   botol: Package,
@@ -154,43 +157,80 @@ export default function ProductDetailScreen() {
         <Text className="text-[17px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.4 }}>Nilai proyek</Text>
         <View className="flex-row flex-wrap mb-7" style={{ gap: 10 }}>
           {[
-            { label: "Estim Biaya", value: `Rp ${product.estimatedCost.toLocaleString("id-ID")}` },
+            { label: "Estim Biaya", value: `Rp ${product.estimatedCost.toLocaleString("id-ID")}`, icon: Wallet },
             {
               label: "Est. Harga Jual",
               value: priceData ? `Rp ${priceData.suggestedSellPrice.toLocaleString("id-ID")}` : "-",
+              icon: Tag,
             },
             {
               label: "Est. Keuntungan",
               value: priceData ? `Rp ${priceData.estimatedProfit.toLocaleString("id-ID")}` : "-",
+              icon: TrendingUp,
             },
             {
               label: "Level Kesulitan",
               value:
                 product.difficulty === "mudah" ? "Mudah" : product.difficulty === "sedang" ? "Sedang" : "Sulit",
+              icon: Gauge,
             },
-          ].map((row, idx) => (
-            <View
-              key={idx}
-              style={{
-                width: "48.5%",
-                minHeight: 104,
-                justifyContent: "space-between",
-                padding: 15,
-                borderRadius: 20,
-                borderCurve: "continuous",
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.mist100,
-                boxShadow: "0 8px 24px rgba(31,63,42,0.09)",
-              }}
-            >
-              <View className="flex-row items-center justify-between">
-                <Text className="text-[11px]" style={{ color: colors.ink600 }}>{row.label}</Text>
-                {idx === 2 ? <TrendingUp size={15} color={colors.forest700} /> : null}
+          ].map((row, idx) => {
+            const MetricIcon = row.icon;
+
+            return (
+              <View
+                key={idx}
+                style={{
+                  width: "48.5%",
+                  minHeight: 92,
+                  gap: 14,
+                  padding: 14,
+                  borderRadius: 20,
+                  borderCurve: "continuous",
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.mist100,
+                  boxShadow: "0 8px 24px rgba(31,63,42,0.09)",
+                }}
+              >
+                <Text style={{ color: colors.ink600, fontFamily: "Manrope_500Medium", fontSize: 10.5 }}>
+                  {row.label}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 9 }}>
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      flexShrink: 0,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 12,
+                      borderCurve: "continuous",
+                      backgroundColor: colors.mist100,
+                    }}
+                  >
+                    <MetricIcon size={16} color={colors.forest700} strokeWidth={2} />
+                  </View>
+                  <Text
+                    selectable
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.78}
+                    style={{
+                      flex: 1,
+                      color: colors.ink900,
+                      fontFamily: "Manrope_800ExtraBold",
+                      fontSize: 17,
+                      fontVariant: ["tabular-nums"],
+                      letterSpacing: -0.45,
+                    }}
+                  >
+                    {row.value}
+                  </Text>
+                </View>
               </View>
-              <Text selectable className="text-[17px] font-extrabold" style={{ color: colors.ink900, fontVariant: ["tabular-nums"], letterSpacing: -0.4 }}>{row.value}</Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         <View className="mb-7">
@@ -252,12 +292,31 @@ export default function ProductDetailScreen() {
           </View>
         )}
 
-        <Button
-          title="Mulai Tutorial"
+        <TouchableOpacity
           onPress={() => router.push(`/product/${id}/tutorial`)}
-          variant="primary"
-          icon={<ArrowRight size={19} color={colors.white} />}
-        />
+          activeOpacity={0.84}
+          accessibilityRole="button"
+          accessibilityLabel="Mulai Tutorial"
+          style={{
+            minHeight: 58,
+            borderRadius: 18,
+            borderCurve: "continuous",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            backgroundColor: "#2B7748",
+            ...gradientStyle(gradients.uploadAnalyze),
+            borderWidth: 1,
+            borderColor: "rgba(190,232,120,0.24)",
+            boxShadow: "0 8px 20px rgba(20,69,39,0.22)",
+          }}
+        >
+          <ArrowRight size={20} color={colors.white} />
+          <Text style={{ color: colors.white, fontFamily: "Manrope_600SemiBold", fontSize: 16 }}>
+            Mulai Tutorial
+          </Text>
+        </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

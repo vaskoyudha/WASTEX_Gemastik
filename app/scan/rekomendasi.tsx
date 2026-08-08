@@ -80,8 +80,8 @@ export default function RekomendasiScreen(): React.JSX.Element {
             textAlign: "center",
           }}
         >
-          Pilihan terbaik untuk{"\n"}
-          <Text style={{ color: colors.forest600 }}>materialmu</Text>
+          Pilihan Terbaik Untuk{"\n"}
+          <Text style={{ color: "#3C9A57", fontStyle: "italic" }}>Sampah Anorganikmu</Text>
         </Text>
         <Text
           selectable
