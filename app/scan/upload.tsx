@@ -357,6 +357,7 @@ export default function UploadScreen() {
                           color: colors.white,
                           fontFamily: "Manrope_700Bold",
                           fontSize: 13,
+                          lineHeight: 17,
                           textAlign: "center",
                         }}
                       >
@@ -369,6 +370,7 @@ export default function UploadScreen() {
                           color: "rgba(255,255,255,0.66)",
                           fontFamily: "Manrope_400Regular",
                           fontSize: 9.5,
+                          lineHeight: 12,
                           textAlign: "center",
                         }}
                       >
