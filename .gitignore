@@ -62,9 +62,18 @@ backend/.venv/
 .playwright-mcp/
 backend/supabase/.temp/
 *.png
+!assets/icon.png
+!assets/splash-icon.png
+!assets/favicon.png
+!assets/android-icon-foreground.png
+!assets/android-icon-background.png
+!assets/android-icon-monochrome.png
 !assets/images/impact-upcycling-card-bg.png
+!assets/images/home-hero-bg.png
+!assets/images/impact-header-bg.png
 !assets/images/upload-screen-bg.png
 !assets/images/upload-screen-bottom-bg-062031.png
+!assets/images/upload-screen-bottom-bg.png
 
 # manual image-gen playbooks (local experiments, not in repo)
 visuals/
