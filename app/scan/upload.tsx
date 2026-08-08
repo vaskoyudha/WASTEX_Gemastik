@@ -211,7 +211,7 @@ export default function UploadScreen() {
                   letterSpacing: -0.45,
                 }}
               >
-                Pilih foto sampah anorganik
+                Pilih Foto Sampah Anorganik
               </Text>
             </View>
             <Text style={{ color: colors.ink600, fontFamily: "Manrope_400Regular", fontSize: 12, lineHeight: 18, textAlign: "center" }}>
