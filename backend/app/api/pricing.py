@@ -72,7 +72,7 @@ async def calculate_pricing(skill_id: str, sb: Client = Depends(get_supabase)):
 
 def compute_pricing(skill: dict) -> dict:
     steps = skill.get("steps") or []
-    labor_rate = LABOR_RATES.get(skill.get("difficulty") or "menengah", 25000)
+    labor_rate = LABOR_RATES.get(skill.get("difficulty") or "menengah", 15000)
     labor_cost = int(len(steps) * HOURS_PER_STEP * labor_rate)
 
     # est_cost_idr is the LLM's aggregate estimate and already includes the
@@ -109,6 +109,11 @@ def compute_pricing(skill: dict) -> dict:
     if suggested_price > price_ceiling:
         suggested_price = price_ceiling
         profit_margin = round((suggested_price - total_cost) / total_cost, 2) if total_cost else 0
+
+    # Ceiling dapat menekan harga di bawah biaya untuk kerajinan padat tenaga
+    # kerja; jangan laporkan margin negatif.
+    if suggested_price < total_cost:
+        profit_margin = 0
 
     return {
         "skill_id": skill["id"],

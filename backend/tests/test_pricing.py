@@ -197,6 +197,33 @@ def test_pricing_floor_is_break_even_not_forced_margin(fake_sb):
     assert body["profit_margin"] == 0
 
 
+def test_pricing_ceiling_clamps_margin_at_break_even(fake_sb):
+    # Regresi: ceiling (plafon) menekan harga jual di bawah biaya untuk
+    # kerajinan padat tenaga kerja. Mahir kaca 20 langkah: labor 20 x 0.15h x
+    # 20000 = 60000 + material 800 = 60800, plafon kaca mahir = 50000 + 10000
+    # = 60000. Margin harus dipatok ke 0 (break-even), bukan negatif.
+    fake_sb.table("skills").insert(
+        {
+            "id": "99999999-aaaa-4aaa-8aaa-999999999999",
+            "title": "Lampu Kaca Bekas",
+            "material": "kaca",
+            "difficulty": "mahir",
+            "steps": [{"order": i, "instruction": "x"} for i in range(1, 21)],
+            "est_cost_idr": 0,
+            "est_price_idr": 100000,
+        }
+    )
+    client = TestClient(app)
+    r = client.get("/pricing/99999999-aaaa-4aaa-8aaa-999999999999")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["labor_cost"] == 60000
+    assert body["total_cost"] == 60800
+    # est_price 100000 di atas plafon kaca mahir (60000) -> dipatok ke plafon
+    assert body["suggested_price"] == 60000
+    assert body["profit_margin"] == 0
+
+
 def test_compute_pricing_pure_function():
     from app.api.pricing import compute_pricing
 
