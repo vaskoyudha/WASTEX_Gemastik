@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, ImageBackground, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import {
   Bell,
@@ -52,6 +52,13 @@ export default function HomeScreen() {
   const { width, height } = useWindowDimensions();
   const { history, summary, loading } = useImpactData();
   const compact = width < 360;
+  const actionCardHeight = compact ? 94 : 100;
+  const actionIconSize = compact ? 48 : 52;
+  const actionContentGap = 8;
+  const actionLabelHeight = 16;
+  const actionContentHeight = actionIconSize + actionContentGap + actionLabelHeight;
+  const actionContentTop = (actionCardHeight - actionContentHeight) / 2;
+  const [impactCardSize, setImpactCardSize] = React.useState({ width: 0, height: 0 });
   const target = 15;
   const progress = Math.min(summary.totalWasteProcessed / target, 1);
   const progressWidth = `${Math.max(progress * 100, 4)}%` as `${number}%`;
@@ -215,15 +222,16 @@ export default function HomeScreen() {
                 "-5px -5px 20px rgba(197,240,132,0.1), 0 0 18px 4px rgba(0,0,0,0.58)",
             }}
           >
-            <ImageBackground
-              source={require("../../assets/images/impact-upcycling-card-bg.png")}
-              resizeMode="stretch"
-              imageStyle={{
-                width: "100%",
-                height: "100%",
-                borderRadius: radii.xl,
+            <View
+              onLayout={({ nativeEvent: { layout } }) => {
+                setImpactCardSize((current) =>
+                  current.width === layout.width && current.height === layout.height
+                    ? current
+                    : { width: layout.width, height: layout.height },
+                );
               }}
               style={{
+                position: "relative",
                 width: "100%",
                 backgroundColor: colors.forest900,
                 borderRadius: radii.xl,
@@ -233,12 +241,16 @@ export default function HomeScreen() {
                 overflow: "hidden",
               }}
             >
-            <View
-              pointerEvents="none"
+            <Image
+              source={require("../../assets/images/impact-upcycling-card-bg.png")}
+              resizeMode="cover"
+              accessibilityIgnoresInvertColors
               style={{
                 position: "absolute",
-                inset: 0,
-                ...gradientStyle(gradients.impactImageGlow),
+                top: 0,
+                left: 0,
+                width: impactCardSize.width,
+                height: impactCardSize.height,
               }}
             />
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -314,7 +326,7 @@ export default function HomeScreen() {
                 <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 9, marginTop: 1 }}>Nilai ekonomi</Text>
               </View>
             </View>
-            </ImageBackground>
+            </View>
           </View>
 
           <View
@@ -324,40 +336,55 @@ export default function HomeScreen() {
             }}
           >
             {actions.map((action) => (
-              <View key={action.label} style={{ flex: 1, flexBasis: 0, minWidth: 0 }}>
-                <PressableScale
+              <View
+                key={action.label}
+                style={{
+                  flex: 1,
+                  flexBasis: 0,
+                  minWidth: 0,
+                  height: actionCardHeight,
+                  position: "relative",
+                  borderRadius: 17,
+                  borderCurve: "continuous",
+                  overflow: "hidden",
+                  backgroundColor: action.featured ? "#1E442D" : "#112D1E",
+                  borderWidth: 1,
+                  borderColor: action.featured
+                    ? "rgba(205,244,148,0.48)"
+                    : "rgba(190,226,159,0.28)",
+                  boxShadow:
+                    "inset 0 1px 0 rgba(236,255,218,0.09), 0 8px 18px rgba(0,12,7,0.32)",
+                }}
+              >
+                <Pressable
+                  accessibilityRole="button"
                   accessibilityLabel={action.label}
                   onPress={() => router.push(action.route)}
-                  style={{
+                  hitSlop={4}
+                  android_ripple={{ color: "rgba(255,255,255,0.08)", borderless: false }}
+                  style={({ pressed }) => ({
                     width: "100%",
-                    height: compact ? 94 : 100,
-                    borderRadius: 17,
-                    borderCurve: "continuous",
-                  }}
+                    height: actionCardHeight,
+                    alignSelf: "stretch",
+                    backgroundColor: pressed ? "rgba(255,255,255,0.05)" : "transparent",
+                  })}
                 >
                   <View
+                    testID={`home-action-content-${action.label.toLowerCase()}`}
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: 17,
-                      borderCurve: "continuous",
+                      position: "absolute",
+                      top: actionContentTop,
+                      left: 0,
+                      right: 0,
+                      height: actionContentHeight,
                       alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      backgroundColor: action.featured ? "#1E442D" : "#112D1E",
-                      borderWidth: 1,
-                      borderColor: action.featured
-                        ? "rgba(205,244,148,0.48)"
-                        : "rgba(190,226,159,0.28)",
-                      boxShadow:
-                        "inset 0 1px 0 rgba(236,255,218,0.09), 0 8px 18px rgba(0,12,7,0.32)",
                     }}
                   >
                     <View
                       style={{
-                        width: compact ? 48 : 52,
-                        height: compact ? 48 : 52,
-                        borderRadius: 26,
+                        width: actionIconSize,
+                        height: actionIconSize,
+                        borderRadius: actionIconSize / 2,
                         alignItems: "center",
                         justifyContent: "center",
                         backgroundColor: colors.forest800,
@@ -379,10 +406,11 @@ export default function HomeScreen() {
                       numberOfLines={1}
                       style={{
                         width: "100%",
-                        height: 16,
+                        height: actionLabelHeight,
+                        marginTop: actionContentGap,
                         color: colors.white,
                         fontSize: 11,
-                        lineHeight: 16,
+                        lineHeight: actionLabelHeight,
                         fontFamily: "Inter_600SemiBold",
                         textAlign: "center",
                         includeFontPadding: false,
@@ -391,7 +419,7 @@ export default function HomeScreen() {
                       {action.label}
                     </Text>
                   </View>
-                </PressableScale>
+                </Pressable>
               </View>
             ))}
           </View>

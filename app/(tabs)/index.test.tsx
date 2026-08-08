@@ -1,5 +1,6 @@
 import React from "react";
 import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import HomeScreen from "./index";
 
 const mockPush = jest.fn();
@@ -81,5 +82,47 @@ describe("HomeScreen recent history", () => {
     const { getByText } = await render(<HomeScreen />);
 
     expect(getByText("Mulai pemindaian pertama")).toBeTruthy();
+  });
+
+  it("keeps every home action centered and interactive", async () => {
+    const { getByLabelText, getByTestId } = await render(<HomeScreen />);
+
+    const routes = {
+      Scan: "/scan/upload",
+      Upload: "/scan/upload",
+      Ide: "/ideas",
+      Jual: "/riwayat",
+    } as const;
+
+    for (const [label, route] of Object.entries(routes)) {
+      const button = getByLabelText(label);
+      expect(StyleSheet.flatten(button.parent?.props.style)).toEqual(
+        expect.objectContaining({
+          flex: 1,
+          height: 100,
+          position: "relative",
+        }),
+      );
+      expect(StyleSheet.flatten(button.props.style)).toEqual(
+        expect.objectContaining({
+          width: "100%",
+          height: 100,
+          alignSelf: "stretch",
+        }),
+      );
+      expect(
+        StyleSheet.flatten(
+          getByTestId(`home-action-content-${label.toLowerCase()}`).props.style,
+        ),
+      ).toEqual(
+        expect.objectContaining({
+          top: 12,
+          height: 76,
+          alignItems: "center",
+        }),
+      );
+      await fireEvent.press(button);
+      expect(mockPush).toHaveBeenLastCalledWith(route);
+    }
   });
 });

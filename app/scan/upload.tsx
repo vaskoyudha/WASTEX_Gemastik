@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, Image, Alert, ScrollView, useWindowDimensions } from "react-native";
+import { View, Text, Image, Alert, Pressable, ScrollView, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -322,22 +322,25 @@ export default function UploadScreen() {
                       boxShadow: "inset 0 1px 0 rgba(243,255,221,0.16), 0 7px 15px rgba(7,39,21,0.2)",
                     }}
                   >
-                    <PressableScale
+                    <Pressable
+                      accessibilityRole="button"
                       onPress={() => pickImage(option.mode)}
                       accessibilityLabel={option.mode === "camera" ? "Ambil foto dengan kamera" : "Pilih foto dari galeri"}
-                      style={{
+                      style={({ pressed }) => ({
                         flex: 1,
-                        width: "100%",
+                        alignSelf: "stretch",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 8,
-                      }}
+                        opacity: pressed ? 0.88 : 1,
+                      })}
                     >
                       <View
                         style={{
                           width: 58,
                           height: 58,
                           borderRadius: 29,
+                          alignSelf: "center",
                           alignItems: "center",
                           justifyContent: "center",
                           backgroundColor: "rgba(91,148,80,0.5)",
@@ -348,7 +351,17 @@ export default function UploadScreen() {
                       >
                         <option.icon size={25} color={colors.white} strokeWidth={1.9} />
                       </View>
-                      <Text style={{ color: colors.white, fontFamily: "Manrope_700Bold", fontSize: 13 }}>{option.label}</Text>
+                      <Text
+                        style={{
+                          alignSelf: "stretch",
+                          color: colors.white,
+                          fontFamily: "Manrope_700Bold",
+                          fontSize: 13,
+                          textAlign: "center",
+                        }}
+                      >
+                        {option.label}
+                      </Text>
                       <Text
                         numberOfLines={1}
                         style={{
@@ -361,7 +374,7 @@ export default function UploadScreen() {
                       >
                         {option.caption}
                       </Text>
-                    </PressableScale>
+                    </Pressable>
                   </View>
                 ))}
               </View>
