@@ -308,7 +308,7 @@ export default function HasilScreen() {
 
         {/* Material Traits */}
         <View>
-          <Text className="text-[19px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Karakter material</Text>
+          <Text className="text-[19px] font-extrabold mb-3" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Karakter Material</Text>
           <View className="flex-row flex-wrap gap-2">
             {traits.map((t, idx) => (
               <View key={idx} style={{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: "transparent", borderWidth: 1, borderColor: colors.sage300 }}>
@@ -344,7 +344,7 @@ export default function HasilScreen() {
             <ChevronRight size={20} color={colors.lime300} />
           </TouchableOpacity>
 
-          <Text className="text-[19px] font-extrabold mt-2" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Skill terverifikasi</Text>
+          <Text className="text-[19px] font-extrabold mt-2" style={{ color: colors.ink900, letterSpacing: -0.55 }}>Skill Terverifikasi</Text>
           {verifiedSkills.length === 0 ? (
             <Text className="text-xs" style={{ color: colors.ink600 }}>
               Belum ada skill terverifikasi untuk material ini.
