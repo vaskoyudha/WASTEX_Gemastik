@@ -308,25 +308,29 @@ export default function UploadScreen() {
                 ].map((option) => (
                   <View
                     key={option.mode}
-                    style={{ flex: 1, flexBasis: 0, minWidth: 0 }}
+                    style={{
+                      flex: 1,
+                      flexBasis: 0,
+                      minWidth: 0,
+                      height: 136,
+                      borderRadius: 20,
+                      borderCurve: "continuous",
+                      overflow: "hidden",
+                      backgroundColor: "#337A4C",
+                      borderWidth: 1.25,
+                      borderColor: "rgba(220,247,170,0.72)",
+                      boxShadow: "inset 0 1px 0 rgba(243,255,221,0.16), 0 7px 15px rgba(7,39,21,0.2)",
+                    }}
                   >
                     <PressableScale
                       onPress={() => pickImage(option.mode)}
                       accessibilityLabel={option.mode === "camera" ? "Ambil foto dengan kamera" : "Pilih foto dari galeri"}
                       style={{
+                        flex: 1,
                         width: "100%",
-                        height: 136,
-                        borderRadius: 22,
-                        borderCurve: "continuous",
-                        overflow: "hidden",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 8,
-                        backgroundColor: "rgba(42,94,55,0.92)",
-                        ...gradientStyle(gradients.uploadChoice),
-                        borderWidth: 1,
-                        borderColor: "rgba(205,239,146,0.43)",
-                        boxShadow: "inset 0 1px 0 rgba(243,255,221,0.12), 0 7px 15px rgba(7,39,21,0.2)",
                       }}
                     >
                       <View
