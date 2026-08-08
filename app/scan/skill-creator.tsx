@@ -238,7 +238,30 @@ export default function SkillCreatorScreen() {
           <Text className="text-sm font-bold mb-3" style={{ color: colors.ink900 }}>
             Skill layak dikirim
           </Text>
-          <Button title="Kirim Skill untuk Verifikasi" onPress={handleSubmit} disabled={submitting} />
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={submitting}
+            activeOpacity={0.84}
+            accessibilityRole="button"
+            accessibilityLabel="Kirim Skill untuk Verifikasi"
+            style={{
+              minHeight: 58,
+              borderRadius: 18,
+              borderCurve: 'continuous',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#2B7748',
+              ...gradientStyle(gradients.uploadAnalyze),
+              borderWidth: 1,
+              borderColor: 'rgba(190,232,120,0.24)',
+              boxShadow: '0 8px 20px rgba(20,69,39,0.22)',
+              opacity: submitting ? 0.5 : 1,
+            }}
+          >
+            <Text style={{ color: colors.white, fontFamily: 'Manrope_600SemiBold', fontSize: 16 }}>
+              Kirim Skill untuk Verifikasi
+            </Text>
+          </TouchableOpacity>
           <Button title="Coba Ide Lain" onPress={handlePickAnother} variant="secondary" />
         </View>
       </View>
