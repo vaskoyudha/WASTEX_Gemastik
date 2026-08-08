@@ -141,16 +141,21 @@ export function AnalysisLoadingView({ photoUri }: AnalysisLoadingViewProps) {
           </Text>
         </View>
         <Text
+          selectable
+          accessibilityRole="header"
+          accessibilityLabel="Sedang Memahami Materialmu"
           style={{
             color: colors.ink900,
-            fontFamily: "Manrope_700Bold",
-            fontSize: 24,
-            lineHeight: 30,
-            letterSpacing: -0.8,
+            fontFamily: "serif",
+            fontSize: 26,
+            fontWeight: "700",
+            lineHeight: 31,
+            letterSpacing: -0.45,
             textAlign: "center",
           }}
         >
-          Sedang memahami materialmu
+          Sedang Memahami{"\n"}
+          <Text style={{ color: "#3C9A57", fontStyle: "italic" }}>Materialmu</Text>
         </Text>
         <Text
           style={{

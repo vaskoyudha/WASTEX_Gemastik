@@ -36,7 +36,7 @@ jest.mock("lucide-react-native", () => ({
 
 describe("AnalysisLoadingView", () => {
   it("explains the active AI analysis phase accessibly", async () => {
-    const { getByTestId, getByText } = await render(
+    const { getByLabelText, getByTestId, getByText } = await render(
       <AnalysisLoadingView photoUri="file:///photo.jpg" />,
     );
 
@@ -44,7 +44,7 @@ describe("AnalysisLoadingView", () => {
 
     expect(loader.props.accessibilityRole).toBe("progressbar");
     expect(loader.props.accessibilityValue).toEqual({ text: "Mengenali material" });
-    expect(getByText("Sedang memahami materialmu")).toBeTruthy();
+    expect(getByLabelText("Sedang Memahami Materialmu")).toBeTruthy();
     expect(getByText("Mengenali material")).toBeTruthy();
   });
 });

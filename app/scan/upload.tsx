@@ -203,15 +203,17 @@ export default function UploadScreen() {
               <Text
                 selectable
                 style={{
-                  color: "#153B29",
+                  color: colors.ink900,
                   fontFamily: "serif",
                   fontWeight: "700",
-                  fontSize: 24,
-                  lineHeight: 29,
+                  fontSize: 26,
+                  lineHeight: 31,
                   letterSpacing: -0.45,
+                  textAlign: "center",
                 }}
               >
-                Pilih Foto Sampah Anorganik
+                Pilih Foto{"\n"}
+                <Text style={{ color: "#3C9A57", fontStyle: "italic" }}>Sampah Anorganik</Text>
               </Text>
             </View>
             <Text style={{ color: colors.ink600, fontFamily: "Manrope_400Regular", fontSize: 12, lineHeight: 18, textAlign: "center" }}>
