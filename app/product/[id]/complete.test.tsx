@@ -16,7 +16,6 @@ jest.mock('expo-router', () => ({
 
 jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn(),
-  MediaTypeOptions: { Images: 'Images' },
 }));
 
 jest.mock('../../../src/services/api', () => ({

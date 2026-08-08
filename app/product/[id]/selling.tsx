@@ -38,6 +38,7 @@ function inferMaterialFromProduct(productId: string): MaterialType {
 export default function SellingScreen() {
   const { id, completionId } = useLocalSearchParams<{ id: string; completionId?: string }>();
   const router = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
   const {
     product,
     tutData,
@@ -163,7 +164,6 @@ export default function SellingScreen() {
 
   const posterImageUri = sellData.promoImageUri || tutData?.mockupImageUri;
   const socialCaption = buildSocialCaption(sellData);
-  const { height: screenHeight } = useWindowDimensions();
 
   const showShareError = (error: unknown, target: ShareTarget) => {
     if (isShareCancellation(error)) return;

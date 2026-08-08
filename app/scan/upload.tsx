@@ -81,14 +81,14 @@ export default function UploadScreen() {
           return;
         }
         result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: "images",
           allowsEditing: true,
           aspect: [4, 3],
           quality: 0.8,
         });
       } else {
         result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: "images",
           allowsEditing: true,
           aspect: [4, 3],
           quality: 0.8,
@@ -333,7 +333,7 @@ export default function UploadScreen() {
                         opacity: pressed ? 0.88 : 1,
                       })}
                     >
-                      <View style={{ alignItems: "center", gap: 8, paddingTop: 14 }}>
+                      <View style={{ alignItems: "center", gap: 8 }}>
                         <View
                           style={{
                             width: 58,
@@ -370,7 +370,6 @@ export default function UploadScreen() {
                             lineHeight: 12,
                             textAlign: "center",
                             includeFontPadding: false,
-                            marginBottom: 4,
                           }}
                         >
                           {option.caption}

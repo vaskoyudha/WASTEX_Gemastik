@@ -1,16 +1,17 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Image, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
 import { TrendingUp } from "lucide-react-native";
 import { safeBack } from "../../../src/lib/navigation";
-import { colors, screenSheetStyle } from "../../../src/theme";
+import { colors } from "../../../src/theme";
 
 export default function PricingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { priceData, loading, error, refetch } = useProductData(id);
+  const { height: screenHeight } = useWindowDimensions();
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat estimasi harga..." />;
@@ -39,65 +40,84 @@ export default function PricingScreen() {
     : 0;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
-      <Header title="Estimasi Harga" onBack={() => safeBack(router)} />
-
-      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
-        <Card className="p-0 border border-slate-100 mb-5 overflow-hidden">
-          {[
-            { label: "Biaya Material", value: priceData.materialCost },
-            { label: "Aksesoris & Tambahan", value: priceData.additionalCost },
-            { label: "Biaya Tenaga Kerja", value: priceData.totalCost - priceData.materialCost - priceData.additionalCost },
-          ].map((row, idx, arr) => (
-            <View
-              key={idx}
-              className={`flex-row items-center justify-between px-4 py-3.5 ${
-                idx !== arr.length - 1 ? "border-b border-slate-100" : ""
-              }`}
-            >
-              <Text className="text-sm text-slate-500">{row.label}</Text>
-              <Text className="text-sm font-bold text-slate-900">
-                Rp {row.value.toLocaleString("id-ID")}
-              </Text>
-            </View>
-          ))}
-        </Card>
-
-        <Card className="bg-emerald-50 border-emerald-100 p-5 mb-4 items-center">
-          <Text className="text-xs text-slate-500 mb-1">Total Biaya Produksi</Text>
-          <Text className="text-3xl font-extrabold text-brand-dark">
-            Rp {priceData.totalCost.toLocaleString("id-ID")}
-          </Text>
-        </Card>
-
-        <Card className="bg-emerald-50 border-emerald-100 p-5 mb-4 items-center">
-          <Text className="text-xs text-slate-500 mb-1">Harga Jual yang Disarankan</Text>
-          <Text className="text-3xl font-extrabold text-brand-dark">
-            Rp {priceData.suggestedSellPrice.toLocaleString("id-ID")}
-          </Text>
-        </Card>
-
-        <Card className="bg-emerald-50/60 border-emerald-100 p-5 mb-4">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="text-xs text-slate-500 mb-1">Keuntungan Estimasi</Text>
-              <Text className="text-2xl font-extrabold text-brand-dark">
-                Rp {priceData.estimatedProfit.toLocaleString("id-ID")} ({profitPct}%)
-              </Text>
-            </View>
-            <TrendingUp size={32} color="#16a34a" />
-          </View>
-        </Card>
-
-        <Text className="text-[11px] text-slate-400 leading-4 mb-6">
-          Harga dapat disesuaikan dengan kondisi pasar dan kualitas produk.
-        </Text>
-
-        <Button
-          title="Lanjut ke AI Selling Assistant"
-          onPress={() => router.push(`/product/${id}/selling`)}
-          variant="primary"
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight, backgroundColor: "transparent" }}
+      >
+        <Image
+          source={require("../../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{
+            position: "absolute",
+            top: -128,
+            left: 0,
+            width: "100%",
+            height: screenHeight + 128,
+          }}
         />
+        <Header title="Estimasi Harga" onBack={() => safeBack(router)} transparent contentColor={colors.white} />
+
+        <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40, backgroundColor: "transparent" }}>
+          <Card className="p-0 border border-slate-100 mb-5 overflow-hidden">
+            {[
+              { label: "Biaya Material", value: priceData.materialCost },
+              { label: "Aksesoris & Tambahan", value: priceData.additionalCost },
+              { label: "Biaya Tenaga Kerja", value: priceData.totalCost - priceData.materialCost - priceData.additionalCost },
+            ].map((row, idx, arr) => (
+              <View
+                key={idx}
+                className={`flex-row items-center justify-between px-4 py-3.5 ${
+                  idx !== arr.length - 1 ? "border-b border-slate-100" : ""
+                }`}
+              >
+                <Text className="text-sm text-slate-500">{row.label}</Text>
+                <Text className="text-sm font-bold text-slate-900">
+                  Rp {row.value.toLocaleString("id-ID")}
+                </Text>
+              </View>
+            ))}
+          </Card>
+
+          <Card className="bg-emerald-50 border-emerald-100 p-5 mb-4 items-center">
+            <Text className="text-xs text-slate-500 mb-1">Total Biaya Produksi</Text>
+            <Text className="text-3xl font-extrabold text-brand-dark">
+              Rp {priceData.totalCost.toLocaleString("id-ID")}
+            </Text>
+          </Card>
+
+          <Card className="bg-emerald-50 border-emerald-100 p-5 mb-4 items-center">
+            <Text className="text-xs text-slate-500 mb-1">Harga Jual yang Disarankan</Text>
+            <Text className="text-3xl font-extrabold text-brand-dark">
+              Rp {priceData.suggestedSellPrice.toLocaleString("id-ID")}
+            </Text>
+          </Card>
+
+          <Card className="bg-emerald-50/60 border-emerald-100 p-5 mb-4">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-xs text-slate-500 mb-1">Keuntungan Estimasi</Text>
+                <Text className="text-2xl font-extrabold text-brand-dark">
+                  Rp {priceData.estimatedProfit.toLocaleString("id-ID")} ({profitPct}%)
+                </Text>
+              </View>
+              <TrendingUp size={32} color="#16a34a" />
+            </View>
+          </Card>
+
+          <Text className="text-[11px] text-slate-400 leading-4 mb-6">
+            Harga dapat disesuaikan dengan kondisi pasar dan kualitas produk.
+          </Text>
+
+          <Button
+            title="Lanjut ke AI Selling Assistant"
+            onPress={() => router.push(`/product/${id}/selling`)}
+            variant="primary"
+          />
+        </View>
       </ScrollView>
     </View>
   );
