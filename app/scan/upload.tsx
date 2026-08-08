@@ -328,54 +328,54 @@ export default function UploadScreen() {
                       accessibilityLabel={option.mode === "camera" ? "Ambil foto dengan kamera" : "Pilih foto dari galeri"}
                       style={({ pressed }) => ({
                         flex: 1,
-                        alignSelf: "stretch",
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: 8,
                         opacity: pressed ? 0.88 : 1,
                       })}
                     >
-                      <View
-                        style={{
-                          width: 58,
-                          height: 58,
-                          borderRadius: 29,
-                          alignSelf: "center",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "rgba(91,148,80,0.5)",
-                          borderWidth: 1,
-                          borderColor: "rgba(217,245,166,0.34)",
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                        }}
-                      >
-                        <option.icon size={25} color={colors.white} strokeWidth={1.9} />
+                      <View style={{ alignItems: "center", gap: 8, paddingTop: 14 }}>
+                        <View
+                          style={{
+                            width: 58,
+                            height: 58,
+                            borderRadius: 29,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(91,148,80,0.5)",
+                            borderWidth: 1,
+                            borderColor: "rgba(217,245,166,0.34)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                          }}
+                        >
+                          <option.icon size={25} color={colors.white} strokeWidth={1.9} />
+                        </View>
+                        <Text
+                          style={{
+                            color: colors.white,
+                            fontFamily: "Manrope_700Bold",
+                            fontSize: 13,
+                            lineHeight: 17,
+                            textAlign: "center",
+                            includeFontPadding: false,
+                          }}
+                        >
+                          {option.label}
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            color: "rgba(255,255,255,0.66)",
+                            fontFamily: "Manrope_400Regular",
+                            fontSize: 9.5,
+                            lineHeight: 12,
+                            textAlign: "center",
+                            includeFontPadding: false,
+                            marginBottom: 4,
+                          }}
+                        >
+                          {option.caption}
+                        </Text>
                       </View>
-                      <Text
-                        style={{
-                          alignSelf: "stretch",
-                          color: colors.white,
-                          fontFamily: "Manrope_700Bold",
-                          fontSize: 13,
-                          lineHeight: 17,
-                          textAlign: "center",
-                        }}
-                      >
-                        {option.label}
-                      </Text>
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          width: "100%",
-                          color: "rgba(255,255,255,0.66)",
-                          fontFamily: "Manrope_400Regular",
-                          fontSize: 9.5,
-                          lineHeight: 12,
-                          textAlign: "center",
-                        }}
-                      >
-                        {option.caption}
-                      </Text>
                     </Pressable>
                   </View>
                 ))}
