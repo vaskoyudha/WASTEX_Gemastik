@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Modal } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, Image, useWindowDimensions } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, FitImage, LoadingSpinner } from "../../../src/components/ui";
@@ -163,6 +163,7 @@ export default function SellingScreen() {
 
   const posterImageUri = sellData.promoImageUri || tutData?.mockupImageUri;
   const socialCaption = buildSocialCaption(sellData);
+  const { height: screenHeight } = useWindowDimensions();
 
   const showShareError = (error: unknown, target: ShareTarget) => {
     if (isShareCancellation(error)) return;
@@ -296,10 +297,22 @@ export default function SellingScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
-      <Header title="AI Selling Assistant" onBack={handleBack} />
+    <View style={{ flex: 1, backgroundColor: "#F8F8F2" }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
+      >
+        <Image
+          source={require("../../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{ position: "absolute", top: -128, left: 0, width: "100%", height: screenHeight }}
+        />
+        <Header title="AI Selling Assistant" onBack={handleBack} transparent contentColor={colors.white} />
 
-      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+        <View className="px-5 pt-4" style={{ paddingBottom: 40 }}>
         <View className="flex-row bg-white rounded-2xl p-1 border border-slate-100 mb-5">
           {(
             [
@@ -405,6 +418,7 @@ export default function SellingScreen() {
           icon={<BookmarkCheck size={20} color="#ffffff" />}
           variant="primary"
         />
+        </View>
       </ScrollView>
 
       <Modal visible={confirmVisible} animationType="fade" transparent onRequestClose={() => setConfirmVisible(false)}>

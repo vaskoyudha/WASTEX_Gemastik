@@ -34,6 +34,7 @@ function ScanTabButton({ onPress, onLongPress, style, testID }: ScanTabButtonPro
           style={{
             position: "absolute",
             top: -34,
+            alignSelf: "center",
             width: 58,
             height: 58,
             borderRadius: 29,

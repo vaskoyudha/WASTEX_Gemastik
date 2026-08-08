@@ -293,16 +293,34 @@ export default function SkillCreatorScreen() {
         <View style={{ paddingHorizontal: 18, paddingTop: 32, paddingBottom: 44 }}>
         {stage === 'ideas' && (
           <View style={{ gap: 16 }}>
-            <View style={{ padding: 17, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: radii.xl, borderCurve: 'continuous', backgroundColor: colors.forest900, ...gradientStyle(gradients.navigation), borderWidth: 1, borderColor: 'rgba(255,255,255,0.11)', boxShadow: shadows.floating }}>
-              <View style={{ width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.lime300, ...gradientStyle(gradients.scanButton) }}>
-                <Sparkles size={20} color={colors.forest900} />
-              </View>
-              <View style={{ flex: 1, gap: 3 }}>
-                <Text className="text-base font-bold" style={{ color: colors.white }}>Ide skill dari AI</Text>
-                <Text className="text-[11px] leading-4" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  Pilih ide untuk {scanResult.materialLabel}, lalu AI akan menyusun dan meninjau detailnya.
-                </Text>
-              </View>
+            <View style={{ alignItems: "center", gap: 7 }}>
+              <Text
+                selectable
+                style={{
+                  color: colors.ink900,
+                  fontFamily: "serif",
+                  fontSize: 26,
+                  fontWeight: "700",
+                  letterSpacing: -0.45,
+                  lineHeight: 31,
+                  textAlign: "center",
+                }}
+              >
+                Ide Skill dari AI{"\n"}
+                <Text style={{ color: "#3C9A57", fontStyle: "italic" }}>untuk {scanResult.materialLabel}</Text>
+              </Text>
+              <Text
+                selectable
+                style={{
+                  color: colors.ink700,
+                  fontFamily: "Manrope_400Regular",
+                  fontSize: 12,
+                  lineHeight: 19,
+                  textAlign: "center",
+                }}
+              >
+                Pilih ide, lalu AI akan menyusun dan meninjau detailnya.
+              </Text>
             </View>
             {renderIdeas()}
           </View>

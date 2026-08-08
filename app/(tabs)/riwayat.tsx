@@ -75,9 +75,10 @@ export default function RiwayatScreen() {
       >
         <View
           style={{
-            minHeight: 250,
+            minHeight: 268,
             paddingTop: Math.max(insets.top, 18),
             paddingHorizontal: 16,
+            paddingBottom: 28,
             overflow: "hidden",
             backgroundColor: palette.forestDeep,
           }}
@@ -134,7 +135,6 @@ export default function RiwayatScreen() {
               alignItems: "center",
               gap: 14,
               borderRadius: 27,
-              borderCurve: "continuous",
               overflow: "hidden",
               backgroundColor: "rgba(74,119,78,0.72)",
               borderWidth: 1,
@@ -218,16 +218,14 @@ export default function RiwayatScreen() {
         <View
           style={{
             minHeight: 570,
-            marginTop: -24,
+            marginTop: -16,
             paddingHorizontal: 16,
-            paddingTop: 20,
+            paddingTop: 24,
             paddingBottom: 18,
             borderTopLeftRadius: 38,
             borderTopRightRadius: 38,
-            borderCurve: "continuous",
             backgroundColor: palette.cream,
             boxShadow: "0 -10px 28px rgba(4,43,23,0.12)",
-            zIndex: 2,
           }}
         >
           <View
@@ -275,7 +273,6 @@ export default function RiwayatScreen() {
                     key={projectKey}
                     style={{
                       borderRadius: 22,
-                      borderCurve: "continuous",
                       overflow: "hidden",
                       backgroundColor: palette.white,
                       borderWidth: 1,
@@ -287,7 +284,7 @@ export default function RiwayatScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={`Buka ${project.product.name}`}
                       onPress={() => router.push(`/product/${project.product.id}`)}
-                      style={{ minHeight: 105, flexDirection: "row", padding: 10, gap: 13 }}
+                      style={{ minHeight: 105, flexDirection: "row", padding: 10, gap: 13, alignItems: "stretch" }}
                     >
                       <Image
                         source={{ uri: project.photoUri }}
@@ -295,8 +292,7 @@ export default function RiwayatScreen() {
                         accessibilityIgnoresInvertColors
                         style={{
                           width: 102,
-                          minHeight: 96,
-                          alignSelf: "stretch",
+                          height: 96,
                           borderRadius: 20,
                           backgroundColor: "#EEF2EC",
                         }}
@@ -411,7 +407,6 @@ export default function RiwayatScreen() {
                   justifyContent: "center",
                   gap: 12,
                   borderRadius: 20,
-                  borderCurve: "continuous",
                   overflow: "hidden",
                   backgroundColor: palette.forest,
                   ...gradientStyle("linear-gradient(135deg, #2E7440 0%, #0B4B28 100%)"),
@@ -446,7 +441,6 @@ export default function RiwayatScreen() {
               maxWidth: 384,
               padding: 24,
               borderRadius: 28,
-              borderCurve: "continuous",
               backgroundColor: palette.cream,
             }}
           >

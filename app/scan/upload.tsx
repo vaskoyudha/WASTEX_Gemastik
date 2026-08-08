@@ -24,7 +24,7 @@ import {
   MoreHorizontal,
   ChevronLeft,
 } from "lucide-react-native";
-import { colors, gradients, gradientStyle, screenSheetStyle, shadows } from "../../src/theme";
+import { colors, gradients, gradientStyle, shadows } from "../../src/theme";
 
 const supportedMaterials = [
   { label: "Plastik", icon: SprayCan },
@@ -110,12 +110,12 @@ export default function UploadScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
         style={{ flex: 1, backgroundColor: "transparent" }}
-        contentContainerStyle={{ minHeight: screenHeight }}
+        contentContainerStyle={{ minHeight: screenHeight, backgroundColor: "transparent" }}
       >
         <Image
           source={require("../../assets/images/upload-screen-bg.png")}
@@ -199,11 +199,11 @@ export default function UploadScreen() {
         </View>
 
         {analyzeCall.loading ? (
-          <View style={[screenSheetStyle, { minHeight: Math.max(screenHeight - 100, 620), backgroundColor: "#FFFFFF" }]}>
+          <View style={{ minHeight: Math.max(screenHeight - 100, 620), backgroundColor: "transparent" }}>
           <AnalysisLoadingView photoUri={image} />
           </View>
         ) : (
-          <View style={{ marginTop: -12, paddingHorizontal: 20, paddingTop: 30, paddingBottom: 54, gap: 20 }}>
+          <View style={{ marginTop: -12, paddingHorizontal: 20, paddingTop: 30, paddingBottom: 54, gap: 20, backgroundColor: "transparent" }}>
           <View style={{ alignItems: "center", paddingHorizontal: 22, gap: 7 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Text

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Image, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner, FitImage } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
@@ -11,6 +11,7 @@ export default function BeforeAfterScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { tutData, priceData, loading, error, refetch } = useProductData(id);
+  const { height: screenHeight } = useWindowDimensions();
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat perbandingan..." />;
@@ -36,9 +37,28 @@ export default function BeforeAfterScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
-      <Header title="Sebelum & Sesudah" onBack={() => safeBack(router)} />
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
+      >
+        <Image
+          source={require("../../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{
+            position: "absolute",
+            top: -128,
+            left: 0,
+            width: "100%",
+            height: screenHeight + 128,
+          }}
+        />
+        <Header title="Sebelum & Sesudah" onBack={() => safeBack(router)} transparent contentColor={colors.white} />
 
-      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={screenSheetStyle} className="flex-1 px-5 pt-4">
+          <View style={{ paddingBottom: 40 }}>
         <Card className="p-4 border border-slate-100 mb-4 items-center">
           <Text className="text-xs font-semibold text-slate-500 mb-3">Sebelum & Sesudah</Text>
           <FitImage
@@ -67,6 +87,8 @@ export default function BeforeAfterScreen() {
           onPress={() => router.push(`/product/${id}/mockup`)}
           variant="primary"
         />
+          </View>
+        </View>
       </ScrollView>
     </View>
   );

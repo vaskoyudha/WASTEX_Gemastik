@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView, Image, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Header, Button, Card, LoadingSpinner } from "../../../src/components/ui";
 import { useProductData } from "../../../src/hooks/useProductData";
@@ -10,6 +10,7 @@ export default function MockupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { tutData, loading, error, refetch } = useProductData(id);
+  const { height: screenHeight } = useWindowDimensions();
 
   if (loading) {
     return <LoadingSpinner fullScreen message="Memuat mockup produk..." />;
@@ -35,9 +36,28 @@ export default function MockupScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.forest900 }}>
-      <Header title="Mockup Produk" onBack={() => safeBack(router)} />
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        contentContainerStyle={{ minHeight: screenHeight }}
+      >
+        <Image
+          source={require("../../../assets/images/upload-screen-bg.png")}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={{
+            position: "absolute",
+            top: -128,
+            left: 0,
+            width: "100%",
+            height: screenHeight + 128,
+          }}
+        />
+        <Header title="Mockup Produk" onBack={() => safeBack(router)} transparent contentColor={colors.white} />
 
-      <ScrollView style={screenSheetStyle} className="flex-1 px-5 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={screenSheetStyle} className="flex-1 px-5 pt-4" >
+          <View style={{ paddingBottom: 40 }}>
         <Card className="rounded-3xl overflow-hidden p-0 border-0 mb-5">
           <Image source={{ uri: tutData.mockupImageUri }} className="w-full h-64" resizeMode="cover" />
         </Card>
@@ -69,6 +89,8 @@ export default function MockupScreen() {
           onPress={() => router.push(`/product/${id}/pricing`)}
           variant="primary"
         />
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
