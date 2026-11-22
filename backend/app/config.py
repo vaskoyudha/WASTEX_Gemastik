@@ -36,6 +36,7 @@ class Settings(BaseSettings):
         "http://localhost:8082",  # Expo web (second instance)
         "http://localhost:19006",  # Expo web (legacy)
         "exp://localhost:19000",  # Expo Go
+        "http://192.168.1.11:8000",  # laptop LAN IP for physical-device testing
     ]
 
     supabase_jwt_secret: str = ""
